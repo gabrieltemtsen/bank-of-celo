@@ -318,7 +318,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         transition={{ duration: 0.5 }}
         className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4"
       >
-        <div className="flex items-center justify-between max-w-md mx-auto">
+        <div className="flex items-center justify-between mx-20">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
             {title}
           </h1>
