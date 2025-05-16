@@ -5,7 +5,7 @@ import { Toaster } from "~/components/ui/sonner";
 import { APP_NAME } from "~/lib/constants";
 
 // note: dynamic import is required for components that use the Frame SDK
-const Demo = dynamic(() => import("~/components/Home"), {
+const Main = dynamic(() => import("~/components/Main"), {
   ssr: false,
 });
 
@@ -14,7 +14,7 @@ export default function App(
 ) {
   return (
     <>
-      <Demo title={title} />
+      <Main title={title} />
       <Toaster position="top-right" />
     </>
   );

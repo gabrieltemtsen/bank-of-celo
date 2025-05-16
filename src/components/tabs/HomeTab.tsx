@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Info, Gift, HandCoins, Clock } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { formatDistanceToNow } from "date-fns";
+import { celoImage } from "~/constants/images";
 
 interface HomeTabProps {
   vaultBalance: string;
@@ -42,6 +43,7 @@ export default function HomeTab({
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       className="space-y-4"
+      
     >
       {/* Vault Balance Card */}
       <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 text-center">
