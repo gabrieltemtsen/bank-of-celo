@@ -22,6 +22,7 @@ import LeaderboardTab from "./tabs/LeaderboardTab";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
+import { celoImage, cubesImage } from "~/constants/images";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -238,8 +239,17 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
         paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
+        backgroundImage: `url(${cubesImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh', 
+        // padding: '20px',
       }}
     >
+       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
         <motion.div 
