@@ -10,7 +10,7 @@ async function main() {
 
   const BocContract = await hre.ethers.getContractFactory("BankOfCelo");
 
-   const factory = await BocContract.deploy(parseEther("5"));
+  const factory = await BocContract.deploy(parseEther("5"));
   await factory.waitForDeployment();
   console.log("Bank Of Celo deployed at:", factory.target);
 }
@@ -18,6 +18,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error("Error deploying:", error);
+    console.log("Error deploying:", error);
     process.exit(1);
   });

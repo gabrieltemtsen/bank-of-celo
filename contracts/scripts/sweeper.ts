@@ -698,7 +698,7 @@ async function main() {
       "stateMutability": "payable",
       "type": "receive"
     }
-  ]
+  ];
 
   // 1. Get the contract's balance
   const balance = await publicClient.getBalance({ address: contractAddress });
@@ -724,6 +724,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("Error calling sweep:", err);
+  console.log("Error calling sweep:", err);
   process.exit(1);
 });
