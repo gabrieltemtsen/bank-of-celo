@@ -127,7 +127,7 @@ async function queryNeynarApp(apiKey) {
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error querying Neynar app data:', error);
+    console.log('Error querying Neynar app data:', error);
     return null;
   }
 }
@@ -399,7 +399,7 @@ async function main() {
     console.log('📝 Make sure to configure the environment variables from .env in your hosting provider');
 
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
+    console.log('\n❌ Error:', error.message);
     process.exit(1);
   }
 }

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ fid });
   } catch (error) {
-    console.error("Neynar API error:", error);
+    console.log("Neynar API error:", error);
     return NextResponse.json(
       { error: `Failed to fetch FID: ${error instanceof Error ? error.message : "Unknown error"}` },
       { status: 500 }

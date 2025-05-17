@@ -312,10 +312,10 @@ async function loginToVercel() {
     }
   }
 
-  console.error('\n❌ Login timed out. Please ensure you have:');
-  console.error('1. Completed the Vercel account setup in your browser');
-  console.error('2. Authorized the GitHub integration');
-  console.error('Then try running this script again.');
+  console.log('\n❌ Login timed out. Please ensure you have:');
+  console.log('1. Completed the Vercel account setup in your browser');
+  console.log('2. Authorized the GitHub integration');
+  console.log('Then try running this script again.');
   return false;
 }
 
@@ -563,7 +563,7 @@ async function deployToVercel(useGitHub = false) {
       // Clean up the temporary file
       fs.unlinkSync(tempOutputFile);
     } catch (error) {
-      console.error('Error:', error);
+      console.log('Error:', error);
       
       // Try to read the output file even if there was an error
       try {
@@ -573,7 +573,7 @@ async function deployToVercel(useGitHub = false) {
           fs.unlinkSync(tempOutputFile);
         }
       } catch (readError) {
-        console.error('Error reading output file:', readError);
+        console.log('Error reading output file:', readError);
       }
     }
     
@@ -582,7 +582,7 @@ async function deployToVercel(useGitHub = false) {
     console.log('\n📝 You can manage your project at https://vercel.com/dashboard');
 
   } catch (error) {
-    console.error('\n❌ Deployment failed:', error.message);
+    console.log('\n❌ Deployment failed:', error.message);
     process.exit(1);
   }
 }
@@ -651,7 +651,7 @@ async function main() {
     // Login to Vercel
     console.log('pre login');
     if (!await loginToVercel()) {
-      console.error('\n❌ Failed to log in to Vercel. Please try again.');
+      console.log('\n❌ Failed to log in to Vercel. Please try again.');
       process.exit(1);
     }
 
@@ -659,7 +659,7 @@ async function main() {
     await deployToVercel(useGitHub);
 
   } catch (error) {
-    console.error('\n❌ Error:', error.message);
+    console.log('\n❌ Error:', error.message);
     process.exit(1);
   }
 }

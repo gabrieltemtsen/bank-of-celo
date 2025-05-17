@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // User has no CELO: Use private key to call executeGaslessClaim
-      const privateKey =process.env.SPONSOR_PRIVATE_KEY;
+      const privateKey = process.env.SPONSOR_PRIVATE_KEY;
       if (!privateKey) {
         throw new Error("SPONSOR_PRIVATE_KEY not configured in environment variables");
       }
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
             chainId: 42220, // Celo mainnet
           });
         } catch (diviError) {
-          console.error("Divi submitReferral error:", diviError);
+          console.log("Divi submitReferral error:", diviError);
           // Continue to return success, as referral tracking is secondary
         }
       }
@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ transactionHash: receipt.transactionHash });
     }
   } catch (error) {
-    console.error("Claim error:", error);
+    console.log("Claim error:", error);
     return NextResponse.json(
       { error: `Failed to process claim: ${error instanceof Error ? error.message : "Unknown error"}` },
       { status: 500 }
