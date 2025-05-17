@@ -135,8 +135,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   useEffect(() => {
     const load = async () => {
       if (!sdk) return;
-      sdk.actions.ready({});
-      await sdk.actions.addFrame();
+      sdk?.actions?.ready({});
+      await sdk?.actions?.addFrame();
     };
 
     load();
