@@ -22,6 +22,7 @@ import LeaderboardTab from "./tabs/LeaderboardTab";
 import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/constants";
 import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
+import { celoImage, cubesImage } from "~/constants/images";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -134,8 +135,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   useEffect(() => {
     const load = async () => {
       if (!sdk) return;
-      sdk.actions.ready({});
-      await sdk.actions.addFrame();
+      sdk?.actions?.ready({});
+      await sdk?.actions?.addFrame();
     };
 
     load();
@@ -238,8 +239,17 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
         paddingLeft: context?.client.safeAreaInsets?.left ?? 0,
         paddingRight: context?.client.safeAreaInsets?.right ?? 0,
+        backgroundImage: `url(${cubesImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundRepeat: 'no-repeat',
+        minHeight: '100vh', 
+        // padding: '20px',
       }}
     >
+       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
         <motion.div 
@@ -308,7 +318,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         transition={{ duration: 0.5 }}
         className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4"
       >
-        <div className="flex items-center justify-between max-w-md mx-auto">
+        <div className="flex items-center justify-between mx-0 md:mx-20">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
             {title}
           </h1>
@@ -398,7 +408,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.5 }}
-        className="fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
       >
         {[
           { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },

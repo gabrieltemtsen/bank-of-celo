@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { usePublicClient, useAccount } from "wagmi";
 import { formatEther } from "viem";
 import { motion, AnimatePresence } from "framer-motion";
-import { Trophy, Loader2, Award, ChevronDown, ChevronUp } from "lucide-react";
+import { Trophy, Loader2, Award, ChevronDown, ChevronUp, RefreshCcw } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { toast } from "sonner";
@@ -101,13 +101,13 @@ export default function LeaderboardTab({ isCorrectChain = true }: LeaderboardTab
             </div>
             <span className="text-gray-900 dark:text-white">Top Donors</span>
           </h2>
-          <Button
+          <button
             onClick={fetchLeaderboard}
             disabled={isLoading || !isCorrectChain}
-            className="text-xs font-medium bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full px-3 py-1.5"
+            className="text-xs text-center flex items-center justify-center w-10 h-10  font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full  py-1.5"
           >
-            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Refresh"}
-          </Button>
+            {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCcw />}
+          </button>
         </div>
 
         {!isCorrectChain ? (

@@ -70,7 +70,7 @@ async function startDev() {
   // Check if port 3000 is already in use
   const isPortInUse = await checkPort(3000);
   if (isPortInUse) {
-    console.error('Port 3000 is already in use. To find and kill the process using this port:\n\n' +
+    console.log('Port 3000 is already in use. To find and kill the process using this port:\n\n' +
       (process.platform === 'win32' 
         ? '1. Run: netstat -ano | findstr :3000\n' +
           '2. Note the PID (Process ID) from the output\n' +
@@ -90,7 +90,7 @@ async function startDev() {
     try {
       ip = await fetch('https://ipv4.icanhazip.com').then(res => res.text()).then(ip => ip.trim());
     } catch (error) {
-      console.error('Error getting IP address:', error);
+      console.log('Error getting IP address:', error);
     }
 
     frameUrl = tunnel.url;
@@ -177,7 +177,7 @@ async function startDev() {
       // Force kill any remaining processes on port 3000
       await killProcessOnPort(3000);
     } catch (error) {
-      console.error('Error during cleanup:', error);
+      console.log('Error during cleanup:', error);
     } finally {
       process.exit(0);
     }
@@ -192,4 +192,4 @@ async function startDev() {
   }
 }
 
-startDev().catch(console.error); 
+startDev().catch(console.log); 

@@ -1,4 +1,4 @@
-import { AuthOptions, getServerSession } from "next-auth"
+import { AuthOptions, getServerSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { createAppClient, viemConnector } from "@farcaster/auth-client";
 
@@ -19,14 +19,14 @@ function getDomainFromUrl(urlString: string | undefined): string {
     const url = new URL(urlString);
     return url.hostname;
   } catch (error) {
-    console.error('Invalid NEXTAUTH_URL:', urlString, error);
+    console.log('Invalid NEXTAUTH_URL:', urlString, error);
     console.warn('Using localhost:3000 as fallback');
     return 'localhost:3000';
   }
 }
 
 export const authOptions: AuthOptions = {
-    // Configure one or more authentication providers
+  // Configure one or more authentication providers
   providers: [
     CredentialsProvider({
       name: "Sign in with Farcaster",
@@ -59,7 +59,7 @@ export const authOptions: AuthOptions = {
       async authorize(credentials, req) {
         const csrfToken = req?.body?.csrfToken;
         if (!csrfToken) {
-          console.error('CSRF token is missing from request');
+          console.log('CSRF token is missing from request');
           return null;
         }
 
@@ -123,13 +123,13 @@ export const authOptions: AuthOptions = {
       }
     }
   }
-}
+};
 
 export const getSession = async () => {
   try {
     return await getServerSession(authOptions);
   } catch (error) {
-    console.error('Error getting server session:', error);
+    console.log('Error getting server session:', error);
     return null;
   }
-}
+};

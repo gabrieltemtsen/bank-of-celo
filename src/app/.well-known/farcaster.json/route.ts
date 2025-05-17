@@ -6,7 +6,7 @@ export async function GET() {
     const config = await getFarcasterMetadata();
     return NextResponse.json(config);
   } catch (error) {
-    console.error('Error generating metadata:', error);
+    console.log('Error generating metadata:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
