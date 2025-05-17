@@ -23,6 +23,7 @@ import { BANK_OF_CELO_CONTRACT_ABI, BANK_OF_CELO_CONTRACT_ADDRESS } from "~/lib/
 import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { celoImage, cubesImage } from "~/constants/images";
+import { cn } from "~/lib/utils";
 
 export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string; }) {
   const { address, isConnected, chain } = useAccount();
@@ -34,7 +35,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
   const publicClient = usePublicClient();
   const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
-
+  
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
   const [showWelcome, setShowWelcome] = useState(() => {
@@ -49,14 +50,16 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
     minReserve: "0",
     availableForClaims: "0",
   });
-
+  
   const chainId = useChainId();
   const CELO_CHAIN_ID = celo.id;
   const targetChain = celo;
   const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const showSwitchNetworkBanner = isConnected && !isCorrectChain;
+
   console.log("Current chain ID:", chainId);
   console.log("Is correct chain:", isCorrectChain);
-
+  
   const handleSwitchChain = useCallback(() => {
     try {
       switchChain({ chainId: targetChain.id });
@@ -94,10 +97,10 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
           functionName: "MAX_CLAIM",
         }),
       ]);
-
+      
       const [status, cooldown, lastClaim, maxClaimAmount] = data;
       const [currentBalance, minReserve, availableForClaims] = status as [bigint, bigint, bigint];
-
+      
       const newVaultStatus = {
         currentBalance: formatEther(currentBalance),
         minReserve: formatEther(minReserve),
@@ -126,36 +129,36 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
       setIsLoading(false);
     }
   }, [publicClient, address, isCorrectChain]);
-
+  
   useEffect(() => {
     const load = async () => {
       if (!sdk?.actions?.addFrame) {
         console.warn("sdk.actions.addFrame is not available");
         return;
       }
-  
+      
       try {
         sdk.actions.ready?.({});
-        await sdk.actions.addFrame(); 
+        await sdk.actions.addFrame();
       } catch (err) {
-        console.error("Failed to add frame:", err);
+        console.log("Failed to add frame:", err);
       }
     };
-  
+    
     load();
   }, []);
-
+  
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
       toast.error("Please switch to Celo Network");
       return;
     }
-
+    
     if (Number(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-
+    
     try {
       // 1. Encode the donate function call
       const donateData = encodeFunctionData({
@@ -168,7 +171,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
         consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
         providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
-
+      
       // 3. Properly combine the data
       const combinedData = dataSuffix ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : donateData;
 
@@ -179,11 +182,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
       });
-
+      
       // 5. Show success toast and update contract data immediately
       toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
       fetchContractData();
-
+      
       // 6. Report to Divi in a separate try-catch
       try {
         console.log("Submitting referral to Divi:", { txHash: hash, chainId: CELO_CHAIN_ID });
@@ -210,7 +213,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
       chainId: CELO_CHAIN_ID,
     });
   };
-
+  
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     toast.success("Signed out successfully!");
@@ -253,37 +256,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
     >
       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
 
-      {/* Network Warning Banner */}
-      {isConnected && !isCorrectChain && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-100 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
-        >
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
-            <span className="text-amber-800 dark:text-amber-100 font-medium">
-              You are on the wrong network
-            </span>
-          </div>
-          <Button
-            onClick={handleSwitchChain}
-            disabled={isSwitchChainPending}
-            className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
-          >
-            {isSwitchChainPending ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-              />
-            ) : (
-              <ArrowLeftRight className="w-4 h-4" />
-            )}
-            Switch to Celo
-          </Button>
-        </motion.div>
-      )}
+
 
       {/* Welcome Modal */}
       <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
@@ -319,7 +292,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="sticky top-0 z-10 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 p-4"
+        className={cn("sticky top-0 z-10 bg-white/90  dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700", showSwitchNetworkBanner ? 'pt-7' : "p-4")}
       >
         <div className="flex items-center justify-between mx-0 md:mx-20">
           <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
@@ -357,6 +330,38 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
             )}
           </div>
         </div>
+        {/* Network Warning Banner */}
+        {isConnected && !isCorrectChain && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ zIndex: 10000 }}
+            className="bg-amber-100 mt-5 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
+              <span className="text-amber-800 dark:text-amber-100 font-medium">
+                You are on the wrong network
+              </span>
+            </div>
+            <Button
+              onClick={handleSwitchChain}
+              disabled={isSwitchChainPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
+            >
+              {isSwitchChainPending ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                />
+              ) : (
+                <ArrowLeftRight className="w-4 h-4" />
+              )}
+              Switch to Celo
+            </Button>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Content */}
@@ -423,8 +428,8 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string;
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === tab.id
-                ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
-                : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+              ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
+              : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
               }`}
             aria-label={tab.label}
           >
