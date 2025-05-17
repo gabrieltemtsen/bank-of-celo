@@ -98,7 +98,7 @@ export default function TransactTab({
       const claimed = donorInfo[3]; // hasClaimed is the 4th element
       setHasClaimed(claimed as boolean);
     } catch (error) {
-      console.error("Error fetching hasClaimed:", error);
+      console.log("Error fetching hasClaimed:", error);
       toast.error("Failed to check claim status. Please try again.");
     }
   }, [address, publicClient, isCorrectChain]);
@@ -274,8 +274,8 @@ export default function TransactTab({
     } else {
       handleClaim();
     }
-  };  
-  
+  };
+
 
   return (
     <motion.div
@@ -290,17 +290,16 @@ export default function TransactTab({
             <Gift className="w-5 h-5 text-blue-600 dark:text-blue-300" />
           </div>
           <h2 className="text-3xl font-semibold text-white">
-             Vault
+            Vault
           </h2>
         </div>
         <div className="flex bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
           <button
             onClick={() => setActiveTab("donate")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "donate"
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === "donate"
                 ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+              }`}
             aria-label="Donate tab"
             role="tab"
             aria-selected={activeTab === "donate"}
@@ -310,11 +309,10 @@ export default function TransactTab({
           </button>
           <button
             onClick={() => setActiveTab("claim")}
-            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "claim"
+            className={`flex-1 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${activeTab === "claim"
                 ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
+              }`}
             aria-label="Claim tab"
             role="tab"
             aria-selected={activeTab === "claim"}

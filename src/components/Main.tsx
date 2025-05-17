@@ -24,7 +24,7 @@ import { celo } from "viem/chains";
 import { getDataSuffix, submitReferral } from '@divvi/referral-sdk';
 import { celoImage, cubesImage } from "~/constants/images";
 
-export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string }) {
+export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string; }) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
@@ -61,7 +61,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
     try {
       switchChain({ chainId: targetChain.id });
     } catch (error) {
-      console.error("Chain switch failed:", error, {
+      console.log("Chain switch failed:", error, {
         targetChainId: targetChain.id,
       });
       toast.error(`Failed to switch to ${targetChain.name}. Please try again.`);
@@ -120,7 +120,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       setLastClaimAt((prev) => (prev === Number(lastClaim) ? prev : Number(lastClaim)));
       setMaxClaim((prev) => (prev === formatEther(maxClaimAmount as bigint) ? prev : formatEther(maxClaimAmount as bigint)));
     } catch (error) {
-      console.error("Failed to fetch contract data:", error);
+      console.log("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -128,17 +128,20 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
   }, [publicClient, address, isCorrectChain]);
 
   useEffect(() => {
-    fetchContractData();
-    const interval = setInterval(fetchContractData, 3000);
-    return () => clearInterval(interval);
-  }, [fetchContractData]);
-  useEffect(() => {
     const load = async () => {
-      if (!sdk) return;
-      sdk?.actions?.ready({});
-      await sdk?.actions?.addFrame();
+      if (!sdk?.actions?.addFrame) {
+        console.warn("sdk.actions.addFrame is not available");
+        return;
+      }
+  
+      try {
+        sdk.actions.ready?.({});
+        await sdk.actions.addFrame(); 
+      } catch (err) {
+        console.error("Failed to add frame:", err);
+      }
     };
-
+  
     load();
   }, []);
 
@@ -147,28 +150,28 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
       toast.error("Please switch to Celo Network");
       return;
     }
-  
+
     if (Number(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-  
+
     try {
       // 1. Encode the donate function call
       const donateData = encodeFunctionData({
         abi: BANK_OF_CELO_CONTRACT_ABI,
         functionName: "donate",
       });
-  
+
       // 2. Get the referral data suffix
       const dataSuffix = getDataSuffix({
         consumer: '0xC5337CeE97fF5B190F26C4A12341dd210f26e17c',
         providers: ['0x5f0a55FaD9424ac99429f635dfb9bF20c3360Ab8', '0x6226ddE08402642964f9A6de844ea3116F0dFc7e'],
       });
-  
+
       // 3. Properly combine the data
       const combinedData = dataSuffix ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix) : donateData;
-  
+
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
         to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
@@ -176,11 +179,11 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         value: parseEther(amount),
         chainId: CELO_CHAIN_ID,
       });
-  
+
       // 5. Show success toast and update contract data immediately
       toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
       fetchContractData();
-  
+
       // 6. Report to Divi in a separate try-catch
       try {
         console.log("Submitting referral to Divi:", { txHash: hash, chainId: CELO_CHAIN_ID });
@@ -190,12 +193,12 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         });
         console.log("Referral submitted successfully");
       } catch (diviError) {
-        console.error("Divi submitReferral error:", diviError);
+        console.log("Divi submitReferral error:", diviError);
         // Optionally show a warning toast, but don't mark donation as failed
         toast.warning("Donation succeeded, but referral tracking failed. We're looking into it.");
       }
     } catch (error) {
-      console.error("Donation error:", error);
+      console.log("Donation error:", error);
       toast.error(`Donation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
@@ -244,15 +247,15 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
         backgroundPosition: 'center',
         backgroundAttachment: 'fixed',
         backgroundRepeat: 'no-repeat',
-        minHeight: '100vh', 
+        minHeight: '100vh',
         // padding: '20px',
       }}
     >
-       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+      <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
 
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-amber-100 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
@@ -346,7 +349,7 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
             ) : (
               <Button
                 onClick={handleConnect}
-                className="text-xs font-medium bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-full px-3 py-1.5 shadow-sm"
+                className="text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                 aria-label="Connect wallet"
               >
                 <Wallet className="w-4 h-4 mr-1" /> Connect
@@ -419,11 +422,10 @@ export default function BankOfCelo({ title = "Bank of Celo" }: { title?: string 
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
-              activeTab === tab.id
+            className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${activeTab === tab.id
                 ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
                 : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
-            }`}
+              }`}
             aria-label={tab.label}
           >
             {tab.icon}
