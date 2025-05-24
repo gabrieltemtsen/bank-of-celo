@@ -148,11 +148,12 @@ export default function WarpcastWalletApp(): JSX.Element {
 
   const miniCards: MiniCard[] = [
     {
-      id: "scored",
-      title: "Scored last week",
-      value: "500",
-      icon: <Calendar className="w-4 h-4" />,
+      id: "leaderboard",
+      title: "Leaderboard",
+      value: "",
+      icon: <Users className="w-4 h-4 text-blue-600" />,
       bgColor: "bg-gray-100/80",
+      iconColor: "blue",
     },
     {
       id: "og-earning",
@@ -179,12 +180,11 @@ export default function WarpcastWalletApp(): JSX.Element {
       iconColor: "emerald",
     },
     {
-      id: "leaderboard",
-      title: "Leaderboard",
-      value: "",
-      icon: <Users className="w-4 h-4 text-blue-600" />,
+      id: "scored",
+      title: "Scored last week",
+      value: "500",
+      icon: <Calendar className="w-4 h-4" />,
       bgColor: "bg-gray-100/80",
-      iconColor: "blue",
     },
   ];
 
@@ -214,7 +214,7 @@ export default function WarpcastWalletApp(): JSX.Element {
           {/* Background decorative elements */}
           <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-16 translate-x-16" />
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-12 -translate-x-12" />
-          
+
           {/* Floating icons */}
           <div className="absolute top-4 right-4 text-emerald-400/30">
             <Zap className="w-6 h-6" />
@@ -222,7 +222,7 @@ export default function WarpcastWalletApp(): JSX.Element {
           <div className="absolute bottom-4 left-4 text-teal-400/30">
             <Star className="w-5 h-5" />
           </div>
-          
+
           <div className="relative z-10">
             {/* Header with icon */}
             <div className="flex items-center justify-center mb-6">
@@ -231,7 +231,7 @@ export default function WarpcastWalletApp(): JSX.Element {
               </div>
               <p className="text-gray-600 text-lg font-medium">Your Score</p>
             </div>
-            
+
             {/* Main score with decorative elements */}
             <div className="text-center mb-8">
               <div className="relative inline-block">
@@ -241,7 +241,7 @@ export default function WarpcastWalletApp(): JSX.Element {
                     <div className="w-4 h-4 bg-emerald-500 rounded-full animate-pulse" />
                   </div>
                 </div>
-                
+
                 {/* Score status indicator */}
                 <div className="flex items-center justify-center mt-3 mb-6">
                   <div className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
@@ -259,7 +259,7 @@ export default function WarpcastWalletApp(): JSX.Element {
                 <div className="w-2 h-2 bg-emerald-400 rounded-full" />
               </div>
             </div>
-            
+
             {/* Bottom info with enhanced styling */}
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2 text-gray-600">
@@ -273,7 +273,7 @@ export default function WarpcastWalletApp(): JSX.Element {
                 </div>
               </div>
             </div>
-            
+
             {/* Additional stats row */}
             <div className="mt-6 pt-6 border-t border-emerald-200/30">
               <div className="flex justify-between items-center text-sm">
