@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import { formatEther } from "viem";
 import { toast } from "sonner";
-import { Abi } from "viem";
+import type { Abi } from "viem";
 
 interface VaultStatus {
   currentBalance: string;

@@ -18,6 +18,7 @@ import sdk from "@farcaster/frame-sdk";
 import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { toast } from "sonner";
+import type { Abi } from "viem";
 import {
   BANK_OF_CELO_CONTRACT_ABI,
   BANK_OF_CELO_CONTRACT_ADDRESS,
@@ -62,7 +63,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   // Use our custom hooks
   const bankAddress =
     mode === "celo" ? BANK_OF_CELO_CONTRACT_ADDRESS : BANK_OF_DEGEN_ADDRESS;
-  const bankAbi = mode === "celo" ? BANK_OF_CELO_CONTRACT_ABI : BANK_OF_DEGEN_ABI;
+  const bankAbi = (mode === "celo"
+    ? BANK_OF_CELO_CONTRACT_ABI
+    : BANK_OF_DEGEN_ABI) as Abi;
 
   const {
     vaultBalance,
