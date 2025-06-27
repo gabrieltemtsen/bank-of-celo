@@ -5,6 +5,7 @@ import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { FrameProvider } from "~/components/providers/FrameProvider";
 import { ConvexClientProvider } from "./ConvexClientProvider";
+import { ChainProvider } from "~/components/providers/ChainContext";
 
 const WagmiProvider = dynamic(
   () => import("~/components/providers/WagmiProvider"),
@@ -22,11 +23,13 @@ export function Providers({
 }) {
   return (
     <SessionProvider session={session}>
-      <WagmiProvider>
-        <FrameProvider>
-          <ConvexClientProvider>{children}</ConvexClientProvider>
-        </FrameProvider>
-      </WagmiProvider>
+      <ChainProvider>
+        <WagmiProvider>
+          <FrameProvider>
+            <ConvexClientProvider>{children}</ConvexClientProvider>
+          </FrameProvider>
+        </WagmiProvider>
+      </ChainProvider>
     </SessionProvider>
   );
 }

@@ -16,6 +16,8 @@ interface HeaderProps {
   onDisconnect: () => void;
   onSignOut: () => void;
   onSwitchChain: () => void;
+  mode: "celo" | "degen";
+  onToggleMode: () => void;
 }
 
 export default function Header({
@@ -30,6 +32,8 @@ export default function Header({
   onDisconnect,
   onSignOut,
   onSwitchChain,
+  mode,
+  onToggleMode,
 }: HeaderProps) {
   return (
     <motion.div
@@ -75,6 +79,12 @@ export default function Header({
               <Wallet className="w-4 h-4 mr-1" /> Connect
             </Button>
           )}
+          <button
+            onClick={onToggleMode}
+            className="text-xs px-2 py-1 rounded-full border"
+          >
+            {mode === "celo" ? "Celo" : "Degen"}
+          </button>
         </div>
       </div>
 
@@ -106,7 +116,7 @@ export default function Header({
             ) : (
               <ArrowLeftRight className="w-4 h-4" />
             )}
-            Switch to Celo
+            Switch to {mode === "celo" ? "Celo" : "Base"}
           </Button>
         </motion.div>
       )}
