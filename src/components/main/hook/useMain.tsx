@@ -2,10 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import { formatEther } from "viem";
 import { toast } from "sonner";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
+
+import { useBankContract } from "~/hooks/contracts";
 
 interface VaultStatus {
   currentBalance: string;
@@ -28,6 +26,7 @@ export function useContractData(
   isCorrectChain: boolean,
 ): UseContractDataResult {
   const publicClient = usePublicClient();
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [vaultBalance, setVaultBalance] = useState<string>("0");
   const [isLoading, setIsLoading] = useState(false);
   const [claimCooldown, setClaimCooldown] = useState<number>(0);
@@ -44,24 +43,24 @@ export function useContractData(
     try {
       const data = await Promise.all([
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "getVaultStatus",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "claimCooldown",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "lastClaimAt",
           args: [address],
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "MAX_CLAIM",
         }),
       ]);

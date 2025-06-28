@@ -5,13 +5,35 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #fbcc5c;
+  --primary-hover: #e0ae32;
+  --gradient-from: #35d07f;
+  --gradient-to: #fbcc5c;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --primary: #fbcc5c;
+    --primary-hover: #e0ae32;
+    --gradient-from: #35d07f;
+    --gradient-to: #fbcc5c;
   }
+}
+
+html.degen-mode {
+  --primary: #7c65c1;
+  --primary-hover: #6952a3;
+  --gradient-from: #a855f7;
+  --gradient-to: #7c65c1;
+}
+
+html.celo-mode {
+  --primary: #fbcc5c;
+  --primary-hover: #e0ae32;
+  --gradient-from: #35d07f;
+  --gradient-to: #fbcc5c;
 }
 
 body {
