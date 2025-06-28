@@ -166,6 +166,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       }
 
       try {
+        if (!publicClient) {
+          toast.error("Public client not available");
+          return;
+        }
         if (mode === "degen" && address) {
           const tokenAddress = (await publicClient.readContract({
             address: bankAddress as `0x${string}`,
