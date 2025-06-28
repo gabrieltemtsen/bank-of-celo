@@ -43,11 +43,9 @@ import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
-import { celo } from "viem/chains";
+import { useBankContract } from "~/hooks/contracts";
+import { useChainMode } from "~/app/chain-mode/context";
+import { celo, base } from "viem/chains";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
@@ -79,10 +77,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     availableForClaims: "0",
   });
 
+  const { mode } = useChainMode();
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
   const chainId = useChainId();
-  const CELO_CHAIN_ID = celo.id;
-  const targetChain = celo;
-  const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const targetChain = mode === "degen" ? base : celo;
+  const isCorrectChain = chain?.id === targetChain.id;
   const showSwitchNetworkBanner = isConnected && !isCorrectChain;
 
   console.log("Current chain ID:", chainId);
@@ -104,24 +103,24 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     try {
       const data = await Promise.all([
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "getVaultStatus",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "claimCooldown",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "lastClaimAt",
           args: [address],
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "MAX_CLAIM",
         }),
       ]);
@@ -205,7 +204,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
-      toast.error("Please switch to Celo Network");
+      toast.error(`Please switch to ${targetChain.name} Network`);
       return;
     }
 
@@ -217,7 +216,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     try {
       // 1. Encode the donate function call
       const donateData = encodeFunctionData({
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+        abi: bankAbi,
         functionName: "donate",
       });
 
@@ -239,10 +238,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
       // 4. Send the transaction
       const hash = await sendTransactionAsync({
-        to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+        to: bankAddress as `0x${string}`,
         data: combinedData as `0x${string}`,
         value: parseEther(amount),
-        chainId: CELO_CHAIN_ID,
+        chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
       });
@@ -255,14 +254,14 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
       // 6. Report to Divi in a separate try-catch
       try {
-        console.log("Submitting referral to Divi:", {
-          txHash: hash,
-          chainId: CELO_CHAIN_ID,
-        });
-        await submitReferral({
-          txHash: hash,
-          chainId: CELO_CHAIN_ID,
-        });
+          console.log("Submitting referral to Divi:", {
+            txHash: hash,
+            chainId: targetChain.id,
+          });
+          await submitReferral({
+            txHash: hash,
+            chainId: targetChain.id,
+          });
         console.log("Referral submitted successfully");
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
@@ -284,7 +283,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
     connect({
       connector,
-      chainId: CELO_CHAIN_ID,
+      chainId: targetChain.id,
     });
   };
 
