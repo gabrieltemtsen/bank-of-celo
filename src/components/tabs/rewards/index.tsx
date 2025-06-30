@@ -23,7 +23,7 @@ import RewardTiersSheet from "./bottom-sheets/reward-tiers-sheet";
 import HowToEarnSheet from "./bottom-sheets/how-to-earn";
 import LeaderboardSheet from "./bottom-sheets/leader-board";
 import { ClaimsSheet } from "./bottom-sheets/claims";
-import { DailyCheckinSheet } from "./bottom-sheets/daily-check-ins";
+import {DailyCheckinSheet} from "./bottom-sheets/daily-check-ins";
 import { toast } from "sonner";
 
 interface MiniCard {

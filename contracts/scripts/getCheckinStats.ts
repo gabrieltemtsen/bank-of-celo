@@ -79,7 +79,7 @@ async function main() {
         return {
           address,
           checkInCount: Number(userData.checkInCount),
-          hasClaimed: userData.hasClaimed,
+          hasClaimed: userData.hasClaimed as boolean,
         };
       } catch (error) {
         console.warn(
@@ -90,7 +90,7 @@ async function main() {
     });
 
     const batchResults = await Promise.all(batchPromises);
-    userStats.push(...batchResults.filter(Boolean));
+    userStats.push(...batchResults.filter((result): result is { address: string; checkInCount: number; hasClaimed: boolean; } => result !== null));
 
     // Delay between batches
     if (i + BATCH_SIZE < addresses.length) {

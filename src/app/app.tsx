@@ -1,5 +1,7 @@
 "use client";
 
+"use client";
+
 import dynamic from "next/dynamic";
 import { Toaster } from "~/components/ui/sonner";
 import { APP_NAME } from "~/lib/constants";

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { formatDistanceToNow } from "date-fns";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface HomeTabProps {
   vaultBalance: string;
@@ -58,11 +59,15 @@ export default function HomeTab({
   vaultStatus,
   isLoading,
   onNavigate,
-  maxClaim = "0.5",
+  maxClaim: initialMaxClaim = "0.5",
   claimCooldown = 86400,
   lastClaimAt = 0,
   isCorrectChain,
 }: HomeTabProps) {
+  const { mode } = useChainMode();
+  const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+
   const canClaim = () => {
     if (!lastClaimAt) return true;
     const now = Math.floor(Date.now() / 1000);
@@ -148,7 +153,7 @@ export default function HomeTab({
                 {parseFloat(vaultBalance).toFixed(2)}
               </span>
               <span className="ml-2 text-lg font-semibold text-gray-600 dark:text-gray-300">
-                CELO
+                {currency}
               </span>
             </motion.div>
           </motion.div>
@@ -165,7 +170,7 @@ export default function HomeTab({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
-              {parseFloat(vaultStatus.availableForClaims).toFixed(2)} CELO
+              {parseFloat(vaultStatus.availableForClaims).toFixed(2)} {currency}
             </motion.p>
           </div>
           <motion.div
@@ -234,7 +239,7 @@ export default function HomeTab({
                 ? "border-amber-100 dark:border-amber-800/50"
                 : "border-gray-200 dark:border-gray-700/50"
             }`}
-            aria-label={`Claim ${maxClaim} CELO`}
+            aria-label={`Claim ${maxClaim} ${currency}`}
           >
             <motion.div
               whileHover={
@@ -264,7 +269,7 @@ export default function HomeTab({
                   : "text-gray-500 dark:text-gray-400"
               }`}
             >
-              Claim {maxClaim} CELO
+              Claim {maxClaim} {currency}
             </span>
 
             {!canClaim() && nextClaimTime && (
@@ -307,7 +312,7 @@ export default function HomeTab({
             <Info className="w-5 h-5 text-white" />
           </motion.div>
           <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200">
-            About Bank of Celo
+            About Bank of {mode === "degen" ? "Degen" : "Celo"}
           </h2>
         </div>
 
@@ -317,8 +322,8 @@ export default function HomeTab({
           transition={{ delay: 0.5 }}
           className="relative z-10 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
         >
-          Support the Celo ecosystem by donating CELO or claim {maxClaim} CELO
-          to explore the blockchain. Swap tokens to Celo using our bridge and
+          Support the {mode === "degen" ? "Degen" : "Celo"} ecosystem by donating {currency} or claim {maxClaim} {currency}
+          to explore the blockchain. Swap tokens to {mode === "degen" ? "Degen" : "Celo"} using our bridge and
           track top contributors on the leaderboard!
         </motion.p>
       </motion.div>

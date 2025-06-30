@@ -12,6 +12,7 @@ import {
   Info,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface LoansModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export default function LoansModal({
   const [selectedTerm, setSelectedTerm] = useState("30");
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false); // Added isReady state
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
 
   const loanTerms = [
     {
@@ -81,7 +84,7 @@ export default function LoansModal({
 
   const handleApplyLoan = async () => {
     if (!isCorrectChain) {
-      alert("Please switch to Celo Network");
+      alert(`Please switch to ${mode === "degen" ? "Base" : "Celo"} Network`);
       return;
     }
 
@@ -97,7 +100,7 @@ export default function LoansModal({
     try {
       // Simulate loan application
       await new Promise((resolve) => setTimeout(resolve, 2000));
-      toast.success(`Loan application submitted for ${loanAmount} CELO`);
+      toast.success(`Loan application submitted for ${loanAmount} ${currency}`);
       setLoanAmount("");
       setCollateralAmount("");
       onClose();
@@ -185,7 +188,7 @@ export default function LoansModal({
                             Network Switch Required
                           </p>
                           <p className="text-xs text-amber-700">
-                            Please switch to Celo Network to proceed
+                            Please switch to {mode === "degen" ? "Base" : "Celo"} Network to proceed
                           </p>
                         </div>
                       </div>
@@ -236,7 +239,7 @@ export default function LoansModal({
                   {/* Loan Amount Input */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Loan Amount (CELO)
+                      Loan Amount ({currency})
                     </label>
                     <div className="relative">
                       <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -249,14 +252,14 @@ export default function LoansModal({
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Available balance: {vaultBalance} CELO
+                      Available balance: {vaultBalance} {currency}
                     </p>
                   </div>
 
                   {/* Collateral Input */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Collateral Amount (CELO)
+                      Collateral Amount ({currency})
                     </label>
                     <div className="relative">
                       <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -270,7 +273,7 @@ export default function LoansModal({
                     </div>
                     {loanDetails && (
                       <p className="text-xs text-gray-500 mt-1">
-                        Required: {loanDetails.requiredCollateral} CELO (150%
+                        Required: {loanDetails.requiredCollateral} {currency} (150%
                         collateralization)
                       </p>
                     )}
@@ -293,7 +296,7 @@ export default function LoansModal({
                             Principal Amount
                           </span>
                           <span className="font-medium text-gray-900">
-                            {loanAmount} CELO
+                            {loanAmount} {currency}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
@@ -301,7 +304,7 @@ export default function LoansModal({
                             Interest ({selectedTermData?.interestRate})
                           </span>
                           <span className="font-medium text-red-600">
-                            +{loanDetails.interest} CELO
+                            +{loanDetails.interest} {currency}
                           </span>
                         </div>
                         <div className="flex justify-between items-center pt-2 border-t border-blue-200">
@@ -309,7 +312,7 @@ export default function LoansModal({
                             Total Repayment
                           </span>
                           <span className="font-bold text-blue-600">
-                            {loanDetails.totalRepayment} CELO
+                            {loanDetails.totalRepayment} {currency}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">

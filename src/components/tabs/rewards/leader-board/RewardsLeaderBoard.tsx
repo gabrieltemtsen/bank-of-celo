@@ -14,6 +14,7 @@ import {
   RefreshCcw,
 } from "lucide-react";
 import { api } from "../../../../../convex/_generated/api";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface User {
   _id: string;
@@ -35,6 +36,7 @@ export default function RewardsLeaderBoard({
   const { address } = useAccount();
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { mode } = useChainMode();
 
   // Fetch leaderboard from Convex
   const leaderboardData = useQuery(api.users.getLeaderboard, { limit: 50 });
@@ -47,7 +49,7 @@ export default function RewardsLeaderBoard({
     setLoading(true);
     try {
       if (!isCorrectChain) {
-        toast.error("Please connect to Celo network");
+        toast.error(`Please connect to ${mode === "degen" ? "Base" : "Celo"} network`);
         return;
       }
       toast.success("Leaderboard refreshed");
@@ -88,7 +90,7 @@ export default function RewardsLeaderBoard({
             <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">
               <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-300" />
             </div>
-            <span className="text-gray-900 dark:text-white">Celo Rewards</span>
+            <span className="text-gray-900 dark:text-white">{mode === "degen" ? "Degen" : "Celo"} Rewards</span>
           </h2>
           <button
             onClick={fetchLeaderboard}
@@ -104,8 +106,8 @@ export default function RewardsLeaderBoard({
         </div>
 
         <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
-          Welcome to the Celo Leaderboard where we display our users who cast
-          via the celo channel!! In addition, users successfully verified using
+          Welcome to the {mode === "degen" ? "Degen" : "Celo"} Leaderboard where we display our users who cast
+          via the {mode === "degen" ? "degen" : "celo"} channel!! In addition, users successfully verified using
           their passports through the Self Protocol will have a multiplier of
           x2!!
         </div>
@@ -113,7 +115,7 @@ export default function RewardsLeaderBoard({
         {!isCorrectChain ? (
           <div className="p-4 text-center bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
             <p className="text-yellow-600 dark:text-yellow-300">
-              Please connect to Celo network to view leaderboard
+              Please connect to {mode === "degen" ? "Base" : "Celo"} network to view leaderboard
             </p>
           </div>
         ) : loading && !leaderboardData ? (
@@ -123,7 +125,7 @@ export default function RewardsLeaderBoard({
         ) : sortedUsers.length === 0 ? (
           <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-gray-600 dark:text-gray-300">
-              No activity yet. Start casting in the Celo channel!
+              No activity yet. Start casting in the {mode === "degen" ? "degen" : "celo"} channel!
             </p>
           </div>
         ) : (

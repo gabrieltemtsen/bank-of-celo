@@ -2,44 +2,26 @@ import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import { formatEther } from "viem";
 import { toast } from "sonner";
-
 import { useBankContract } from "~/hooks/contracts";
 
-interface VaultStatus {
-  currentBalance: string;
-  minReserve: string;
-  availableForClaims: string;
-}
-
-interface UseContractDataResult {
-  vaultBalance: string;
-  vaultStatus: VaultStatus;
-  claimCooldown: number;
-  lastClaimAt: number;
-  maxClaim: string;
-  isLoading: boolean;
-  fetchContractData: () => Promise<void>;
-}
-
-export function useContractData(
-  address: string | undefined,
-  isCorrectChain: boolean,
-): UseContractDataResult {
+export function useContractData(address?: `0x${string}`, isCorrectChain?: boolean) {
   const publicClient = usePublicClient();
   const { address: bankAddress, abi: bankAbi } = useBankContract();
+
   const [vaultBalance, setVaultBalance] = useState<string>("0");
-  const [isLoading, setIsLoading] = useState(false);
-  const [claimCooldown, setClaimCooldown] = useState<number>(0);
-  const [lastClaimAt, setLastClaimAt] = useState<number>(0);
-  const [maxClaim, setMaxClaim] = useState<string>("0");
-  const [vaultStatus, setVaultStatus] = useState<VaultStatus>({
+  const [vaultStatus, setVaultStatus] = useState({
     currentBalance: "0",
     minReserve: "0",
     availableForClaims: "0",
   });
+  const [claimCooldown, setClaimCooldown] = useState<number>(0);
+  const [lastClaimAt, setLastClaimAt] = useState<number>(0);
+  const [maxClaim, setMaxClaim] = useState<string>("0");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchContractData = useCallback(async () => {
     if (!publicClient || !address || !isCorrectChain) return;
+    setIsLoading(true);
     try {
       const data = await Promise.all([
         publicClient.readContract({
@@ -78,40 +60,18 @@ export function useContractData(
         availableForClaims: formatEther(availableForClaims),
       };
 
-      // Only update state if values have changed
-      setVaultStatus((prev) => {
-        if (
-          prev.currentBalance === newVaultStatus.currentBalance &&
-          prev.minReserve === newVaultStatus.minReserve &&
-          prev.availableForClaims === newVaultStatus.availableForClaims
-        ) {
-          return prev;
-        }
-        return newVaultStatus;
-      });
-      setVaultBalance((prev) =>
-        prev === formatEther(currentBalance)
-          ? prev
-          : formatEther(currentBalance),
-      );
-      setClaimCooldown((prev) =>
-        prev === Number(cooldown) ? prev : Number(cooldown),
-      );
-      setLastClaimAt((prev) =>
-        prev === Number(lastClaim) ? prev : Number(lastClaim),
-      );
-      setMaxClaim((prev) =>
-        prev === formatEther(maxClaimAmount as bigint)
-          ? prev
-          : formatEther(maxClaimAmount as bigint),
-      );
+      setVaultStatus(newVaultStatus);
+      setVaultBalance(formatEther(currentBalance));
+      setClaimCooldown(Number(cooldown));
+      setLastClaimAt(Number(lastClaim));
+      setMaxClaim(formatEther(maxClaimAmount as bigint));
     } catch (error) {
-      console.log("Failed to fetch contract data:", error);
+      console.error("Failed to fetch contract data:", error);
       toast.error("Failed to fetch contract data. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  }, [publicClient, address, isCorrectChain, bankAbi, bankAddress]);
+  }, [publicClient, address, isCorrectChain, bankAddress, bankAbi]);
 
   useEffect(() => {
     fetchContractData();

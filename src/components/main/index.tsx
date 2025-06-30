@@ -268,7 +268,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         );
       }
     },
-    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
   );
 
   // Show loading spinner if SDK is not loaded

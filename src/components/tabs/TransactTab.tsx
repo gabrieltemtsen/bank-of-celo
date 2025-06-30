@@ -23,14 +23,12 @@ import {
   useSignTypedData,
   useSendTransaction,
 } from "wagmi";
-import {
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-  BANK_OF_CELO_CONTRACT_ABI,
-} from "~/lib/constants";
+import { useBankContract } from "~/hooks/contracts";
+import JackPot from "./JackPot";
+import JackPotV2 from "./JackPotV2";
+import { useChainMode } from "~/app/chain-mode/context";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
-import { encodeFunctionData, parseEther, parseUnits } from "viem";
-import CeloJackpot from "./JackPot";
-import CeloJackpotV2 from "./JackPotV2";
+import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -50,7 +48,7 @@ interface NeynarResponse {
 
 export default function TransactTab({
   onDonate,
-  maxClaim = "0.5",
+  maxClaim: initialMaxClaim = "0.5",
   claimCooldown = 86400,
   lastClaimAt = 0,
   isCorrectChain,
@@ -62,6 +60,7 @@ export default function TransactTab({
   const publicClient = usePublicClient();
   const { signTypedDataAsync } = useSignTypedData();
   const { sendTransactionAsync } = useSendTransaction();
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
@@ -74,6 +73,9 @@ export default function TransactTab({
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [isUnderMaintenance, setIsUnderMaintenance] = useState(false);
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -112,8 +114,8 @@ export default function TransactTab({
           throw new Error("Public client is not available");
         }
         const isBlacklisted = await publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress,
+          abi: bankAbi,
           functionName: "fidBlacklisted",
           args: [BigInt(data.fid)],
         });
@@ -131,14 +133,14 @@ export default function TransactTab({
     } finally {
       setFidLoading(false);
     }
-  }, [address, publicClient]);
+  }, [address, publicClient, bankAbi, bankAddress]);
 
   const fetchHasClaimed = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
     try {
       const donorInfo: any = await publicClient.readContract({
-        address: BANK_OF_CELO_CONTRACT_ADDRESS,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+        address: bankAddress,
+        abi: bankAbi,
         functionName: "donors",
         args: [address],
       });
@@ -148,7 +150,7 @@ export default function TransactTab({
       console.error("Error fetching hasClaimed:", error);
       toast.error("Failed to check claim status. Please try again.");
     }
-  }, [address, publicClient, isCorrectChain]);
+  }, [address, publicClient, isCorrectChain, bankAbi, bankAddress]);
 
   useEffect(() => {
     fetchFid();
@@ -182,17 +184,17 @@ export default function TransactTab({
       const deadline = Math.floor(Date.now() / 1000) + 3600;
 
       const nonce = (await publicClient.readContract({
-        address: BANK_OF_CELO_CONTRACT_ADDRESS,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+        address: bankAddress,
+        abi: bankAbi,
         functionName: "nonces",
         args: [address],
       })) as bigint;
 
       const domain = {
-        name: "BankOfCelo",
+        name: mode === "degen" ? "BankOfDegen" : "BankOfCelo",
         version: "1",
-        chainId: 42220,
-        verifyingContract: BANK_OF_CELO_CONTRACT_ADDRESS,
+        chainId: mode === "degen" ? 8453 : 42220,
+        verifyingContract: bankAddress,
       };
 
       const types = {
@@ -238,7 +240,7 @@ export default function TransactTab({
 
       if (balance >= minBalance) {
         const contractData = encodeFunctionData({
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          abi: bankAbi,
           functionName: "claim",
           args: [BigInt(fid), BigInt(deadline), signature],
         });
@@ -246,7 +248,7 @@ export default function TransactTab({
         const finalData = dataSuffix ? contractData + dataSuffix : contractData;
 
         const hash = await sendTransactionAsync({
-          to: BANK_OF_CELO_CONTRACT_ADDRESS,
+          to: bankAddress,
           data: finalData as `0x${string}`,
           value: 0n,
           maxFeePerGas: parseUnits("100", 9),
@@ -256,7 +258,7 @@ export default function TransactTab({
         try {
           await submitReferral({
             txHash: hash,
-            chainId: 42220,
+            chainId: mode === "degen" ? 8453 : 42220,
           });
         } catch (diviError) {
           console.log("Divi submitReferral error:", diviError);
@@ -265,7 +267,7 @@ export default function TransactTab({
 
         setTxHash(hash);
         toast.success(
-          `Claimed ${maxClaim} CELO! Transaction hash: ${hash.slice(0, 6)}...`,
+          `Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`,
         );
       } else {
         const requestBody = {
@@ -294,7 +296,7 @@ export default function TransactTab({
         try {
           await submitReferral({
             txHash: result.transactionHash,
-            chainId: 42220,
+            chainId: mode === "degen" ? 8453 : 42220,
           });
         } catch (diviError) {
           console.log("Divi submitReferral error:", diviError);
@@ -302,7 +304,7 @@ export default function TransactTab({
         }
 
         toast.success(
-          `Claimed ${maxClaim} CELO (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`,
+          `Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`,
         );
       }
     } catch (error) {
@@ -317,7 +319,7 @@ export default function TransactTab({
 
   const handleSubmit = () => {
     if (!isCorrectChain) {
-      toast.error("Please switch to Celo Network");
+      toast.error(`Please switch to ${mode === "degen" ? "Base" : "Celo"} Network`);
       return;
     }
 
@@ -414,7 +416,7 @@ export default function TransactTab({
                 htmlFor="donate-amount"
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Amount to Donate (CELO)
+                Amount to Donate ({currency})
               </label>
               <Input
                 id="donate-amount"
@@ -431,14 +433,14 @@ export default function TransactTab({
               onClick={handleSubmit}
               disabled={isPending || !amount}
               className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
-              aria-label="Donate CELO"
+              aria-label={`Donate ${currency}`}
             >
               {isPending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <Send className="w-5 h-5" />
-                  <span>Donate CELO</span>
+                  <span>Donate {currency}</span>
                 </div>
               )}
             </Button>
@@ -490,12 +492,12 @@ export default function TransactTab({
                   <span>
                     Claim successful!{" "}
                     <a
-                      href={`https://celoscan.io/tx/${txHash}`}
+                      href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline"
                     >
-                      View on CeloScan
+                      View on {mode === "degen" ? "BaseScan" : "CeloScan"}
                     </a>
                   </span>
                 </div>
@@ -555,7 +557,7 @@ export default function TransactTab({
                   hasClaimed
                 }
                 className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-                aria-label={`Claim ${maxClaim} CELO`}
+                aria-label={`Claim ${maxClaim} ${currency}`}
               >
                 {claimPending || isPending ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -565,7 +567,7 @@ export default function TransactTab({
                     {hasClaimed ? (
                       <span>You have already claimed</span>
                     ) : (
-                      <span>Claim {maxClaim} CELO</span>
+                      <span>Claim {maxClaim} {currency}</span>
                     )}
                   </div>
                 )}
@@ -574,9 +576,9 @@ export default function TransactTab({
           )}
         </motion.div>
       ) : activeTab === "lottery" ? (
-        <CeloJackpot isCorrectChain={isCorrectChain} />
+        <JackPot isCorrectChain={isCorrectChain} />
       ) : activeTab === "lottery2" ? (
-        <CeloJackpotV2 isCorrectChain={isCorrectChain} />
+        <JackPotV2 isCorrectChain={isCorrectChain} />
       ) : null}
     </motion.div>
   );

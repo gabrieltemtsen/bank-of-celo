@@ -8,10 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { toast } from "sonner";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
+import { useBankContract } from "~/hooks/contracts";
 import { celo } from "viem/chains";
 import {
   Trophy,
@@ -21,6 +18,7 @@ import {
   ChevronUp,
   RefreshCcw,
 } from "lucide-react";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface Donor {
   donor: string;
@@ -43,6 +41,9 @@ export default function DonorsLeaderBoard({
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
 
   // Fetch current user's username
   useEffect(() => {
@@ -94,15 +95,15 @@ export default function DonorsLeaderBoard({
     setIsLoading(true);
     try {
       if (!publicClient || !isCorrectChain) {
-        toast.error("Please connect to Celo network");
+        toast.error(`Please connect to ${mode === "degen" ? "Base" : "Celo"} network`);
         setIsLoading(false);
         return;
       }
 
       // Get top donors from contract
       const leaderboard = (await publicClient.readContract({
-        address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+        address: bankAddress as `0x${string}`,
+        abi: bankAbi,
         functionName: "getLeaderboard",
       })) as any[];
 
@@ -148,8 +149,8 @@ export default function DonorsLeaderBoard({
 
     // Watch for new donations
     const unwatch = publicClient?.watchContractEvent({
-      address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BANK_OF_CELO_CONTRACT_ABI,
+      address: bankAddress as `0x${string}`,
+      abi: bankAbi,
       eventName: "Donated",
       onLogs: () => fetchLeaderboard(),
     });
@@ -193,7 +194,7 @@ export default function DonorsLeaderBoard({
           {!isCorrectChain ? (
             <div className="p-4 text-center bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
               <p className="text-yellow-600 dark:text-yellow-300">
-                Please connect to Celo network to view leaderboard
+                Please connect to {mode === "degen" ? "Base" : "Celo"} network to view leaderboard
               </p>
             </div>
           ) : isLoading ? (
@@ -258,7 +259,7 @@ export default function DonorsLeaderBoard({
                             )}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {parseFloat(donor.amount).toFixed(2)} CELO
+                            {parseFloat(donor.amount).toFixed(2)} {currency}
                           </p>
                         </div>
                         {expandedDonor === donor.donor ? (
@@ -281,7 +282,7 @@ export default function DonorsLeaderBoard({
                           <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300">
                             <span>Total Donations:</span>
                             <span className="font-medium">
-                              {parseFloat(donor.amount).toFixed(2)} CELO
+                              {parseFloat(donor.amount).toFixed(2)} {currency}
                             </span>
                           </div>
                           <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mt-1">
@@ -328,7 +329,7 @@ export default function DonorsLeaderBoard({
                   {donors[0].username || truncateAddress(donors[0].donor)}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  {parseFloat(donors[0].amount).toFixed(2)} CELO donated
+                  {parseFloat(donors[0].amount).toFixed(2)} {currency} donated
                 </p>
               </div>
             </div>
@@ -340,7 +341,7 @@ export default function DonorsLeaderBoard({
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-sm text-center text-gray-600 dark:text-gray-300">
               Your rank: #{userRank} with {donors[userRank - 1]?.amount || "0"}{" "}
-              CELO donated
+              {currency} donated
             </p>
           </div>
         )}

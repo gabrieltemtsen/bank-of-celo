@@ -4,9 +4,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { farcasterFrame } from "@farcaster/frame-wagmi-connector";
 import { coinbaseWallet, metaMask, walletConnect } from "wagmi/connectors";
 import { APP_NAME, APP_ICON_URL, APP_URL } from "~/lib/constants";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useConnect, useAccount } from "wagmi";
 import React from "react";
+import { useChainMode } from "~/app/chain-mode/context";
 
 // Custom hook for Coinbase Wallet detection and auto-connection
 function useCoinbaseWalletAutoConnect() {
@@ -42,32 +43,42 @@ function useCoinbaseWalletAutoConnect() {
   return isCoinbaseWallet;
 }
 
-export const config = createConfig({
-  chains: [celo, base],
-  transports: {
-    [celo.id]: http(),
-    [base.id]: http(),
-  },
-  connectors: [
-    farcasterFrame(),
-    coinbaseWallet({
-      appName: APP_NAME,
-      appLogoUrl: APP_ICON_URL,
-      preference: "all",
-    }),
-    metaMask({
-      dappMetadata: {
-        name: APP_NAME,
-        url: APP_URL,
-      },
-    }),
-    walletConnect({
-      projectId: "12ed680dece83c5e9afbcb9ea589bda9",
-    }),
-  ],
-});
-
 const queryClient = new QueryClient();
+
+function ConfiguredWagmiProvider({ children }: { children: React.ReactNode }) {
+  const { mode } = useChainMode();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const config = useMemo(() => {
+    const chains = [celo, base] as const;
+    return createConfig({
+      chains,
+      transports: {
+        [celo.id]: http(),
+        [base.id]: http(),
+      },
+      connectors: [
+        farcasterFrame(),
+        coinbaseWallet({
+          appName: APP_NAME,
+          appLogoUrl: APP_ICON_URL,
+          preference: "all",
+        }),
+        metaMask({
+          dappMetadata: {
+            name: APP_NAME,
+            url: APP_URL,
+          },
+        }),
+        walletConnect({
+          projectId: "12ed680dece83c5e9afbcb9ea589bda9",
+        }),
+      ],
+    });
+  }, []);
+
+  return <WagmiProvider config={config}>{children}</WagmiProvider>;
+}
 
 // Wrapper component that provides Coinbase Wallet auto-connection
 function CoinbaseWalletAutoConnect({
@@ -81,10 +92,10 @@ function CoinbaseWalletAutoConnect({
 
 export default function Provider({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <ConfiguredWagmiProvider>
         <CoinbaseWalletAutoConnect>{children}</CoinbaseWalletAutoConnect>
-      </QueryClientProvider>
-    </WagmiProvider>
+      </ConfiguredWagmiProvider>
+    </QueryClientProvider>
   );
 }

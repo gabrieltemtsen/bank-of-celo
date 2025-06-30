@@ -32,13 +32,6 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
@@ -50,6 +43,7 @@ import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
+import WelcomeModal from "./main/Welcome-Modal";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -65,7 +59,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
   const [showWelcome, setShowWelcome] = useState(() => {
-    return !localStorage.getItem("hasSeenWelcome");
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("hasSeenWelcome");
+    }
+    return true;
   });
   const [isLoading, setIsLoading] = useState(false);
   const [claimCooldown, setClaimCooldown] = useState<number>(0);
@@ -340,34 +337,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
 
       {/* Welcome Modal */}
-      <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
-        <DialogContent className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-xl p-6 max-w-md">
-          <DialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-full">
-                <Trophy className="w-8 h-8 text-emerald-600 dark:text-emerald-300" />
-              </div>
-            </div>
-            <DialogTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-              Welcome to Bank of Celo!
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-              The decentralized vault supporting the Celo ecosystem. Donate to
-              help grow the community or claim {maxClaim} CELO to explore
-              decentralized finance. Swap tokens seamlessly or check the
-              leaderboard to see top contributors!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-6 flex flex-col gap-3">
-            <Button
-              onClick={handleCloseWelcome}
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-lg py-3 shadow-md"
-            >
-              Get Started
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <WelcomeModal
+        showWelcome={showWelcome}
+        maxClaim={maxClaim}
+        onClose={handleCloseWelcome}
+      />
 
       {/* Header */}
       <motion.div
@@ -443,7 +417,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
               ) : (
                 <ArrowLeftRight className="w-4 h-4" />
               )}
-              Switch to Celo
+              Switch to {targetChain.name}
             </Button>
           </motion.div>
         )}

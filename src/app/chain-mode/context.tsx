@@ -39,6 +39,13 @@ export function ChainModeProvider({ children }: { children: React.ReactNode }) {
 
 export function useChainMode() {
   const ctx = useContext(ChainModeContext);
-  if (!ctx) throw new Error("useChainMode must be used within ChainModeProvider");
+  if (!ctx) {
+    // Return default values or handle the case where provider isn't available
+    return {
+      mode: "celo" as Mode,
+      toggleMode: () => console.warn("ChainModeProvider not available"),
+      setMode: () => console.warn("ChainModeProvider not available"),
+    };
+  }
   return ctx;
 }
