@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export const APP_URL = process.env.NEXT_PUBLIC_URL;
 export const APP_NAME = process.env.NEXT_PUBLIC_FRAME_NAME;
 export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_FRAME_DESCRIPTION;
@@ -3515,7 +3516,7 @@ export const CELO_JACKPOTV2_ABI = [
 ];
 
 export const BANK_OF_DEGEN_ADDRESS =
-  "0xaFbFAaac9c495C74de33c039C0B56172b393d2Ad" as `0x${string}`;
+  "0xbAA9d576E6bA810C6e15f2b3b144a7268a6280e2" as `0x${string}`;
 export const BANK_OF_DEGEN_ABI = [
   {
     inputs: [
@@ -5280,3 +5281,26 @@ export const DEGEN_JACKPOT_ABI = [
     type: "function",
   },
 ];
+
+export const withRetry = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelayMs: number = 1000,
+): Promise<T> => {
+  let lastError: any;
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      if (error.message.includes("429") || error.message.includes("over rate limit")) {
+        const delay = baseDelayMs * Math.pow(2, i); // Exponential backoff
+        console.warn(`Rate limit hit, retrying in ${delay}ms... (Attempt ${i + 1}/${maxRetries})`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error; // Non-429 errors are thrown immediately
+      }
+    }
+  }
+  throw lastError; // Throw the last error if retries are exhausted
+};

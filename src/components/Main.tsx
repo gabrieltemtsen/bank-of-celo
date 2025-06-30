@@ -36,7 +36,7 @@ import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
-import { useBankContract } from "~/hooks/contracts";
+import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
 import { useChainMode } from "~/app/chain-mode/context";
 import { celo, base } from "viem/chains";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
@@ -53,7 +53,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
 
   const [activeTab, setActiveTab] = useState("home");
@@ -199,81 +199,147 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     load();
   }, []);
 
-  const handleDonate = async (amount: string) => {
-    if (!isCorrectChain) {
-      toast.error(`Please switch to ${targetChain.name} Network`);
-      return;
-    }
 
-    if (Number(amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
+const handleDonate = async (amount: string) => {
 
-    try {
-      // 1. Encode the donate function call
-      const donateData = encodeFunctionData({
+  if (!isCorrectChain) {
+    toast.error(`Please switch to ${targetChain.name} Network`);
+    return;
+  }
+
+  if (!address) {
+    toast.error("Please connect your wallet");
+    return;
+  }
+
+  if (!publicClient) {
+    toast.error("Public client is not available. Please try again.");
+    return;
+  }
+
+  if (Number(amount) <= 0) {
+    toast.error("Please enter a valid amount");
+    return;
+  }
+
+  try {
+    let donateData: `0x${string}`;
+    let transactionParams: Parameters<typeof sendTransactionAsync>[0];
+
+    if (mode === "degen") {
+      // Base chain: DEGEN token donation
+      const degenAmount = parseUnits(amount, 18); // DEGEN has 18 decimals
+      const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"; // DEGEN on Base mainnet
+      const bankContractAddress = bankAddress as `0x${string}`;
+
+      // 1. Check DEGEN token allowance
+      const allowance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, bankContractAddress],
+      }) as bigint;
+
+      // 2. Approve DEGEN tokens if allowance is insufficient
+      if (allowance < degenAmount) {
+        toast.info("Approving DEGEN tokens for donation...");
+        const approveHash = await writeContractAsync({
+          address: degenTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [bankContractAddress, degenAmount],
+          chainId: targetChain.id,
+        });
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        toast.success("DEGEN token approval successful!");
+      }
+
+      // 3. Encode donate function call with amount
+      donateData = encodeFunctionData({
         abi: bankAbi,
         functionName: "donate",
+        args: [degenAmount],
       });
 
-      // 2. Get the referral data suffix
-      const dataSuffix = getDataSuffix({
-        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-        providers: [
-          "0x0423189886d7966f0dd7e7d256898daeee625dca",
-          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-        ],
-      });
-
-      // 3. Properly combine the data
-      const combinedData = dataSuffix
-        ? donateData +
-          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
-        : donateData;
-
-      // 4. Send the transaction
-      const hash = await sendTransactionAsync({
-        to: bankAddress as `0x${string}`,
-        data: combinedData as `0x${string}`,
-        value: parseEther(amount),
-        chainId: targetChain.id,
+      // 4. Set transaction params (no value for ERC-20)
+      transactionParams = {
+        to: bankContractAddress,
+        data: donateData,
+        chainId: targetChain.id, // 8453 for Base mainnet
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
+      };
+    } else {
+      // Celo chain: CELO native currency donation
+      const celoAmount = parseEther(amount); // CELO has 18 decimals
+
+      // 1. Encode donate function call (no args for BankOfCelo)
+      donateData = encodeFunctionData({
+        abi: bankAbi,
+        functionName: "donate",
+        args: [],
       });
 
-      // 5. Show success toast and update contract data immediately
-      toast.success(
-        `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
-      );
-      fetchContractData();
+      // 2. Set transaction params with value
+      transactionParams = {
+        to: bankAddress as `0x${string}`,
+        data: donateData,
+        value: celoAmount,
+        chainId: targetChain.id, // 42220 for Celo mainnet
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
+      };
+    }
 
-      // 6. Report to Divi in a separate try-catch
-      try {
-          console.log("Submitting referral to Divi:", {
-            txHash: hash,
-            chainId: targetChain.id,
-          });
-          await submitReferral({
-            txHash: hash,
-            chainId: targetChain.id,
-          });
-        console.log("Referral submitted successfully");
-      } catch (diviError) {
-        console.error("Divi submitReferral error:", diviError);
-        // Optionally show a warning toast, but don't mark donation as failed
-        toast.warning(
-          "Donation succeeded, but referral tracking failed. We're looking into it.",
-        );
-      }
-    } catch (error) {
-      console.error("Donation error:", error);
-      toast.error(
-        `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    // 5. Get the referral data suffix
+    const dataSuffix = getDataSuffix({
+      consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+      providers: [
+        "0x0423189886d7966f0dd7e7d256898daeee625dca",
+        "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+        "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+      ],
+    });
+
+    // 6. Combine the data
+    const combinedData = dataSuffix
+      ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+      : donateData;
+
+    // 7. Update transaction params with combined data
+    transactionParams.data = combinedData as `0x${string}`;
+
+    // 8. Send the transaction
+    const hash = await sendTransactionAsync(transactionParams);
+
+    // 9. Show success toast and update contract data
+    toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
+    fetchContractData();
+
+    // 10. Report to Divi in a separate try-catch
+    try {
+      console.log("Submitting referral to Divi:", {
+        txHash: hash,
+        chainId: targetChain.id,
+      });
+      await submitReferral({
+        txHash: hash,
+        chainId: targetChain.id,
+      });
+      console.log("Referral submitted successfully");
+    } catch (diviError) {
+      console.error("Divi submitReferral error:", diviError);
+      toast.warning(
+        "Donation succeeded, but referral tracking failed. We're looking into it.",
       );
     }
-  };
+  } catch (error) {
+    console.error("Donation error:", error);
+    toast.error(
+      `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+};
 
   const handleConnect = () => {
     const connector =

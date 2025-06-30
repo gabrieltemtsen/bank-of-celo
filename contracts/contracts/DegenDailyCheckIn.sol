@@ -38,6 +38,7 @@ contract DegenDailyCheckIn {
     mapping(uint256 => mapping(uint256 => bool)) public fidUsedInRound;
     mapping(uint256 => mapping(uint256 => address[])) public addressesClaimedPerDay;
     mapping(uint256 => mapping(uint256 => uint256)) public claimCountPerDay;
+    mapping(uint256 => mapping(address => bool)) public hasClaimedDay;
 
     // Events
     event CheckedIn(address indexed user, uint256 indexed day, uint256 round);
@@ -55,32 +56,6 @@ contract DegenDailyCheckIn {
     }
 
     // ========================
-    // Signature Verification (Fixed)
-    // ========================
-
-    function verifySignature(bytes32 ethSignedMessageHash, bytes memory signature) internal view returns (bool) {
-        return recoverSigner(ethSignedMessageHash, signature) == trustedSigner;
-    }
-
-    function getEthSignedMessageHash(bytes32 messageHash) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
-    }
-
-    function recoverSigner(bytes32 ethSignedMessageHash, bytes memory signature) internal pure returns (address) {
-        (bytes32 r, bytes32 s, uint8 v) = splitSignature(signature);
-        return ecrecover(ethSignedMessageHash, v, r, s);
-    }
-
-    function splitSignature(bytes memory sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
-        require(sig.length == 65, "Invalid signature length");
-        assembly {
-            r := mload(add(sig, 32))
-            s := mload(add(sig, 64))
-            v := byte(0, mload(add(sig, 96)))
-        }
-    }
-
-    // ========================
     // Core User Functions
     // ========================
 
@@ -89,7 +64,7 @@ contract DegenDailyCheckIn {
         require(day >= 1 && day <= 7, "Invalid day");
         require(!dailyCheckIns[currentRound][msg.sender][day], "Already checked in");
 
-        // Transfer 1 DEGEN fee
+        // Transfer check-in fee (1 DEGEN)
         require(degenToken.transferFrom(msg.sender, address(this), checkInFee), "DEGEN transfer failed");
 
         // Verify signature
@@ -113,6 +88,7 @@ contract DegenDailyCheckIn {
         rounds[currentRound].totalCheckIns++;
         addressesClaimedPerDay[currentRound][day].push(msg.sender);
         claimCountPerDay[currentRound][day]++;
+        hasClaimedDay[currentRound][msg.sender] = true;
 
         emit CheckedIn(msg.sender, day, currentRound);
     }
@@ -138,7 +114,216 @@ contract DegenDailyCheckIn {
     }
 
     // ========================
-    // Helper Functions
+    // Signature Verification
+    // ========================
+
+    function verifySignature(bytes32 ethSignedMessageHash, bytes memory signature) internal view returns (bool) {
+        return recoverSigner(ethSignedMessageHash, signature) == trustedSigner;
+    }
+
+    function getEthSignedMessageHash(bytes32 messageHash) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
+    }
+
+    function recoverSigner(bytes32 ethSignedMessageHash, bytes memory signature) internal pure returns (address) {
+        (bytes32 r, bytes32 s, uint8 v) = splitSignature(signature);
+        return ecrecover(ethSignedMessageHash, v, r, s);
+    }
+
+    function splitSignature(bytes memory sig) internal pure returns (bytes32 r, bytes32 s, uint8 v) {
+        require(sig.length == 65, "Invalid signature length");
+        assembly {
+            r := mload(add(sig, 32))
+            s := mload(add(sig, 64))
+            v := byte(0, mload(add(sig, 96)))
+        }
+        return (r, s, v);
+    }
+
+    // ========================
+    // Analytics Functions
+    // ========================
+
+    function getAddressesForDay(uint256 round, uint256 day) public view onlyAdmin returns (address[] memory) {
+        require(day >= 1 && day <= 7, "Invalid day");
+        return addressesClaimedPerDay[round][day];
+    }
+
+    function getCheckInCountForDay(uint256 round, uint256 day) public view returns (uint256) {
+        require(day >= 1 && day <= 7, "Invalid day");
+        return claimCountPerDay[round][day];
+    }
+
+    function hasAddressCheckedInDay(uint256 round, uint256 day, address user) public view returns (bool) {
+        require(day >= 1 && day <= 7, "Invalid day");
+        return dailyCheckIns[round][user][day];
+    }
+
+    function getActiveRound() public view returns (Round memory) {
+        return rounds[currentRound];
+    }
+
+    function getAllRounds() public view returns (Round[] memory) {
+        Round[] memory allRounds = new Round[](currentRound);
+        for (uint256 i = 1; i <= currentRound; i++) {
+            allRounds[i - 1] = rounds[i];
+        }
+        return allRounds;
+    }
+
+    function getUserStatus(address user) public view returns (
+        uint256 currentCheckIns,
+        bool eligibleForReward,
+        bool hasClaimed,
+       bool _hasCheckedInToday,
+        uint256 lastCheckInTimestamp,
+        bool[7] memory checkInStatus
+    ) {
+        UserRoundData memory data = userRoundData[currentRound][user];
+        uint256 lastCheckIn = 0;
+
+        // Find most recent check-in timestamp
+        for (uint256 day = 1; day <= 7; day++) {
+            if (dailyCheckIns[currentRound][user][day]) {
+                lastCheckIn = rounds[currentRound].startTime + (day * 86400);
+            }
+        }
+
+        return (
+            data.checkInCount,
+            _hasCheckedIn7Days(user),
+            data.hasClaimed,
+            dailyCheckIns[currentRound][user][getCurrentDay()],
+            lastCheckIn,
+            getUserCheckInStatus(user)
+        );
+    }
+
+    function getRoundTimeInfo() public view returns (
+        uint256 startTime,
+        uint256 endTime,
+        uint256 currentDay,
+        uint256 daysRemaining
+    ) {
+        Round memory round = rounds[currentRound];
+        uint256 durationInSeconds = round.duration * 86400;
+        uint256 elapsed = block.timestamp - round.startTime;
+        currentDay = (elapsed / 86400) + 1;
+        daysRemaining = round.duration - (elapsed / 86400);
+        return (
+            round.startTime,
+            round.startTime + durationInSeconds,
+            currentDay > round.duration ? round.duration : currentDay,
+            daysRemaining
+        );
+    }
+
+    function batchCheckClaimStatus(address[] calldata users) external view returns (bool[] memory) {
+        bool[] memory statuses = new bool[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            statuses[i] = canUserClaim(users[i]);
+        }
+        return statuses;
+    }
+
+    function hasCheckedInToday(address user) public view returns (bool) {
+        return dailyCheckIns[currentRound][user][getCurrentDay()];
+    }
+
+    function getUserCheckInStatus(address user) public view returns (bool[7] memory) {
+        bool[7] memory status;
+        for (uint256 day = 1; day <= 7; day++) {
+            status[day - 1] = dailyCheckIns[currentRound][user][day];
+        }
+        return status;
+    }
+
+    function getContractBalance() public view returns (uint256) {
+        return degenToken.balanceOf(address(this));
+    }
+
+    function getRewardAmount() public view returns (uint256) {
+        return rewardAmount;
+    }
+
+    function getCheckInFee() public view returns (uint256) {
+        return checkInFee;
+    }
+
+    function canUserClaim(address user) public view returns (bool) {
+        return _hasCheckedIn7Days(user) && !userRoundData[currentRound][user].hasClaimed;
+    }
+
+    function getUserDashboard(address user) public view returns (
+        uint256 currentRoundNumber,
+        uint256 userCheckIns,
+        bool canClaim,
+        bool checkedInToday,
+        uint256 contractBalance,
+        uint256 currentReward,
+        uint256 currentFee,
+        bool roundActive,
+        uint256 roundStart,
+        uint256 roundEnd,
+        uint256 currentDay
+    ) {
+        return (
+            currentRound,
+            userRoundData[currentRound][user].checkInCount,
+            canUserClaim(user),
+            hasCheckedInToday(user),
+            getContractBalance(),
+            getRewardAmount(),
+            getCheckInFee(),
+            rounds[currentRound].isActive,
+            rounds[currentRound].startTime,
+            rounds[currentRound].startTime + (rounds[currentRound].duration * 86400),
+            getCurrentDay()
+        );
+    }
+
+    // ========================
+    // Admin Functions
+    // ========================
+
+    function depositRewards(uint256 amount) external {
+        require(amount > 0, "Must send some DEGEN");
+        require(degenToken.transferFrom(msg.sender, address(this), amount), "Deposit failed");
+        emit FundsDeposited(msg.sender, amount);
+    }
+
+    function setRewardAmount(uint256 newAmount) external onlyAdmin {
+        require(newAmount > 0, "Reward must be positive");
+        rewardAmount = newAmount;
+    }
+
+    function startNewRound() external onlyAdmin {
+        currentRound++;
+        rounds[currentRound] = Round(block.timestamp, true, 0, 0, 7);
+        emit RoundStarted(currentRound);
+    }
+
+    function stopRound() external onlyAdmin {
+        rounds[currentRound].isActive = false;
+        emit RoundEnded(currentRound);
+    }
+
+    function withdrawFunds() external onlyAdmin {
+        uint256 balance = degenToken.balanceOf(address(this));
+        require(degenToken.transfer(admin, balance), "Withdrawal failed");
+    }
+
+    function setCheckInFee(uint256 newFee) external onlyAdmin {
+        checkInFee = newFee;
+    }
+
+    function setTrustedSigner(address newSigner) external onlyAdmin {
+        require(newSigner != address(0), "Invalid signer");
+        trustedSigner = newSigner;
+    }
+
+    // ========================
+    // Internal Helpers
     // ========================
 
     function _hasCheckedIn7Days(address user) internal view returns (bool) {
@@ -150,31 +335,16 @@ contract DegenDailyCheckIn {
 
     function getCurrentDay() public view returns (uint256) {
         uint256 elapsed = block.timestamp - rounds[currentRound].startTime;
-        return (elapsed / 86400) + 1; // Days since round start (1-7)
+        uint256 currentDay = (elapsed / 86400) + 1;
+        return currentDay > 7 ? 7 : currentDay;
     }
 
     // ========================
-    // Admin Functions
+    // Fallback
     // ========================
 
-    function depositRewards(uint256 amount) external {
-        require(degenToken.transferFrom(msg.sender, address(this), amount), "Deposit failed");
-        emit FundsDeposited(msg.sender, amount);
-    }
-
-    function setRewardAmount(uint256 newAmount) external onlyAdmin {
-        rewardAmount = newAmount;
-    }
-
-    function startNewRound() external onlyAdmin {
-        currentRound++;
-        rounds[currentRound] = Round(block.timestamp, true, 0, 0, 7);
-        emit RoundStarted(currentRound);
-    }
-
-    function emergencyWithdrawDEGEN() external onlyAdmin {
-        uint256 balance = degenToken.balanceOf(address(this));
-        require(degenToken.transfer(admin, balance), "Withdrawal failed");
+    receive() external payable {
+        revert("Use depositRewards() for DEGEN");
     }
 
     modifier onlyAdmin() {

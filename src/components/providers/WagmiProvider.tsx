@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { createConfig, http, WagmiProvider } from "wagmi";
 import { celo, base } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -55,7 +56,7 @@ function ConfiguredWagmiProvider({ children }: { children: React.ReactNode }) {
       chains,
       transports: {
         [celo.id]: http(),
-        [base.id]: http(),
+        [base.id]: http("https://base-mainnet.g.alchemy.com/v2/ImPte7otRAJ_4gDny9NLO_Ao9GT4_CiQ"),
       },
       connectors: [
         farcasterFrame(),
