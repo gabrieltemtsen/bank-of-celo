@@ -34,8 +34,8 @@ export default function BottomNavigation({
           onClick={() => onTabChange(tab.id)}
           className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
             activeTab === tab.id
-              ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
-              : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+              ? "text-white bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] shadow-md"
+              : "text-gray-600 dark:text-gray-300 hover:text-[var(--primary)]"
           }`}
           aria-label={tab.label}
         >
@@ -44,7 +44,7 @@ export default function BottomNavigation({
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabIndicator"
-              className="absolute bottom-0 w-1/2 h-1 bg-emerald-300 rounded-full"
+              className="absolute bottom-0 w-1/2 h-1 bg-[var(--primary)]/70 rounded-full"
             />
           )}
         </button>

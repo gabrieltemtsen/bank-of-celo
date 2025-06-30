@@ -36,6 +36,10 @@ export default function Header({
 }: HeaderProps) {
   const { mode } = useChainMode();
   const targetChain = mode === "degen" ? base : celo;
+  const logoSrc =
+    mode === "degen"
+      ? "/assets/images/degen-logo.svg"
+      : "/assets/images/celo-image.png";
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -47,7 +51,12 @@ export default function Header({
       )}
     >
       <div className="flex items-center justify-between mx-0 md:mx-20">
-        <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)]">
+        <h1 className="flex items-center text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)]">
+          <img
+            src={logoSrc}
+            alt={mode === "degen" ? "Degen logo" : "Celo logo"}
+            className="w-5 h-5 mr-2"
+          />
           {title}
         </h1>
         <div className="flex items-center gap-2">
