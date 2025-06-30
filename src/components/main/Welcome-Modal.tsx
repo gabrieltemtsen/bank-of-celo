@@ -29,9 +29,9 @@ export default function WelcomeModal({
       <DialogContent className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-xl p-6 max-w-md">
         <DialogHeader>
           <div className="flex justify-center mb-4">
-            <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-full">
-              <Trophy className="w-8 h-8 text-emerald-600 dark:text-emerald-300" />
-            </div>
+          <div className="p-3 rounded-full bg-[var(--primary)]/20">
+            <Trophy className="w-8 h-8" style={{ color: "var(--primary)" }} />
+          </div>
           </div>
           <DialogTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">
             Welcome to Bank of {mode === "degen" ? "Degen" : "Celo"}!
@@ -46,7 +46,7 @@ export default function WelcomeModal({
         <div className="mt-6 flex flex-col gap-3">
           <Button
             onClick={onClose}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-lg py-3 shadow-md"
+            className="w-full bg-gradient-to-r from-[var(--gradient-from)] to-[var(--gradient-to)] hover:opacity-90 text-white rounded-lg py-3 shadow-md"
           >
             Get Started
           </Button>

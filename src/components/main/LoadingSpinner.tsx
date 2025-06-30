@@ -10,12 +10,12 @@ export default function LoadingSpinner({
 }: LoadingSpinnerProps) {
   if (isSDKLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-emerald-950 dark:to-amber-950">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[var(--gradient-from)] to-[var(--gradient-to)]">
         <motion.div
           animate={{ rotate: 360, scale: [1, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
         >
-          <Home className="w-12 h-12 text-emerald-500 dark:text-emerald-300" />
+          <Home className="w-12 h-12" style={{ color: "var(--primary)" }} />
         </motion.div>
       </div>
     );
@@ -26,7 +26,7 @@ export default function LoadingSpinner({
       <motion.div
         animate={{ rotate: 360 }}
         transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-        className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full"
+        className="w-8 h-8 border-4 border-[var(--primary)] border-t-transparent rounded-full"
       />
     </div>
   );

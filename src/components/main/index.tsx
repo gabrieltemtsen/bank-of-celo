@@ -52,7 +52,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const [activeTab, setActiveTab] = useState("home");
 
   const { mode } = useChainMode();
-  const dynamicTitle = mode === "degen" ? "Bank of Degen" : title;
+  const dynamicTitle = title;
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const chainId = useChainId();
   const targetChain = mode === "degen" ? base : celo;
