@@ -16,7 +16,7 @@ import {
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, parseEther, parseUnits } from "viem";
+import { encodeFunctionData, parseEther, parseUnits, maxUint256 } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { toast } from "sonner";
 import { useBankContract, ERC20_ABI } from "~/hooks/contracts";
@@ -193,7 +193,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
               address: tokenAddress,
               abi: ERC20_ABI,
               functionName: "approve",
-              args: [bankAddress, amountParsed],
+              args: [bankAddress, maxUint256],
             });
           }
           await writeContract({

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -16,7 +17,7 @@ import {
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
+import { encodeFunctionData, formatEther, parseEther, parseUnits, maxUint256 } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -201,7 +202,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
 
 const handleDonate = async (amount: string) => {
-
   if (!isCorrectChain) {
     toast.error(`Please switch to ${targetChain.name} Network`);
     return;
@@ -232,55 +232,78 @@ const handleDonate = async (amount: string) => {
       const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"; // DEGEN on Base mainnet
       const bankContractAddress = bankAddress as `0x${string}`;
 
-      // 1. Check DEGEN token allowance
+      // 1. Check DEGEN token balance (debugging)
+      const balance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      }) as bigint;
+      console.log(`DEGEN Balance: ${formatEther(balance)} DEGEN`);
+      if (balance < degenAmount) {
+        toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balance)} DEGEN`);
+        return;
+      }
+
+      // 2. Check DEGEN token allowance
       const allowance = await publicClient.readContract({
         address: degenTokenAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: "allowance",
         args: [address, bankContractAddress],
       }) as bigint;
+      console.log(`Current Allowance: ${formatEther(allowance)} DEGEN`);
 
-      // 2. Approve DEGEN tokens if allowance is insufficient
+      // 3. Approve DEGEN tokens if allowance is insufficient
       if (allowance < degenAmount) {
         toast.info("Approving DEGEN tokens for donation...");
         const approveHash = await writeContractAsync({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [bankContractAddress, degenAmount],
+          args: [bankContractAddress, degenAmount], // Exact amount approval
           chainId: targetChain.id,
         });
         await publicClient.waitForTransactionReceipt({ hash: approveHash });
         toast.success("DEGEN token approval successful!");
       }
 
-      // 3. Encode donate function call with amount
+      // 4. Verify allowance after approval
+      const updatedAllowance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, bankContractAddress],
+      }) as bigint;
+      console.log(`Updated Allowance: ${formatEther(updatedAllowance)} DEGEN`);
+      if (updatedAllowance < degenAmount) {
+        throw new Error("Approval amount insufficient after update");
+      }
+
+      // 5. Encode donate function call with amount
       donateData = encodeFunctionData({
         abi: bankAbi,
         functionName: "donate",
         args: [degenAmount],
       });
 
-      // 4. Set transaction params (no value for ERC-20)
+      // 6. Set transaction params (no value for ERC-20, confirming DEGEN donation)
       transactionParams = {
         to: bankContractAddress,
         data: donateData,
         chainId: targetChain.id, // 8453 for Base mainnet
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
+        maxFeePerGas: parseUnits("100", 9), // Fixed gas for now
+        maxPriorityFeePerGas: parseUnits("100", 9), // Fixed gas for now
       };
+      console.log("Transaction Params:", transactionParams);
     } else {
       // Celo chain: CELO native currency donation
       const celoAmount = parseEther(amount); // CELO has 18 decimals
-
-      // 1. Encode donate function call (no args for BankOfCelo)
       donateData = encodeFunctionData({
         abi: bankAbi,
         functionName: "donate",
         args: [],
       });
-
-      // 2. Set transaction params with value
       transactionParams = {
         to: bankAddress as `0x${string}`,
         data: donateData,
@@ -333,14 +356,15 @@ const handleDonate = async (amount: string) => {
         "Donation succeeded, but referral tracking failed. We're looking into it.",
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Donation error:", error);
     toast.error(
       `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
+    // Log detailed error for debugging
+    if (error.cause) console.error("Detailed error cause:", error.cause);
   }
 };
-
   const handleConnect = () => {
     const connector =
       connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback

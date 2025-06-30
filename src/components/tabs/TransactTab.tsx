@@ -22,13 +22,16 @@ import {
   usePublicClient,
   useSignTypedData,
   useSendTransaction,
+  useChainId,
+  useWriteContract,
 } from "wagmi";
-import { useBankContract } from "~/hooks/contracts";
+import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
 import JackPot from "./JackPot";
 import JackPotV2 from "./JackPotV2";
 import { useChainMode } from "~/app/chain-mode/context";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
+import { base, celo } from "wagmi/chains";
 
 interface TransactTabProps {
   onDonate: (amount: string) => void;
@@ -60,6 +63,8 @@ export default function TransactTab({
   const publicClient = usePublicClient();
   const { signTypedDataAsync } = useSignTypedData();
   const { sendTransactionAsync } = useSendTransaction();
+    const { writeContractAsync } = useWriteContract();
+  
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
@@ -76,6 +81,9 @@ export default function TransactTab({
   const { mode } = useChainMode();
   const currency = mode === "degen" ? "DEGEN" : "CELO";
   const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
+
+    const chainId = useChainId()
+    const targetChain = mode === "degen" ? base : celo;
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -134,6 +142,169 @@ export default function TransactTab({
       setFidLoading(false);
     }
   }, [address, publicClient, bankAbi, bankAddress]);
+  const handleDonate = async (amount: string) => {
+    if (!isCorrectChain) {
+      toast.error(`Please switch to ${targetChain.name} Network`);
+      return;
+    }
+  
+    if (!address) {
+      toast.error("Please connect your wallet");
+      return;
+    }
+  
+    if (!publicClient) {
+      toast.error("Public client is not available. Please try again.");
+      return;
+    }
+  
+    if (Number(amount) <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+  
+    try {
+      let donateData: `0x${string}`;
+      let transactionParams: Parameters<typeof sendTransactionAsync>[0];
+  
+      if (mode === "degen") {
+        // Base chain: DEGEN token donation
+        const degenAmount = parseUnits(amount, 18); // DEGEN has 18 decimals
+        const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"; // DEGEN on Base mainnet
+        const bankContractAddress = bankAddress as `0x${string}`;
+  
+        // 1. Check DEGEN token balance (debugging)
+        const balance = await publicClient.readContract({
+          address: degenTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "balanceOf",
+          args: [address],
+        }) as bigint;
+        console.log(`DEGEN Balance: ${formatEther(balance)} DEGEN`);
+        if (balance < degenAmount) {
+          toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balance)} DEGEN`);
+          return;
+        }
+  
+        // 2. Check DEGEN token allowance
+        const allowance = await publicClient.readContract({
+          address: degenTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [address, bankContractAddress],
+        }) as bigint;
+        console.log(`Current Allowance: ${formatEther(allowance)} DEGEN`);
+  
+        // 3. Approve DEGEN tokens if allowance is insufficient
+        if (allowance < degenAmount) {
+          toast.info("Approving DEGEN tokens for donation...");
+          const approveHash = await writeContractAsync({
+            address: degenTokenAddress as `0x${string}`,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [bankContractAddress, degenAmount], // Exact amount approval
+            chainId: targetChain.id,
+          });
+          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          toast.success("DEGEN token approval successful!");
+        }
+  
+        // 4. Verify allowance after approval
+        const updatedAllowance = await publicClient.readContract({
+          address: degenTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [address, bankContractAddress],
+        }) as bigint;
+        console.log(`Updated Allowance: ${formatEther(updatedAllowance)} DEGEN`);
+        if (updatedAllowance < degenAmount) {
+          throw new Error("Approval amount insufficient after update");
+        }
+  
+        // 5. Encode donate function call with amount
+        donateData = encodeFunctionData({
+          abi: bankAbi,
+          functionName: "donate",
+          args: [degenAmount],
+        });
+  
+        // 6. Set transaction params (no value for ERC-20, confirming DEGEN donation)
+        transactionParams = {
+          to: bankContractAddress,
+          data: donateData,
+          chainId: targetChain.id, // 8453 for Base mainnet
+          maxFeePerGas: parseUnits("100", 9), // Fixed gas for now
+          maxPriorityFeePerGas: parseUnits("100", 9), // Fixed gas for now
+        };
+        console.log("Transaction Params:", transactionParams);
+      } else {
+        // Celo chain: CELO native currency donation
+        const celoAmount = parseEther(amount); // CELO has 18 decimals
+        donateData = encodeFunctionData({
+          abi: bankAbi,
+          functionName: "donate",
+          args: [],
+        });
+        transactionParams = {
+          to: bankAddress as `0x${string}`,
+          data: donateData,
+          value: celoAmount,
+          chainId: targetChain.id, // 42220 for Celo mainnet
+          maxFeePerGas: parseUnits("100", 9),
+          maxPriorityFeePerGas: parseUnits("100", 9),
+        };
+      }
+  
+      // 5. Get the referral data suffix
+      const dataSuffix = getDataSuffix({
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+        ],
+      });
+  
+      // 6. Combine the data
+      const combinedData = dataSuffix
+        ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+        : donateData;
+  
+      // 7. Update transaction params with combined data
+      transactionParams.data = combinedData as `0x${string}`;
+  
+      // 8. Send the transaction
+      const hash = await sendTransactionAsync(transactionParams);
+  
+      // 9. Show success toast and update contract data
+      toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
+  
+      // 10. Report to Divi in a separate try-catch
+      try {
+        console.log("Submitting referral to Divi:", {
+          txHash: hash,
+          chainId: targetChain.id,
+        });
+        await submitReferral({
+          txHash: hash,
+          chainId: targetChain.id,
+        });
+        console.log("Referral submitted successfully");
+      } catch (diviError) {
+        console.error("Divi submitReferral error:", diviError);
+        toast.warning(
+          "Donation succeeded, but referral tracking failed. We're looking into it.",
+        );
+      }
+    } catch (error: any) {
+      console.error("Donation error:", error);
+      toast.error(
+        `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+      // Log detailed error for debugging
+      if (error.cause) console.error("Detailed error cause:", error.cause);
+    }
+  };
 
   const fetchHasClaimed = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
@@ -328,7 +499,9 @@ export default function TransactTab({
         toast.error("Please enter a valid amount");
         return;
       }
-      onDonate(amount);
+      console.log(mode, "mode");
+      const donate = onDonate(amount);
+      console.log("Donate function called:", donate);
       setAmount("");
     } else if (activeTab === "claim") {
       handleClaim();
@@ -430,7 +603,7 @@ export default function TransactTab({
               />
             </div>
             <Button
-              onClick={handleSubmit}
+              onClick={() => handleDonate(amount)}
               disabled={isPending || !amount}
               className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
               aria-label={`Donate ${currency}`}
