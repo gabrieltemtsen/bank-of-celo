@@ -10,7 +10,6 @@ import {
   useSwitchChain,
   useChainId,
   useSendTransaction,
-  useWriteContract,
 } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
@@ -41,7 +40,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
-  const { writeContract, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
 
@@ -50,6 +48,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
+  const [isDonatePending, setIsDonatePending] = useState(false);
 
   const chainId = useChainId();
   const CELO_CHAIN_ID = celo.id;
@@ -164,6 +163,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       }
 
       try {
+        setIsDonatePending(true);
         // 1. Encode the donate function call
         const donateData = encodeFunctionData({
           abi: BANK_OF_CELO_CONTRACT_ABI,
@@ -224,6 +224,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         toast.error(
           `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
+      } finally {
+        setIsDonatePending(false);
       }
     },
     [isCorrectChain, sendTransactionAsync, CELO_CHAIN_ID, fetchContractData],
@@ -287,7 +289,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           claimCooldown={claimCooldown}
           lastClaimAt={lastClaimAt}
           isCorrectChain={isCorrectChain}
-          isPending={isPending}
+          isPending={isDonatePending}
           onNavigate={setActiveTab}
           onDonate={handleDonate}
         />
