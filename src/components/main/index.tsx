@@ -17,11 +17,15 @@ import sdk from "@farcaster/frame-sdk";
 import { encodeFunctionData, parseEther, parseUnits } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { toast } from "sonner";
+import type { Abi } from "viem";
 import {
   BANK_OF_CELO_CONTRACT_ABI,
   BANK_OF_CELO_CONTRACT_ADDRESS,
+  BANK_OF_DEGEN_ADDRESS,
+  BANK_OF_DEGEN_ABI,
 } from "~/lib/constants";
-import { celo } from "viem/chains";
+
+import { useChain } from "~/components/providers/ChainContext";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { useContractData } from "./hook/useMain";
@@ -42,6 +46,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { sendTransactionAsync } = useSendTransaction();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
+  const { chain: targetChain, mode, toggleMode } = useChain();
 
   const [customSearchParams, setCustomSearchParams] =
     useState<URLSearchParams | null>(null);
@@ -51,12 +56,16 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const [isDonatePending, setIsDonatePending] = useState(false);
 
   const chainId = useChainId();
-  const CELO_CHAIN_ID = celo.id;
-  const targetChain = celo;
-  const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const isCorrectChain = chain?.id === targetChain.id;
   const showSwitchNetworkBanner = isConnected && !isCorrectChain;
 
   // Use our custom hooks
+  const bankAddress =
+    mode === "celo" ? BANK_OF_CELO_CONTRACT_ADDRESS : BANK_OF_DEGEN_ADDRESS;
+  const bankAbi = (mode === "celo"
+    ? BANK_OF_CELO_CONTRACT_ABI
+    : BANK_OF_DEGEN_ABI) as Abi;
+
   const {
     vaultBalance,
     vaultStatus,
@@ -65,7 +74,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     maxClaim,
     isLoading,
     fetchContractData,
-  } = useContractData(address, isCorrectChain);
+  } = useContractData(address, isCorrectChain, bankAddress, bankAbi);
 
   const { showWelcome, setShowWelcome, handleCloseWelcome } = useWelcomeModal();
 
@@ -131,9 +140,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       connectors.find((c) => c.id === "injected") || connectors[0];
     connect({
       connector,
-      chainId: CELO_CHAIN_ID,
+      chainId: targetChain.id,
     });
-  }, [connectors, connect, CELO_CHAIN_ID]);
+  }, [connectors, connect, targetChain]);
 
   const handleSignOut = useCallback(async () => {
     await signOut({ redirect: false });
@@ -188,10 +197,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
         // 4. Send the transaction
         const hash = await sendTransactionAsync({
-          to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          to: bankAddress as `0x${string}`,
           data: combinedData as `0x${string}`,
           value: parseEther(amount),
-          chainId: CELO_CHAIN_ID,
+          chainId: targetChain.id,
           maxFeePerGas: parseUnits("100", 9),
           maxPriorityFeePerGas: parseUnits("100", 9),
         });
@@ -206,11 +215,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         try {
           console.log("Submitting referral to Divi:", {
             txHash: hash,
-            chainId: CELO_CHAIN_ID,
+            chainId: targetChain.id,
           });
           await submitReferral({
             txHash: hash,
-            chainId: CELO_CHAIN_ID,
+            chainId: targetChain.id,
           });
           console.log("Referral submitted successfully");
         } catch (diviError) {
@@ -228,7 +237,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         setIsDonatePending(false);
       }
     },
-    [isCorrectChain, sendTransactionAsync, CELO_CHAIN_ID, fetchContractData],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData],
   );
 
   // Show loading spinner if SDK is not loaded
@@ -274,6 +283,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         onDisconnect={() => disconnect()}
         onSignOut={handleSignOut}
         onSwitchChain={handleSwitchChain}
+        mode={mode}
+        onToggleMode={toggleMode}
       />
 
       {/* Content */}

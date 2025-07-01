@@ -2,10 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { usePublicClient } from "wagmi";
 import { formatEther } from "viem";
 import { toast } from "sonner";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
+import type { Abi } from "viem";
 
 interface VaultStatus {
   currentBalance: string;
@@ -26,6 +23,8 @@ interface UseContractDataResult {
 export function useContractData(
   address: string | undefined,
   isCorrectChain: boolean,
+  contractAddress: `0x${string}`,
+  contractAbi: Abi,
 ): UseContractDataResult {
   const publicClient = usePublicClient();
   const [vaultBalance, setVaultBalance] = useState<string>("0");
@@ -44,24 +43,24 @@ export function useContractData(
     try {
       const data = await Promise.all([
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: contractAddress,
+          abi: contractAbi,
           functionName: "getVaultStatus",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: contractAddress,
+          abi: contractAbi,
           functionName: "claimCooldown",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: contractAddress,
+          abi: contractAbi,
           functionName: "lastClaimAt",
           args: [address],
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: contractAddress,
+          abi: contractAbi,
           functionName: "MAX_CLAIM",
         }),
       ]);
