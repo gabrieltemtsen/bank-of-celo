@@ -11,6 +11,7 @@ import {
   useChainId,
   useSendTransaction,
   usePublicClient,
+  useWriteContract,
 } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
@@ -37,6 +38,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
+    const { writeContractAsync, isPending } = useWriteContract();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient();
@@ -188,14 +190,14 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
             args: [address, bankAddress],
           })) as bigint;
           if (allowance < amountParsed) {
-            await writeContract({
+            await writeContractAsync({
               address: tokenAddress,
               abi: ERC20_ABI,
               functionName: "approve",
               args: [bankAddress, maxUint256],
             });
           }
-          await writeContract({
+          await writeContractAsync({
             address: bankAddress,
             abi: bankAbi,
             functionName: "donate",
@@ -270,7 +272,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         setIsDonatePending(false);
       }
     },
-    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi],
   );
 
   // Show loading spinner if SDK is not loaded
