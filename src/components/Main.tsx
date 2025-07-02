@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
@@ -16,7 +17,7 @@ import {
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
+import { encodeFunctionData, formatEther, parseEther, parseUnits, maxUint256 } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -32,26 +33,19 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "~/components/ui/dialog";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
 import { truncateAddress } from "~/lib/truncateAddress";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
-import { celo } from "viem/chains";
+import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
+import { useChainMode } from "~/app/chain-mode/context";
+import { celo, base } from "viem/chains";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { cn } from "~/lib/utils";
 import Rewards from "./tabs/rewards";
+import WelcomeModal from "./main/Welcome-Modal";
+import Header from "./main/Header";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -61,13 +55,16 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
   const publicClient = usePublicClient();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
   const { isSDKLoaded, context } = useFrame();
 
   const [activeTab, setActiveTab] = useState("home");
   const [vaultBalance, setVaultBalance] = useState<string>("0");
   const [showWelcome, setShowWelcome] = useState(() => {
-    return !localStorage.getItem("hasSeenWelcome");
+    if (typeof window !== "undefined") {
+      return !localStorage.getItem("hasSeenWelcome");
+    }
+    return true;
   });
   const [isLoading, setIsLoading] = useState(false);
   const [claimCooldown, setClaimCooldown] = useState<number>(0);
@@ -79,10 +76,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     availableForClaims: "0",
   });
 
+  const { mode } = useChainMode();
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
   const chainId = useChainId();
-  const CELO_CHAIN_ID = celo.id;
-  const targetChain = celo;
-  const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const targetChain = mode === "degen" ? base : celo;
+  const isCorrectChain = chain?.id === targetChain.id;
   const showSwitchNetworkBanner = isConnected && !isCorrectChain;
 
   console.log("Current chain ID:", chainId);
@@ -104,24 +102,24 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     try {
       const data = await Promise.all([
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "getVaultStatus",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "claimCooldown",
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "lastClaimAt",
           args: [address],
         }),
         publicClient.readContract({
-          address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          address: bankAddress as `0x${string}`,
+          abi: bankAbi,
           functionName: "MAX_CLAIM",
         }),
       ]);
@@ -203,88 +201,177 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     load();
   }, []);
 
-  const handleDonate = async (amount: string) => {
-    if (!isCorrectChain) {
-      toast.error("Please switch to Celo Network");
-      return;
-    }
 
-    if (Number(amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
+const handleDonate = async (amount: string) => {
+  if (!isCorrectChain) {
+    toast.error(`Please switch to ${targetChain.name} Network`);
+    return;
+  }
 
-    try {
-      // 1. Encode the donate function call
-      const donateData = encodeFunctionData({
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+  if (!address) {
+    toast.error("Please connect your wallet");
+    return;
+  }
+
+  if (!publicClient) {
+    toast.error("Public client is not available. Please try again.");
+    return;
+  }
+
+  if (Number(amount) <= 0) {
+    toast.error("Please enter a valid amount");
+    return;
+  }
+
+  try {
+    let donateData: `0x${string}`;
+    let transactionParams: Parameters<typeof sendTransactionAsync>[0];
+
+    if (mode === "degen") {
+      // Base chain: DEGEN token donation
+      const degenAmount = parseUnits(amount, 18); // DEGEN has 18 decimals
+      const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"; // DEGEN on Base mainnet
+      const bankContractAddress = bankAddress as `0x${string}`;
+
+      // 1. Check DEGEN token balance (debugging)
+      const balance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "balanceOf",
+        args: [address],
+      }) as bigint;
+      console.log(`DEGEN Balance: ${formatEther(balance)} DEGEN`);
+      if (balance < degenAmount) {
+        toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balance)} DEGEN`);
+        return;
+      }
+
+      // 2. Check DEGEN token allowance
+      const allowance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, bankContractAddress],
+      }) as bigint;
+      console.log(`Current Allowance: ${formatEther(allowance)} DEGEN`);
+
+      // 3. Approve DEGEN tokens if allowance is insufficient
+      if (allowance < degenAmount) {
+        toast.info("Approving DEGEN tokens for donation...");
+        const approveHash = await writeContractAsync({
+          address: degenTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [bankContractAddress, degenAmount], // Exact amount approval
+          chainId: targetChain.id,
+        });
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        toast.success("DEGEN token approval successful!");
+      }
+
+      // 4. Verify allowance after approval
+      const updatedAllowance = await publicClient.readContract({
+        address: degenTokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, bankContractAddress],
+      }) as bigint;
+      console.log(`Updated Allowance: ${formatEther(updatedAllowance)} DEGEN`);
+      if (updatedAllowance < degenAmount) {
+        throw new Error("Approval amount insufficient after update");
+      }
+
+      // 5. Encode donate function call with amount
+      donateData = encodeFunctionData({
+        abi: bankAbi,
         functionName: "donate",
+        args: [degenAmount],
       });
 
-      // 2. Get the referral data suffix
-      const dataSuffix = getDataSuffix({
-        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-        providers: [
-          "0x0423189886d7966f0dd7e7d256898daeee625dca",
-          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-        ],
+      // 6. Set transaction params (no value for ERC-20, confirming DEGEN donation)
+      transactionParams = {
+        to: bankContractAddress,
+        data: donateData,
+        chainId: targetChain.id, // 8453 for Base mainnet
+        maxFeePerGas: parseUnits("100", 9), // Fixed gas for now
+        maxPriorityFeePerGas: parseUnits("100", 9), // Fixed gas for now
+      };
+      console.log("Transaction Params:", transactionParams);
+    } else {
+      // Celo chain: CELO native currency donation
+      const celoAmount = parseEther(amount); // CELO has 18 decimals
+      donateData = encodeFunctionData({
+        abi: bankAbi,
+        functionName: "donate",
+        args: [],
       });
-
-      // 3. Properly combine the data
-      const combinedData = dataSuffix
-        ? donateData +
-          (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
-        : donateData;
-
-      // 4. Send the transaction
-      const hash = await sendTransactionAsync({
-        to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        data: combinedData as `0x${string}`,
-        value: parseEther(amount),
-        chainId: CELO_CHAIN_ID,
+      transactionParams = {
+        to: bankAddress as `0x${string}`,
+        data: donateData,
+        value: celoAmount,
+        chainId: targetChain.id, // 42220 for Celo mainnet
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
+      };
+    }
+
+    // 5. Get the referral data suffix
+    const dataSuffix = getDataSuffix({
+      consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+      providers: [
+        "0x0423189886d7966f0dd7e7d256898daeee625dca",
+        "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+        "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+      ],
+    });
+
+    // 6. Combine the data
+    const combinedData = dataSuffix
+      ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
+      : donateData;
+
+    // 7. Update transaction params with combined data
+    transactionParams.data = combinedData as `0x${string}`;
+
+    // 8. Send the transaction
+    const hash = await sendTransactionAsync(transactionParams);
+
+    // 9. Show success toast and update contract data
+    toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
+    fetchContractData();
+
+    // 10. Report to Divi in a separate try-catch
+    try {
+      console.log("Submitting referral to Divi:", {
+        txHash: hash,
+        chainId: targetChain.id,
       });
-
-      // 5. Show success toast and update contract data immediately
-      toast.success(
-        `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
-      );
-      fetchContractData();
-
-      // 6. Report to Divi in a separate try-catch
-      try {
-        console.log("Submitting referral to Divi:", {
-          txHash: hash,
-          chainId: CELO_CHAIN_ID,
-        });
-        await submitReferral({
-          txHash: hash,
-          chainId: CELO_CHAIN_ID,
-        });
-        console.log("Referral submitted successfully");
-      } catch (diviError) {
-        console.error("Divi submitReferral error:", diviError);
-        // Optionally show a warning toast, but don't mark donation as failed
-        toast.warning(
-          "Donation succeeded, but referral tracking failed. We're looking into it.",
-        );
-      }
-    } catch (error) {
-      console.error("Donation error:", error);
-      toast.error(
-        `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      await submitReferral({
+        txHash: hash,
+        chainId: targetChain.id,
+      });
+      console.log("Referral submitted successfully");
+    } catch (diviError) {
+      console.error("Divi submitReferral error:", diviError);
+      toast.warning(
+        "Donation succeeded, but referral tracking failed. We're looking into it.",
       );
     }
-  };
-
+  } catch (error: any) {
+    console.error("Donation error:", error);
+    toast.error(
+      `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+    // Log detailed error for debugging
+    if (error.cause) console.error("Detailed error cause:", error.cause);
+  }
+};
   const handleConnect = () => {
     const connector =
       connectors.find((c) => c.id === "injected") || connectors[0]; // Prefer injected (MetaMask) or fallback
     connect({
       connector,
-      chainId: CELO_CHAIN_ID,
+      chainId: targetChain.id,
     });
   };
 
@@ -341,114 +428,25 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       <div className=" min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
 
       {/* Welcome Modal */}
-      <Dialog open={showWelcome} onOpenChange={handleCloseWelcome}>
-        <DialogContent className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-xl p-6 max-w-md">
-          <DialogHeader>
-            <div className="flex justify-center mb-4">
-              <div className="bg-emerald-100 dark:bg-emerald-900 p-3 rounded-full">
-                <Trophy className="w-8 h-8 text-emerald-600 dark:text-emerald-300" />
-              </div>
-            </div>
-            <DialogTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-              Welcome to Bank of Celo!
-            </DialogTitle>
-            <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-              The decentralized vault supporting the Celo ecosystem. Donate to
-              help grow the community or claim {maxClaim} CELO to explore
-              decentralized finance. Swap tokens seamlessly or check the
-              leaderboard to see top contributors!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-6 flex flex-col gap-3">
-            <Button
-              onClick={handleCloseWelcome}
-              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white rounded-lg py-3 shadow-md"
-            >
-              Get Started
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <WelcomeModal
+        showWelcome={showWelcome}
+        maxClaim={maxClaim}
+        onClose={handleCloseWelcome}
+      />
 
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className={cn(
-          "sticky top-0 z-50 bg-white/90  dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700",
-          showSwitchNetworkBanner ? "pt-7" : "p-4",
-        )}
-      >
-        <div className="flex items-center justify-between mx-0 md:mx-20">
-          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-amber-500">
-            {title}
-          </h1>
-          <div className="flex items-center gap-2">
-            {isConnected ? (
-              <>
-                <Button
-                  onClick={() => disconnect()}
-                  className="text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
-                  aria-label="Disconnect wallet"
-                >
-                  <Wallet className="w-4 h-4 mr-1" />
-                  {truncateAddress(address!)}
-                </Button>
-                {status === "authenticated" && (
-                  <Button
-                    onClick={handleSignOut}
-                    className="text-xs font-medium bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-full p-1.5 shadow-sm"
-                    aria-label="Sign out from Farcaster"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                )}
-              </>
-            ) : (
-              <Button
-                onClick={handleConnect}
-                className="text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
-                aria-label="Connect wallet"
-              >
-                <Wallet className="w-4 h-4 mr-1" /> Connect
-              </Button>
-            )}
-          </div>
-        </div>
-        {/* Network Warning Banner */}
-        {isConnected && !isCorrectChain && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ zIndex: 10000 }}
-            className="bg-amber-100 mt-5 dark:bg-amber-900/50 border-l-4 border-amber-500 dark:border-amber-400 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3"
-          >
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-300" />
-              <span className="text-amber-800 dark:text-amber-100 font-medium">
-                You are on the wrong network
-              </span>
-            </div>
-            <Button
-              onClick={handleSwitchChain}
-              disabled={isSwitchChainPending}
-              className="bg-amber-600 hover:bg-amber-700 text-white text-sm py-1 px-4 rounded-full flex items-center gap-1"
-            >
-              {isSwitchChainPending ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-                />
-              ) : (
-                <ArrowLeftRight className="w-4 h-4" />
-              )}
-              Switch to Celo
-            </Button>
-          </motion.div>
-        )}
-      </motion.div>
+      <Header
+        title={title}
+        isConnected={isConnected}
+        address={address}
+        status={status}
+        showSwitchNetworkBanner={isConnected && !isCorrectChain}
+        isCorrectChain={isCorrectChain}
+        isSwitchChainPending={isSwitchChainPending}
+        onConnect={handleConnect}
+        onDisconnect={disconnect}
+        onSignOut={handleSignOut}
+        onSwitchChain={handleSwitchChain}
+      />
 
       {/* Content */}
       <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative">

@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, PiggyBank, Info, Calculator } from "lucide-react";
 import { toast } from "sonner";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface SavingsModalProps {
   isOpen: boolean;
@@ -21,13 +22,15 @@ export default function SavingsModal({
   const [selectedTerm, setSelectedTerm] = useState("flexible");
   const [isLoading, setIsLoading] = useState(false);
   const [isReady, setIsReady] = useState(false); // Added isReady state cause the feature is not ready yet
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
 
   const savingsPlans = [
     {
       id: "flexible",
       name: "Flexible Savings",
       apy: "6.5%",
-      minDeposit: "10 CELO",
+      minDeposit: mode === "degen" ? "5000 DEGEN" : "10 CELO",
       withdrawal: "Anytime",
       description: "Earn interest with full flexibility",
       color: "emerald",
@@ -36,7 +39,7 @@ export default function SavingsModal({
       id: "30day",
       name: "30-Day Lock",
       apy: "8.5%",
-      minDeposit: "100 CELO",
+      minDeposit: mode === "degen" ? "50000 DEGEN" : "100 CELO",
       withdrawal: "After 30 days",
       description: "Higher returns for short-term commitment",
       color: "blue",
@@ -45,7 +48,7 @@ export default function SavingsModal({
       id: "90day",
       name: "90-Day Lock",
       apy: "12.0%",
-      minDeposit: "500 CELO",
+      minDeposit: mode === "degen" ? "250000 DEGEN" : "500 CELO",
       withdrawal: "After 90 days",
       description: "Maximum returns for patient savers",
       color: "purple",
@@ -64,7 +67,7 @@ export default function SavingsModal({
 
   const handleDeposit = async () => {
     if (!isCorrectChain) {
-      alert("Please switch to Celo Network");
+      alert(`Please switch to ${mode === "degen" ? "Base" : "Celo"} Network`);
       return;
     }
 
@@ -73,7 +76,7 @@ export default function SavingsModal({
       // Simulate deposit transaction
       await new Promise((resolve) => setTimeout(resolve, 2000));
       toast.success(
-        `Successfully deposited ${depositAmount} CELO to ${selectedPlan?.name}`,
+        `Successfully deposited ${depositAmount} ${currency} to ${selectedPlan?.name}`,
       );
       setDepositAmount("");
       onClose();
@@ -201,15 +204,15 @@ export default function SavingsModal({
                         type="number"
                         value={depositAmount}
                         onChange={(e) => setDepositAmount(e.target.value)}
-                        placeholder="Enter amount in CELO"
+                        placeholder={`Enter amount in ${currency}`}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none pr-16"
                       />
                       <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">
-                        CELO
+                        {currency}
                       </span>
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Available Balance: {vaultBalance} CELO
+                      Available Balance: {vaultBalance} {currency}
                     </p>
                   </div>
 
@@ -232,7 +235,7 @@ export default function SavingsModal({
                             Monthly Interest
                           </p>
                           <p className="text-lg font-bold text-emerald-800">
-                            {calculateEarnings()} CELO
+                            {calculateEarnings()} {currency}
                           </p>
                         </div>
                         <div>

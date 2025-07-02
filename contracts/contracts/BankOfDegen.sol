@@ -176,6 +176,66 @@ contract BankOfDegen is Ownable, ReentrancyGuard, EIP712 {
         }
     }
 
+    // --- View Functions for Leaderboard ---
+    function getLeaderboard() external view returns (LeaderboardEntry[] memory) {
+        LeaderboardEntry[] memory currentLeaderboard = new LeaderboardEntry[](LEADERBOARD_SIZE);
+        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
+            currentLeaderboard[i] = leaderboard[i];
+        }
+        return currentLeaderboard;
+    }
+
+    function getDonorRank(address donor) external view returns (uint256) {
+        uint256 donorAmount = donors[donor].totalDonated;
+        if (donorAmount == 0) return type(uint256).max;
+        for (uint256 i = 0; i < LEADERBOARD_SIZE; i++) {
+            if (leaderboard[i].donor == donor) {
+                return i + 1;
+            }
+        }
+        return type(uint256).max;
+    }
+
+    // --- Donor Utilities ---
+    function getTier(uint256 totalDonated) public pure returns (uint8) {
+        if (totalDonated >= TIER3_THRESHOLD) return 3;
+        if (totalDonated >= TIER2_THRESHOLD) return 2;
+        if (totalDonated >= TIER1_THRESHOLD) return 1;
+        return 0;
+    }
+
+    function getDonorTier(address donor) external view returns (uint8) {
+        return donors[donor].tier;
+    }
+
+    function getVaultStatus() external view returns (
+        uint256 currentBalance,
+        uint256 minReserve,
+        uint256 availableForClaims
+    ) {
+        currentBalance = degenToken.balanceOf(address(this));
+        minReserve = minVaultBalance;
+        availableForClaims = currentBalance > minReserve ? currentBalance - minReserve : 0;
+    }
+
+    function getFormattedBalance() external view returns (string memory) {
+        uint256 balance = degenToken.balanceOf(address(this));
+        uint256 degenAmount = balance / 1e18;
+        uint256 decimals = (balance % 1e18) / 1e16;
+        return string(abi.encodePacked(
+            Strings.toString(degenAmount),
+            ".",
+            decimals < 10 ? "0" : "",
+            Strings.toString(decimals),
+            " DEGEN"
+        ));
+    }
+
+    function getBalanceWithAccessControl() external view returns (uint256) {
+        require(donors[msg.sender].totalDonated > 0.1 * 1e18, "Only donors can view");
+        return degenToken.balanceOf(address(this));
+    }
+
     // --- Admin Functions ---
     function setClaimCooldown(uint256 seconds_) external onlyOwner {
         claimCooldown = seconds_;
@@ -193,22 +253,11 @@ contract BankOfDegen is Ownable, ReentrancyGuard, EIP712 {
         require(degenToken.transfer(to, amount), "Sweep failed");
     }
 
-    // --- View Functions ---
-    function getTier(uint256 totalDonated) public pure returns (uint8) {
-        if (totalDonated >= TIER3_THRESHOLD) return 3;
-        if (totalDonated >= TIER2_THRESHOLD) return 2;
-        if (totalDonated >= TIER1_THRESHOLD) return 1;
-        return 0;
-    }
-
-    function getVaultStatus() external view returns (
-        uint256 currentBalance,
-        uint256 minReserve,
-        uint256 availableForClaims
-    ) {
-        currentBalance = degenToken.balanceOf(address(this));
-        minReserve = minVaultBalance;
-        availableForClaims = currentBalance > minReserve ? currentBalance - minReserve : 0;
+    // --- Balance Publishing ---
+    function publishBalance() external {
+        require(block.timestamp > lastPublishedTime + 1 days, "Balance publish cooldown");
+        lastPublishedBalance = degenToken.balanceOf(address(this));
+        lastPublishedTime = block.timestamp;
     }
 
     // --- Fallback Disabled ---

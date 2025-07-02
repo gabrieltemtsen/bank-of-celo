@@ -14,16 +14,15 @@ import {
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
 import { formatDistanceToNow, format } from "date-fns";
-import { useAccount, usePublicClient, useSendTransaction } from "wagmi";
-import {
-  CELO_JACKPOT_CONTRACT_ADDRESS,
-  CELO_JACKPOT_ABI,
-  MOTIVATIONAL_STATEMENTS,
-} from "~/lib/constants";
+import { useAccount, usePublicClient, useWriteContract, useSendTransaction, useBalance } from "wagmi";
+import { CELO_JACKPOT_CONTRACT_ADDRESS, CELO_JACKPOT_ABI, DEGEN_JACKPOT_ABI } from "~/lib/constants";
+import { MOTIVATIONAL_STATEMENTS } from "~/lib/constants";
+import { ERC20_ABI, useJackpotContract } from "~/hooks/contracts";
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
-import { AnyAaaaRecord } from "dns";
+import { base, celo } from "viem/chains";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface CeloJackpotProps {
   isCorrectChain: boolean;
@@ -46,9 +45,22 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { sendTransactionAsync } = useSendTransaction();
+  const { writeContractAsync } = useWriteContract();
+  const { mode } = useChainMode();
+  const targetChain = mode === "degen" ? base : celo;
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const ticketPrice = mode === "degen" ? 250 : 1;
+  const { address: jackpotAddress, abi: jackpotAbi } = useJackpotContract();
+  const { data: tokenBalance } = useBalance({
+    address,
+    token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined, // DEGEN on Base
+    chainId: mode === "degen" ? base.id : undefined,
+  });
+
   const [ticketCount, setTicketCount] = useState("1");
   const [lotteryPending, setLotteryPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+
   const [dashboardData, setDashboardData] = useState<{
     currentRound: number;
     timeUntilDraw: number;
@@ -67,34 +79,24 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     totalParticipants: 0,
   });
   const [pastTickets, setPastTickets] = useState<
-    {
-      roundId: number;
-      tickets: number;
-      hasWon?: boolean;
-      roundActive?: boolean;
-      date?: string;
-    }[]
+    { roundId: number; tickets: number; hasWon?: boolean; roundActive?: boolean; date?: string; }[]
   >([]);
   const [unclaimedRounds, setUnclaimedRounds] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showPastTickets, setShowPastTickets] = useState(false);
   const [countdown, setCountdown] = useState<string>("00:00:00");
-  const [isDataLoading, setIsDataLoading] = useState(false); // Renamed for clarity
+  const [isDataLoading, setIsDataLoading] = useState(false);
   const countdownRef = useRef<NodeJS.Timeout>();
   const [drawDate, setDrawDate] = useState<string>("TBD");
   const [pastRounds, setPastRounds] = useState<RoundData[]>([]);
 
-  // Fetch dashboard data and user-specific data
   const fetchDashboardData = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
-    // Only set loading if we're not already loading
-    if (!isDataLoading) {
-      setIsDataLoading(true);
-    }
+    if (!isDataLoading) setIsDataLoading(true);
     try {
       const data: any = await publicClient.readContract({
-        address: CELO_JACKPOT_CONTRACT_ADDRESS,
-        abi: CELO_JACKPOT_ABI,
+        address: jackpotAddress,
+        abi: jackpotAbi,
         functionName: "getDashboardData",
         args: [address],
       });
@@ -108,66 +110,63 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
         totalWinnings: formatEther(data[5]),
         totalParticipants: Number(data[6]),
       });
-      // Fetch past tickets
+
       const userRounds: any = await publicClient.readContract({
-        address: CELO_JACKPOT_CONTRACT_ADDRESS,
-        abi: CELO_JACKPOT_ABI,
+        address: jackpotAddress,
+        abi: jackpotAbi,
         functionName: "getUserRounds",
         args: [address],
       });
 
       const ticketsPromises = userRounds.map(async (roundId: bigint) => {
         const tickets: any = await publicClient.readContract({
-          address: CELO_JACKPOT_CONTRACT_ADDRESS,
-          abi: CELO_JACKPOT_ABI,
+          address: jackpotAddress,
+          abi: jackpotAbi,
           functionName: "userTickets",
           args: [address, roundId],
         });
 
-        // Check if user won this round
         const roundData: any = await publicClient.readContract({
-          address: CELO_JACKPOT_CONTRACT_ADDRESS,
-          abi: CELO_JACKPOT_ABI,
+          address: jackpotAddress,
+          abi: jackpotAbi,
           functionName: "rounds",
           args: [roundId],
         });
 
-        const winnerAddress = roundData[6] as `0x${string}`;
+        const winnerAddress = roundData[5] as `0x${string}`;
         const hasWon = winnerAddress === address;
         const startTime = Number(roundData[1]);
         const timeInSeconds = Number(startTime);
-        const startTimeDate = new Date(timeInSeconds * 1000); // convert seconds to ms
-        const formattedDate_1 = format(startTimeDate, "MMMM d");
+        const startTimeDate = new Date(timeInSeconds * 1000);
+        const formattedDate = format(startTimeDate, "MMMM d");
 
         const getCurrentRound: any = await publicClient.readContract({
-          address: CELO_JACKPOT_CONTRACT_ADDRESS,
-          abi: CELO_JACKPOT_ABI,
+          address: jackpotAddress,
+          abi: jackpotAbi,
           functionName: "getCurrentRound",
           args: [],
         });
         const isRoundActive = getCurrentRound.roundId === roundId;
-        const roundActive = getCurrentRound.drawCompleted;
         const timestampSeconds = Number(getCurrentRound.startTime);
-        const date = new Date(timestampSeconds * 1000); // convert seconds to ms
-        const formattedDate = format(date, "MMMM d");
-        setDrawDate(formattedDate);
+        const date = new Date(timestampSeconds * 1000);
+        const formattedDrawDate = format(date, "MMMM d");
+        setDrawDate(formattedDrawDate);
 
         return {
           roundId: Number(roundId),
           tickets: Number(tickets),
           hasWon,
           roundActive: isRoundActive,
-          date: formattedDate_1,
+          date: formattedDate,
         };
       });
 
       const ticketsData = await Promise.all(ticketsPromises);
-      setPastTickets(ticketsData.filter((t) => t.tickets > 0));
+      setPastTickets(ticketsData.filter((t: any) => t.tickets > 0));
 
-      // Fetch unclaimed winnings
       const unclaimed: any = await publicClient.readContract({
-        address: CELO_JACKPOT_CONTRACT_ADDRESS,
-        abi: CELO_JACKPOT_ABI,
+        address: jackpotAddress,
+        abi: jackpotAbi,
         functionName: "getUnclaimedRounds",
         args: [address],
       });
@@ -177,41 +176,35 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       toast.error("Failed to load jackpot data. Please try again.");
     } finally {
       setIsLoading(false);
+      setIsDataLoading(false);
     }
-  }, [address, publicClient, isCorrectChain]);
-  // Add this function to fetch past rounds data
+  }, [address, publicClient, isCorrectChain, jackpotAddress, jackpotAbi]);
+
   const fetchPastRounds = useCallback(async () => {
     if (!publicClient) return;
 
     try {
-      // Get current round to know how many past rounds to fetch
       const currentRound: any = await publicClient.readContract({
-        address: CELO_JACKPOT_CONTRACT_ADDRESS,
-        abi: CELO_JACKPOT_ABI,
+        address: jackpotAddress,
+        abi: jackpotAbi,
         functionName: "getCurrentRound",
       });
       const currentRoundId = Number(currentRound.roundId);
 
-      // Fetch data for previous rounds (let's show last 5 rounds)
       const roundsToFetch = Math.min(5, currentRoundId - 1);
       const roundPromises = [];
 
-      for (
-        let i = currentRoundId - 1;
-        i > currentRoundId - 1 - roundsToFetch;
-        i--
-      ) {
+      for (let i = currentRoundId - 1; i > currentRoundId - 1 - roundsToFetch; i--) {
         roundPromises.push(
           publicClient.readContract({
-            address: CELO_JACKPOT_CONTRACT_ADDRESS,
-            abi: CELO_JACKPOT_ABI,
+            address: jackpotAddress,
+            abi: jackpotAbi,
             functionName: "rounds",
             args: [BigInt(i)],
           }),
         );
       }
       const roundsData = await Promise.all(roundPromises);
-      console.log(roundsData);
       const formattedRounds = roundsData.map((round: any, index) => ({
         roundId: currentRoundId - 1 - index,
         startTime: Number(round[1]),
@@ -228,14 +221,14 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     } catch (error) {
       console.error("Error fetching past rounds:", error);
     }
-  }, [publicClient]);
+  }, [publicClient, jackpotAddress, jackpotAbi]);
 
   useEffect(() => {
     fetchDashboardData();
     fetchPastRounds();
-    const syncInterval = setInterval(fetchDashboardData, 3000); // Sync every 30 seconds
+    const syncInterval = setInterval(fetchDashboardData, 3000);
     return () => clearInterval(syncInterval);
-  }, [fetchDashboardData, fetchPastRounds]);
+  }, [fetchDashboardData, fetchPastRounds, targetChain.id]);
 
   const handleTriggerDraw = async () => {
     if (!address || !publicClient || !isCorrectChain) {
@@ -246,122 +239,145 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     setLotteryPending(true);
     try {
       const hash = await sendTransactionAsync({
-        to: CELO_JACKPOT_CONTRACT_ADDRESS,
+        to: jackpotAddress,
         data: encodeFunctionData({
-          abi: CELO_JACKPOT_ABI,
+          abi: jackpotAbi,
           functionName: "triggerDraw",
           args: [],
         }),
         value: 0n,
+        chainId: targetChain.id,
       });
 
-      toast.success(
-        `Draw triggered successfully! Transaction: ${hash.slice(0, 6)}...`,
-      );
-      fetchDashboardData(); // Refresh data
+      toast.success(`Draw triggered successfully! Transaction: ${hash.slice(0, 6)}...`);
+      fetchDashboardData();
     } catch (error) {
       console.error("Trigger draw error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to trigger draw",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to trigger draw");
     } finally {
       setLotteryPending(false);
     }
   };
-  // Helper function to format seconds into HH:mm:ss
+
   const formatCountdown = (seconds: number): string => {
     if (seconds <= 0) return "00:00:00";
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hours.toString().padStart(2, "0")}:${minutes
-      .toString()
-      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const handleBuyTickets = async () => {
-    if (!address || !publicClient || !isCorrectChain) {
-      toast.error("Wallet not connected or wrong network");
-      return;
-    }
+const handleBuyTickets = async () => {
+  if (!address || !publicClient || !isCorrectChain) {
+    toast.error("Wallet not connected or wrong network");
+    return;
+  }
 
-    const tickets = parseInt(ticketCount);
-    if (isNaN(tickets)) {
-      toast.error("Please enter a valid number of tickets");
-      return;
-    }
+  const tickets = parseInt(ticketCount);
+  if (isNaN(tickets)) {
+    toast.error("Please enter a valid number of tickets");
+    return;
+  }
 
-    setLotteryPending(true);
-    setTxHash(null);
+  setLotteryPending(true);
+  setTxHash(null);
 
-    try {
-      const totalCost = parseEther((tickets * 1).toString());
-      const balance = await publicClient.getBalance({ address });
-      if (balance < totalCost) {
-        toast.error("Insufficient CELO balance to buy tickets");
+  try {
+    const totalCost = mode === "degen" ? parseUnits((tickets * ticketPrice).toString(), 18) : parseEther((tickets * ticketPrice).toString());
+    let balanceCheck;
+
+    if (mode === "degen") {
+      console.log("Token Balance Data:", tokenBalance);
+      balanceCheck = tokenBalance?.value || 0n;
+      console.log(`DEGEN Balance: ${formatEther(balanceCheck)} DEGEN, Total Cost: ${formatEther(totalCost)} DEGEN`);
+      if (balanceCheck < totalCost) {
+        toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balanceCheck)} DEGEN, Required: ${formatEther(totalCost)} DEGEN`);
         return;
       }
-
-      // Get Divvi referral data suffix
-      let dataSuffix;
-      try {
-        dataSuffix = getDataSuffix({
-          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-          providers: [
-            "0x0423189886d7966f0dd7e7d256898daeee625dca",
-            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-          ],
+      const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
+      const allowance = await publicClient.readContract({
+        address: degenTokenAddress,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [address, jackpotAddress],
+      }) as bigint;
+      console.log(`DEGEN Allowance: ${formatEther(allowance)} DEGEN`);
+      if (allowance < totalCost) {
+        toast.info(`Approving ${tickets * ticketPrice} DEGEN...`);
+        const approveHash = await writeContractAsync({
+          address: degenTokenAddress,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [jackpotAddress, totalCost],
+          chainId: targetChain.id,
         });
-      } catch (diviError) {
-        console.error("Divi getDataSuffix error:", diviError);
-        throw new Error("Failed to generate referral data");
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        toast.success("DEGEN approval successful!");
       }
-
-      const contractData = encodeFunctionData({
-        abi: CELO_JACKPOT_ABI,
-        functionName: "buyTickets",
-        args: [],
-      });
-
-      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
-
-      const hash = await sendTransactionAsync({
-        to: CELO_JACKPOT_CONTRACT_ADDRESS,
-        value: totalCost,
-        data: finalData as `0x${string}`,
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
-      });
-
-      // Report to Divvi
-      try {
-        await submitReferral({
-          txHash: hash,
-          chainId: 42220, // Celo mainnet
-        });
-      } catch (diviError) {
-        console.error("Divi submitReferral error:", diviError);
-        toast.warning(
-          "Ticket purchase succeeded, but referral tracking failed",
-        );
+    } else {
+      balanceCheck = await publicClient.getBalance({ address });
+      console.log(`CELO Balance: ${formatEther(balanceCheck)} CELO, Total Cost: ${formatEther(totalCost)} CELO`);
+      if (balanceCheck < totalCost) {
+        toast.error(`Insufficient CELO balance. Available: ${formatEther(balanceCheck)} CELO, Required: ${formatEther(totalCost)} CELO`);
+        return;
       }
-
-      toast.success(
-        `Successfully bought ${tickets} ticket${tickets > 1 ? "s" : ""} for ${tickets} CELO! Transaction: ${hash.slice(0, 6)}...`,
-      );
-      setTxHash(hash);
-      setTicketCount("1");
-      fetchDashboardData(); // Refresh data after purchase
-    } catch (error) {
-      console.error("Ticket purchase error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to purchase tickets",
-      );
-    } finally {
-      setLotteryPending(false);
     }
-  };
+
+    let dataSuffix;
+    try {
+      dataSuffix = getDataSuffix({
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+        ],
+      });
+    } catch (diviError) {
+      console.error("Divi getDataSuffix error:", diviError);
+      throw new Error("Failed to generate referral data");
+    }
+
+    const contractData = encodeFunctionData({
+      abi: jackpotAbi,
+      functionName: "buyTickets",
+      args: mode === "degen" ? [BigInt(tickets)] : [],
+    });
+
+    const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
+    const hash = await sendTransactionAsync({
+      to: jackpotAddress,
+      data: finalData as `0x${string}`,
+      value: mode === "degen" ? 0n : totalCost,
+      chainId: targetChain.id,
+      maxFeePerGas: parseUnits("100", 9),
+      maxPriorityFeePerGas: parseUnits("100", 9),
+    });
+
+    try {
+      await submitReferral({
+        txHash: hash,
+        chainId: targetChain.id,
+      });
+    } catch (diviError) {
+      console.error("Divi submitReferral error:", diviError);
+      toast.warning("Ticket purchase succeeded, but referral tracking failed");
+    }
+
+    toast.success(
+      `Successfully bought ${tickets} ticket${tickets > 1 ? "s" : ""} for ${tickets * ticketPrice} ${currency}! Transaction: ${hash.slice(0, 6)}...`,
+    );
+    setTxHash(hash);
+    setTicketCount("1");
+    fetchDashboardData();
+  } catch (error) {
+    console.error("Ticket purchase error:", error);
+    toast.error(error instanceof Error ? error.message : "Failed to purchase tickets");
+  } finally {
+    setLotteryPending(false);
+  }
+};
 
   const handleClaimWinnings = async (roundId: number) => {
     if (!address || !publicClient || !isCorrectChain) {
@@ -373,7 +389,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     setTxHash(null);
 
     try {
-      // Get Divvi referral data suffix
       let dataSuffix;
       try {
         dataSuffix = getDataSuffix({
@@ -390,7 +405,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       }
 
       const contractData = encodeFunctionData({
-        abi: CELO_JACKPOT_ABI,
+        abi: jackpotAbi,
         functionName: "claimWinnings",
         args: [BigInt(roundId)],
       });
@@ -398,73 +413,49 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       const finalData = dataSuffix ? contractData + dataSuffix : contractData;
 
       const hash = await sendTransactionAsync({
-        to: CELO_JACKPOT_CONTRACT_ADDRESS,
+        to: jackpotAddress,
         data: finalData as `0x${string}`,
         value: 0n,
+        chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
-      // Report to Divvi
       try {
         await submitReferral({
           txHash: hash,
-          chainId: 42220, // Celo mainnet
+          chainId: targetChain.id,
         });
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
         toast.warning("Claim succeeded, but referral tracking failed");
       }
 
-      toast.success(
-        `Successfully claimed winnings for Round ${roundId}! Transaction: ${hash.slice(0, 6)}...`,
-      );
+      toast.success(`Successfully claimed winnings for Round ${roundId}! Transaction: ${hash.slice(0, 6)}...`);
       setTxHash(hash);
-      fetchDashboardData(); // Refresh data after claim
+      fetchDashboardData();
     } catch (error) {
       console.error("Claim winnings error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to claim winnings",
-      );
+      toast.error(error instanceof Error ? error.message : "Failed to claim winnings");
     } finally {
       setLotteryPending(false);
     }
   };
-  // Live countdown timer
-  // Start/update countdown when timeUntilDraw changes
-  useEffect(() => {
-    // Clear any existing interval
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-    }
 
-    // Only start if we have positive time
+  useEffect(() => {
     if (dashboardData.timeUntilDraw > 0) {
       setCountdown(formatCountdown(dashboardData.timeUntilDraw));
-
-      // Start new interval
       countdownRef.current = setInterval(() => {
         setCountdown((prev) => {
-          // Parse current time from previous countdown
           const [hours, minutes, seconds] = prev.split(":").map(Number);
           const totalSeconds = hours * 3600 + minutes * 60 + seconds - 1;
-
-          if (totalSeconds <= 0) {
-            clearInterval(countdownRef.current);
-            return "00:00:00";
-          }
-          return formatCountdown(totalSeconds);
+          return totalSeconds <= 0 ? "00:00:00" : formatCountdown(totalSeconds);
         });
       }, 1000);
     } else {
       setCountdown("00:00:00");
     }
-
-    return () => {
-      if (countdownRef.current) {
-        clearInterval(countdownRef.current);
-      }
-    };
+    return () => clearInterval(countdownRef.current);
   }, [dashboardData.timeUntilDraw]);
 
   return (
@@ -477,12 +468,11 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       {!isCorrectChain ? (
         <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 text-center">
           <p className="text-gray-600 dark:text-gray-300">
-            Please switch to Celo Network to proceed
+            Please switch to {mode === "degen" ? "Base" : "Celo"} Network to proceed
           </p>
         </div>
       ) : (
         <>
-          {/* Jackpot Banner */}
           <motion.div
             initial={{ scale: 0.95 }}
             animate={{ scale: 1 }}
@@ -495,7 +485,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                   BOC Jackpot - {drawDate}
                 </p>
                 <h3 className="text-3xl font-bold text-white mb-5">
-                  {dashboardData.currentPot} CELO
+                  {dashboardData.currentPot} {currency}
                 </h3>
                 <div className="flex items-center gap-2 text-purple-100">
                   <Clock className="w-4 h-4" />
@@ -507,7 +497,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                     <Button
                       onClick={handleTriggerDraw}
                       disabled={lotteryPending}
-                      className="text-sm bg-gray-300 text-black hover:bg-gray-100 px-3 py-1"
+                      className="text-sm bg-purple-400 text-black hover:bg-purple-600 px-3 py-1"
                     >
                       {lotteryPending ? (
                         <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
@@ -521,13 +511,12 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
               <div className="flex items-center gap-2 text-white">
                 <Trophy className="w-5 h-5" />
                 <span className="font-medium">
-                  {/* {dashboardData.totalParticipants} */}
+                  {dashboardData.totalParticipants}
                 </span>
               </div>
             </div>
           </motion.div>
 
-          {/* Buy Tickets Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -544,12 +533,12 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                   <span>
                     Tickets purchased successfully!{" "}
                     <a
-                      href={`https://celoscan.io/tx/${txHash}`}
+                      href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="underline"
                     >
-                      View on CeloScan
+                      View on {mode === "degen" ? "BaseScan" : "CeloScan"}
                     </a>
                   </span>
                 </div>
@@ -560,10 +549,9 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                   htmlFor="ticket-count"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Number of Tickets (1 CELO each)
+                  Number of Tickets ({ticketPrice} {currency} each)
                 </label>
 
-                {/* Quick Select Buttons */}
                 <div className="flex gap-2 mb-3">
                   {TICKET_PRESETS.map((num) => (
                     <button
@@ -595,9 +583,9 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                   Total cost:{" "}
                   <span className="font-medium text-gray-900 dark:text-white">
                     {ticketCount && !isNaN(parseInt(ticketCount))
-                      ? parseInt(ticketCount)
+                      ? parseInt(ticketCount) * ticketPrice
                       : 0}{" "}
-                    CELO
+                    {currency}
                   </span>
                 </p>
               </div>
@@ -630,7 +618,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
             </div>
           </motion.div>
 
-          {/* Current Round Info */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -666,21 +653,10 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                     </p>
                   </div>
                 </div>
-                {/* <div className="text-right">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Your chance</p>
-                  <p className="font-semibold text-purple-600 dark:text-purple-400">
-                    {dashboardData.totalParticipants > 0
-                      ? `${Math.round(
-                          (dashboardData.userTicketsCurrentRound / dashboardData.totalParticipants) * 100
-                        )}%`
-                      : "0%"}
-                  </p>
-                </div> */}
               </div>
             )}
           </motion.div>
 
-          {/* Unclaimed Winnings */}
           {dashboardData.hasUnclaimed && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -735,7 +711,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
             </motion.div>
           )}
 
-          {/* Past Tickets Section */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -771,7 +746,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                     {pastTickets
                       .sort((a, b) => b.roundId - a.roundId)
                       .map((ticket) => {
-                        const randomStatement = MOTIVATIONAL_STATEMENTS[4];
+                        const randomStatement = MOTIVATIONAL_STATEMENTS[Math.floor(Math.random() * MOTIVATIONAL_STATEMENTS.length)];
 
                         return (
                           <div key={ticket.roundId} className="space-y-3">
@@ -812,7 +787,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                                     ticket.hasWon
                                       ? "text-green-600 dark:text-green-400"
                                       : ticket.roundActive
-                                        ? "text-green-500 dark:text-green-400" // Green for active rounds
+                                        ? "text-green-500 dark:text-green-400"
                                         : "text-gray-500 dark:text-gray-400"
                                   }`}
                                 >
@@ -825,7 +800,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                               </div>
                             </div>
 
-                            {/* Motivational message for lost rounds */}
                             {!ticket.hasWon && (
                               <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/50">
                                 <div className="flex items-start gap-2">
@@ -852,7 +826,6 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                         );
                       })}
 
-                    {/* Summary card */}
                     <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
@@ -862,7 +835,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                           </p>
                         </div>
                         <p className="text-lg font-bold text-gray-900 dark:text-white">
-                          {dashboardData.totalWinnings} CELO
+                          {dashboardData.totalWinnings} {currency}
                         </p>
                       </div>
                     </div>
@@ -871,7 +844,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
               </div>
             )}
           </motion.div>
-          {/* Past Rounds Section */}
+
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -914,7 +887,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-black font-medium">
-                          {round.pot} CELO
+                          {round.pot} {currency}
                         </p>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           {round.participantCount} participants
@@ -930,7 +903,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
                           {round.winner.slice(-4)}
                         </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Won {round.winningAmount} CELO
+                          Won {round.winningAmount} {currency}
                         </p>
                       </div>
                     ) : (

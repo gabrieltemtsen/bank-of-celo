@@ -19,14 +19,20 @@ import {
   useWriteContract,
   useSwitchChain,
   useSendTransaction,
+  useBalance,
 } from "wagmi";
 import {
   CELO_CHECK_IN_CONTRACT_ADDRESS,
   CELO_CHECK_IN_ABI,
+  DEGEN_DAILY_CHECKIN_ADDRESS,
+  DEGEN_DAILY_CHECKIN_ABI,
 } from "~/lib/constants";
 import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import sdk from "@farcaster/frame-sdk";
+import { base, celo } from "wagmi/chains";
+import { useChainMode } from "~/app/chain-mode/context";
+import { ERC20_ABI } from "~/hooks/contracts";
 
 interface DailyCheckinSheetProps {
   isOpen: boolean;
@@ -51,8 +57,6 @@ interface DashboardData {
   currentDay: bigint;
 }
 
-const CELO_CHAIN_ID = 42220;
-
 export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   isOpen,
   onClose,
@@ -62,32 +66,79 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const { writeContractAsync, isPending: isTxPending } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
+  const { mode } = useChainMode();
+  const targetChain = mode === "degen" ? base : celo;
+  const isCorrectChain = chainId === targetChain.id;
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const CHECK_IN_FEE = mode === "degen" ? parseUnits("1", 18) : parseEther("0.001"); // Adjust DEGEN fee as needed
+  const { address: checkInAddress, abi: checkInAbi } = mode === "degen"
+    ? { address: DEGEN_DAILY_CHECKIN_ADDRESS, abi: DEGEN_DAILY_CHECKIN_ABI }
+    : { address: CELO_CHECK_IN_CONTRACT_ADDRESS, abi: CELO_CHECK_IN_ABI };
+  const { data: tokenBalance } = useBalance({
+    address,
+    token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined,
+    chainId: mode === "degen" ? base.id : undefined,
+  });
 
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
-    null,
-  );
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [checkInStatus, setCheckInStatus] = useState<boolean[]>([]);
   const [fid, setFid] = useState<number | null>(null);
 
-  const isCorrectChain = chainId === CELO_CHAIN_ID;
-  const CHECK_IN_FEE = dashboardData?.currentFee || parseEther("0.001");
-  const currentDay = dashboardData?.currentDay
-    ? Number(dashboardData.currentDay)
-    : 1;
-  const currentRoundNumber = dashboardData?.currentRoundNumber
-    ? Number(dashboardData.currentRoundNumber)
-    : 0;
+  const currentDay = dashboardData?.currentDay ? Number(dashboardData.currentDay) : 1;
+  const currentRoundNumber = dashboardData?.currentRoundNumber ? Number(dashboardData.currentRoundNumber) : 0;
   const canClaimReward = dashboardData?.canClaim || false;
   const isRoundActive = dashboardData?.roundActive ?? false;
-  const userCheckIns = dashboardData?.userCheckIns
-    ? Number(dashboardData.userCheckIns)
-    : 0;
-  const currentReward = dashboardData?.currentReward
-    ? formatEther(dashboardData.currentReward)
-    : 0;
+  const userCheckIns = dashboardData?.userCheckIns ? Number(dashboardData.userCheckIns) : 0;
+  const currentReward = dashboardData?.currentReward ? formatEther(dashboardData.currentReward) : "0";
+
+  // Dynamic theme classes
+  const isDegen = mode === "degen";
+  const progressBarClasses = isDegen
+    ? "bg-gradient-to-r from-purple-500 to-purple-600 h-2.5 rounded-full"
+    : "bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full";
+
+  const checkedInBorderClasses = isDegen
+    ? "bg-purple-500/20 border border-purple-500/30"
+    : "bg-emerald-500/20 border border-emerald-500/30";
+
+  const checkedInIconClasses = isDegen
+    ? "text-purple-400"
+    : "text-emerald-400";
+
+  const primaryButtonClasses = isDegen
+    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
+    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2";
+
+  const rewardButtonClasses = isDegen
+    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse";
+
+  const switchNetworkButtonClasses = isDegen
+    ? "w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
+    : "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium";
+
+  const successBgClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg flex items-center gap-2 text-purple-500"
+    : "p-3 bg-emerald-500/10 rounded-lg flex items-center gap-2 text-emerald-500";
+
+  const successStatusClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400 flex items-center justify-center gap-2"
+    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400 flex items-center justify-center gap-2";
+
+  const claimTimeBgClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400"
+    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400";
+
+  const roundNumberClasses = isDegen
+    ? "text-sm text-purple-400"
+    : "text-sm text-emerald-400";
+
+  const chevronIconClasses = isDegen
+    ? "w-4 h-4 mt-0.5 text-purple-400 flex-shrink-0"
+    : "w-4 h-4 mt-0.5 text-emerald-400 flex-shrink-0";
 
   function mapDashboardData(data: any[]): DashboardData {
     return {
@@ -105,38 +156,35 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     };
   }
 
-  // Fetch all user data in one call using the new dashboard function
   const fetchUserStatus = useCallback(async () => {
     if (!address || !publicClient || !isCorrectChain) return;
     setIsLoading(true);
     setError(null);
 
     try {
-      const data: any = (await publicClient.readContract({
-        address: CELO_CHECK_IN_CONTRACT_ADDRESS,
-        abi: CELO_CHECK_IN_ABI,
+      const data: any = await publicClient.readContract({
+        address: checkInAddress,
+        abi: checkInAbi,
         functionName: "getUserDashboard",
         args: [address],
-      })) as DashboardData;
+      });
       const _dashboardData = mapDashboardData(data);
 
       setDashboardData(_dashboardData);
 
-      // Get check-in status for all days
-      const status = (await publicClient.readContract({
-        address: CELO_CHECK_IN_CONTRACT_ADDRESS,
-        abi: CELO_CHECK_IN_ABI,
+      const status = await publicClient.readContract({
+        address: checkInAddress,
+        abi: checkInAbi,
         functionName: "getUserCheckInStatus",
         args: [address],
-      })) as boolean[];
+      }) as boolean[];
 
       setCheckInStatus(status);
 
-      // Fetch FID if needed for claiming
-      if (data.canClaim && !fid) {
+      if (_dashboardData.canClaim && !fid) {
         const response = await fetch(`/api/farcaster?address=${address}`);
         const fidData = await response.json();
-        // if (fidData.fid) setFid(fidData.fid);
+        if (fidData.fid) setFid(fidData.fid);
       }
     } catch (err) {
       console.error("Error fetching user status:", err);
@@ -145,16 +193,14 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [address, publicClient, isCorrectChain, fid]);
-
-  // Initialize SDK and fetch user context
+  }, [address, publicClient, isCorrectChain, checkInAddress, checkInAbi, fid]);
 
   useEffect(() => {
     const initSdkContext = async () => {
       await sdk.isInMiniApp();
       await sdk.actions.ready();
       const context = await sdk.context;
-      console.log("SDK context:", context.user.fid);
+      console.log("SDK context:", context.user?.fid);
 
       if (!context.user) {
         setError("Please link your Farcaster account to view your profile.");
@@ -169,7 +215,8 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   useEffect(() => {
     fetchUserStatus();
-  }, [fetchUserStatus]);
+  }, [fetchUserStatus, targetChain.id]);
+
   const fetchSignature = async (
     type: "checkIn" | "claimReward",
     params: any,
@@ -194,7 +241,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleCheckin = async () => {
     if (!address || !publicClient || !dashboardData) {
-      toast.error("Please connect wallet and switch to Celo Network");
+      toast.error(`Please connect wallet and switch to ${mode === "degen" ? "Base" : "Celo"} Network`);
       return;
     }
 
@@ -208,31 +255,54 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     setError(null);
 
     try {
-      // Switch to Celo mainnet if needed
       if (!isCorrectChain) {
-        await switchChainAsync({ chainId: CELO_CHAIN_ID });
+        await switchChainAsync({ chainId: targetChain.id });
       }
 
-      // Get signature for check-in
       const signature = await fetchSignature("checkIn", {
         userAddress: address,
         day: currentDay,
         round: currentRoundNumber,
       });
 
-      // Check user's balance for check-in fee
-      const balance = await publicClient.getBalance({ address });
-      if (balance < CHECK_IN_FEE) {
-        throw new Error(`Insufficient CELO for check-in fee (0.001 CELO)`);
+      let balanceCheck;
+      if (mode === "degen") {
+        balanceCheck = tokenBalance?.value || 0n;
+        if (balanceCheck < CHECK_IN_FEE) {
+          throw new Error(`Insufficient ${currency} balance. Available: ${formatEther(balanceCheck)} ${currency}, Required: ${formatEther(CHECK_IN_FEE)} ${currency}`);
+        }
+        const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
+        const allowance = await publicClient.readContract({
+          address: degenTokenAddress,
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [address, checkInAddress],
+        }) as bigint;
+        if (allowance < CHECK_IN_FEE) {
+          toast.info(`Approving ${formatEther(CHECK_IN_FEE)} ${currency}...`);
+          const approveHash = await writeContractAsync({
+            address: degenTokenAddress,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [checkInAddress, CHECK_IN_FEE],
+            chainId: targetChain.id,
+          });
+          await publicClient.waitForTransactionReceipt({ hash: approveHash });
+          toast.success(`${currency} approval successful!`);
+        }
+      } else {
+        balanceCheck = await publicClient.getBalance({ address });
+        if (balanceCheck < CHECK_IN_FEE) {
+          throw new Error(`Insufficient ${currency} balance. Available: ${formatEther(balanceCheck)} ${currency}, Required: ${formatEther(CHECK_IN_FEE)} ${currency}`);
+        }
       }
-      // Encode the contract call data
+
       const checkInData = encodeFunctionData({
-        abi: CELO_CHECK_IN_ABI,
+        abi: checkInAbi,
         functionName: "checkIn",
         args: [BigInt(currentDay), signature],
       });
 
-      // Try to get Divi referral data
       let dataSuffix = "";
       try {
         const suffix = await getDataSuffix({
@@ -248,22 +318,20 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         console.warn("Divi referral tracking failed:", diviError);
       }
 
-      // Combine the data
       const combinedData = (checkInData + dataSuffix) as `0x${string}`;
-      // Call checkIn
       const hash = await sendTransactionAsync({
-        to: CELO_CHECK_IN_CONTRACT_ADDRESS,
+        to: checkInAddress,
         data: combinedData,
-        value: CHECK_IN_FEE,
+        value: mode === "degen" ? 0n : CHECK_IN_FEE,
+        chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
-      // Submit referral if possible
       try {
         await submitReferral({
           txHash: hash,
-          chainId: CELO_CHAIN_ID,
+          chainId: targetChain.id,
         });
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
@@ -283,7 +351,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const handleClaimReward = async () => {
     if (!address || !publicClient || !dashboardData || !fid) {
-      toast.error(`Connect wallet to cehck in farc:, ${fid}`);
+      toast.error(`Connect wallet to claim reward, FID: ${fid}`);
       return;
     }
 
@@ -292,24 +360,18 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
     setError(null);
 
     try {
-      // Get signature for claim
-      // Get signature for check-in
-      console.log("Fetching signature for claim reward...");
       const signature = await fetchSignature("claimReward", {
         userAddress: address,
         fid: fid,
         round: currentRoundNumber,
       });
 
-      console.log("Signature response:", signature);
-      // Encode the contract call data
       const claimData = encodeFunctionData({
-        abi: CELO_CHECK_IN_ABI,
+        abi: checkInAbi,
         functionName: "claimReward",
         args: [BigInt(fid), signature],
       });
 
-      // Try to get Divi referral data
       let dataSuffix = "";
       try {
         const suffix = await getDataSuffix({
@@ -325,19 +387,18 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         console.warn("Divi referral tracking failed:", diviError);
       }
 
-      // Combine the data
       const combinedData = (claimData + dataSuffix) as `0x${string}`;
 
-      // Call claimReward
       const hash = await sendTransactionAsync({
-        to: CELO_CHECK_IN_CONTRACT_ADDRESS,
+        to: checkInAddress,
         data: combinedData,
+        chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       setTxHash(hash);
-      toast.success("Reward claimed successfully!");
+      toast.success(`Reward claimed successfully! (${currentReward} ${currency})`);
       await fetchUserStatus();
     } catch (err) {
       console.error("Claim reward error:", err);
@@ -364,7 +425,6 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         transition={{ duration: 0.3 }}
         className="space-y-4 p-1"
       >
-        {/* Status Indicators */}
         {error && (
           <div className="p-3 bg-red-500/10 rounded-lg flex items-center gap-2 text-red-500">
             <AlertCircle className="w-5 h-5" />
@@ -373,23 +433,22 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         )}
 
         {txHash && (
-          <div className="p-3 bg-green-500/10 rounded-lg flex items-center gap-2 text-green-500">
+          <div className={successBgClasses}>
             <CheckCircle2 className="w-5 h-5" />
             <span>
               Transaction successful!{" "}
               <a
-                href={`https://celoscan.io/tx/${txHash}`}
+                href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="underline"
               >
-                View on CeloScan
+                View on {mode === "degen" ? "BaseScan" : "CeloScan"}
               </a>
             </span>
           </div>
         )}
 
-        {/* Progress Section */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium text-gray-300">Round Progress</h3>
@@ -398,48 +457,23 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
           <div className="w-full bg-gray-800 rounded-full h-2.5 mb-2">
             <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full"
+              className={progressBarClasses}
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
 
           <div className="flex justify-between text-sm text-gray-400">
             <span>{userCheckIns}/7 days checked in</span>
-            <span>{currentReward} CELO reward</span>
+            <span>{currentReward} {currency} reward</span>
           </div>
         </div>
 
-        {/* Daily Check-ins Grid */}
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
-          <h3 className="font-medium text-gray-300 mb-3">Your Check-ins</h3>
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 7 }).map((_, index) => (
-              <div
-                key={index}
-                className={`flex flex-col items-center p-2 rounded-lg ${
-                  checkInStatus[index]
-                    ? "bg-blue-500/20 border border-blue-500/30"
-                    : "bg-gray-800/50 border border-gray-700"
-                }`}
-              >
-                <span className="text-xs text-gray-300">Day {index + 1}</span>
-                {checkInStatus[index] ? (
-                  <CheckCircle2 className="w-4 h-4 text-blue-400 mt-1" />
-                ) : (
-                  <div className="w-4 h-4 rounded-full bg-gray-700 mt-1" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Action Buttons */}
         {!isCorrectChain ? (
           <Button
-            onClick={() => switchChainAsync({ chainId: CELO_CHAIN_ID })}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
+            onClick={() => switchChainAsync({ chainId: targetChain.id })}
+            className={switchNetworkButtonClasses}
           >
-            Switch to Celo Network
+            Switch to {mode === "degen" ? "Base" : "Celo"} Network
           </Button>
         ) : isLoading ? (
           <Button disabled className="w-full py-3 rounded-lg">
@@ -453,13 +487,13 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         ) : !hasCheckedInToday ? (
           <Button
             onClick={handleCheckin}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
+            className={primaryButtonClasses}
           >
             <CheckCircle2 className="w-5 h-5" />
             Check In for Day {currentDay}
           </Button>
         ) : (
-          <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20 text-center text-green-400 flex items-center justify-center gap-2">
+          <div className={successStatusClasses}>
             <CheckCircle2 className="w-5 h-5" />
             Already checked in today
           </div>
@@ -468,30 +502,28 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         {canClaimReward && (
           <Button
             onClick={handleClaimReward}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+            className={rewardButtonClasses}
           >
             <Gift className="w-5 h-5" />
-            Claim {currentReward} CELO Reward
+            Claim {currentReward} {currency} Reward
           </Button>
         )}
 
-        {/* Final Day Messages */}
         {currentDay === 7 && userCheckIns < 7 && (
           <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400">
             You missed some check-ins so this round has ended for you.
           </div>
         )}
         {currentDay === 7 && userCheckIns === 7 && canClaimReward && (
-          <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400">
+          <div className={claimTimeBgClasses}>
             Claim time! You have 24 hours to claim your reward.
           </div>
         )}
 
-        {/* Round Info */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-300">Current Round</h3>
-            <span className="text-sm text-blue-400">#{currentRoundNumber}</span>
+            <span className={roundNumberClasses}>#{currentRoundNumber}</span>
           </div>
 
           <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
@@ -503,28 +535,27 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
           <div className="flex items-center justify-between text-sm text-gray-400">
             <span>Fee</span>
-            <span>0.001 CELO/day</span>
+            <span>{formatEther(CHECK_IN_FEE)} {currency}/day</span>
           </div>
         </div>
 
-        {/* Info Section */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <h3 className="font-medium text-gray-300 mb-2">How It Works</h3>
           <ul className="space-y-2 text-sm text-gray-400">
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
-              <span>Check in daily (0.001 CELO fee per check-in)</span>
+              <ChevronRight className={chevronIconClasses} />
+              <span>Check in daily ({formatEther(CHECK_IN_FEE)} {currency} fee per check-in)</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
-              <span>Complete all 7 days to claim your CELO reward</span>
+              <ChevronRight className={chevronIconClasses} />
+              <span>Complete all 7 days to claim your {currency} reward</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Rewards are distributed at the end of each round</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Connect your Farcaster account to claim rewards</span>
             </li>
           </ul>
@@ -532,4 +563,4 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
       </motion.div>
     </BottomSheet>
   );
-};
+}

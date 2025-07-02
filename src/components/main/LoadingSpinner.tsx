@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface LoadingSpinnerProps {
   isSDKLoading?: boolean;
@@ -8,25 +9,38 @@ interface LoadingSpinnerProps {
 export default function LoadingSpinner({
   isSDKLoading = false,
 }: LoadingSpinnerProps) {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+
+  // Dynamic color classes based on mode
+  const spinnerClasses = isDegen
+    ? "text-purple-600"
+    : "text-emerald-600";
+
+  const bgClasses = isDegen
+    ? "bg-purple-50 dark:bg-purple-900/20"
+    : "bg-emerald-50 dark:bg-emerald-900/20";
+
   if (isSDKLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-emerald-100 to-amber-100 dark:from-emerald-950 dark:to-amber-950">
+      <div className={`flex items-center justify-center min-h-screen ${bgClasses}`}>
         <motion.div
-          animate={{ rotate: 360, scale: [1, 1.2, 1] }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className={`w-8 h-8 ${spinnerClasses}`}
         >
-          <Home className="w-12 h-12 text-emerald-500 dark:text-emerald-300" />
+          <Home size={32} />
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="absolute inset-0 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-20 rounded-xl">
+    <div className={`flex items-center justify-center p-8 ${bgClasses}`}>
       <motion.div
         animate={{ rotate: 360 }}
-        transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-        className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full"
+        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        className={`w-6 h-6 ${spinnerClasses}`}
       />
     </div>
   );

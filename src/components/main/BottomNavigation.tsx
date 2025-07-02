@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Home, Send, Trophy, Briefcase } from "lucide-react";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface BottomNavigationProps {
   activeTab: string;
@@ -21,6 +22,22 @@ export default function BottomNavigation({
   activeTab,
   onTabChange,
 }: BottomNavigationProps) {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+
+  // Dynamic color classes based on mode
+  const activeButtonClasses = isDegen
+    ? "text-white bg-gradient-to-r from-purple-500 to-purple-600 shadow-md"
+    : "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md";
+
+  const inactiveButtonClasses = isDegen
+    ? "text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
+    : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400";
+
+  const indicatorClasses = isDegen
+    ? "bg-purple-300"
+    : "bg-emerald-300";
+
   return (
     <motion.nav
       initial={{ y: 100 }}
@@ -34,8 +51,8 @@ export default function BottomNavigation({
           onClick={() => onTabChange(tab.id)}
           className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
             activeTab === tab.id
-              ? "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md"
-              : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400"
+              ? activeButtonClasses
+              : inactiveButtonClasses
           }`}
           aria-label={tab.label}
         >
@@ -44,7 +61,7 @@ export default function BottomNavigation({
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabIndicator"
-              className="absolute bottom-0 w-1/2 h-1 bg-emerald-300 rounded-full"
+              className={`absolute bottom-0 w-1/2 h-1 ${indicatorClasses} rounded-full`}
             />
           )}
         </button>

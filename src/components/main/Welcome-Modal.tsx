@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "~/components/ui/dialog";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface WelcomeModalProps {
   showWelcome: boolean;
@@ -19,6 +20,10 @@ export default function WelcomeModal({
   maxClaim,
   onClose,
 }: WelcomeModalProps) {
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const dynamicMaxClaim = mode === "degen" ? "250" : maxClaim;
+
   return (
     <Dialog open={showWelcome} onOpenChange={onClose}>
       <DialogContent className="bg-white dark:bg-gray-900 rounded-2xl border-0 shadow-xl p-6 max-w-md">
@@ -29,11 +34,11 @@ export default function WelcomeModal({
             </div>
           </div>
           <DialogTitle className="text-2xl font-bold text-center text-gray-900 dark:text-white">
-            Welcome to Bank of Celo!
+            Welcome to Bank of {mode === "degen" ? "Degen" : "Celo"}!
           </DialogTitle>
           <DialogDescription className="text-center text-gray-600 dark:text-gray-300 mt-2">
-            The decentralized vault supporting the Celo ecosystem. Donate to
-            help grow the community or claim {maxClaim} CELO to explore
+            The decentralized vault supporting the {mode === "degen" ? "Degen" : "Celo"} ecosystem. Donate to
+            help grow the community or claim {dynamicMaxClaim} {currency} to explore
             decentralized finance. Swap tokens seamlessly or check the
             leaderboard to see top contributors!
           </DialogDescription>

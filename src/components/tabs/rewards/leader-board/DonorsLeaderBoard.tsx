@@ -8,10 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { toast } from "sonner";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
+import { useBankContract } from "~/hooks/contracts";
 import { celo } from "viem/chains";
 import {
   Trophy,
@@ -21,6 +18,7 @@ import {
   ChevronUp,
   RefreshCcw,
 } from "lucide-react";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface Donor {
   donor: string;
@@ -43,6 +41,14 @@ export default function DonorsLeaderBoard({
   const [expandedDonor, setExpandedDonor] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const { mode } = useChainMode();
+  const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
+  
+  // Dynamic color classes based on mode
+  const isDegen = mode === "degen";
+  const primaryColor = isDegen ? "purple" : "emerald";
+  const secondaryColor = isDegen ? "blue" : "emerald";
 
   // Fetch current user's username
   useEffect(() => {
@@ -94,15 +100,15 @@ export default function DonorsLeaderBoard({
     setIsLoading(true);
     try {
       if (!publicClient || !isCorrectChain) {
-        toast.error("Please connect to Celo network");
+        toast.error(`Please connect to ${mode === "degen" ? "Base" : "Celo"} network`);
         setIsLoading(false);
         return;
       }
 
       // Get top donors from contract
       const leaderboard = (await publicClient.readContract({
-        address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-        abi: BANK_OF_CELO_CONTRACT_ABI,
+        address: bankAddress as `0x${string}`,
+        abi: bankAbi,
         functionName: "getLeaderboard",
       })) as any[];
 
@@ -148,8 +154,8 @@ export default function DonorsLeaderBoard({
 
     // Watch for new donations
     const unwatch = publicClient?.watchContractEvent({
-      address: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
-      abi: BANK_OF_CELO_CONTRACT_ABI,
+      address: bankAddress as `0x${string}`,
+      abi: bankAbi,
       eventName: "Donated",
       onLogs: () => fetchLeaderboard(),
     });
@@ -168,24 +174,24 @@ export default function DonorsLeaderBoard({
         <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold flex items-center gap-3">
-              <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">
-                <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+              <div className={`bg-${primaryColor}-100 dark:bg-${primaryColor}-900 p-2 rounded-lg`}>
+                <Trophy className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
               </div>
               <span className="text-gray-900 dark:text-white">Top Donors</span>
             </h2>
             <button
               onClick={fetchLeaderboard}
               disabled={isLoading || !isCorrectChain}
-              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full py-1.5"
+              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full py-1.5 transition-all duration-200"
             >
               {isLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
               ) : (
-                <RefreshCcw />
+                <RefreshCcw className="w-3 h-3" />
               )}
             </button>
           </div>
-          <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
+          <div className={`p-5 mb-4 bg-gradient-to-r text-xs from-${primaryColor}-50 to-${secondaryColor}-50 dark:from-${primaryColor}-900/30 dark:to-${secondaryColor}-900/30 rounded-2xl border border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
             Welcome to the Donors Leaderboard where, a list of our top donors
             are acknowledged!!
           </div>
@@ -193,12 +199,12 @@ export default function DonorsLeaderBoard({
           {!isCorrectChain ? (
             <div className="p-4 text-center bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
               <p className="text-yellow-600 dark:text-yellow-300">
-                Please connect to Celo network to view leaderboard
+                Please connect to {mode === "degen" ? "Base" : "Celo"} network to view leaderboard
               </p>
             </div>
           ) : isLoading ? (
             <div className="flex justify-center py-6">
-              <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+              <Loader2 className={`w-8 h-8 animate-spin text-${primaryColor}-500`} />
             </div>
           ) : donors.length === 0 ? (
             <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -216,11 +222,11 @@ export default function DonorsLeaderBoard({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
                     transition={{ delay: index * 0.05 }}
-                    className={`overflow-hidden rounded-lg ${
+                    className={`overflow-hidden rounded-lg transition-all duration-200 ${
                       expandedDonor === donor.donor
-                        ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
-                        : "bg-gray-50 dark:bg-gray-700"
-                    } ${donor.donor === address ? "ring-2 ring-purple-500" : ""}`}
+                        ? `bg-${primaryColor}-50 dark:bg-${primaryColor}-900/30 border border-${primaryColor}-100 dark:border-${primaryColor}-800`
+                        : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                    } ${donor.donor === address ? `ring-2 ring-${primaryColor}-500` : ""}`}
                   >
                     <button
                       onClick={() =>
@@ -228,21 +234,21 @@ export default function DonorsLeaderBoard({
                           expandedDonor === donor.donor ? null : donor.donor,
                         )
                       }
-                      className="w-full flex items-center p-3"
+                      className="w-full flex items-center p-3 transition-all duration-200"
                     >
                       <div className="flex items-center w-full">
                         <div
-                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
+                          className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 transition-all duration-200 ${
                             index < 3
-                              ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
-                              : "bg-purple-100 dark:bg-purple-900"
+                              ? "bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-md"
+                              : `bg-${primaryColor}-100 dark:bg-${primaryColor}-900`
                           }`}
                         >
                           <span
                             className={`text-sm font-bold ${
                               index < 3
                                 ? "text-white"
-                                : "text-purple-600 dark:text-purple-300"
+                                : `text-${primaryColor}-600 dark:text-${primaryColor}-300`
                             }`}
                           >
                             {index + 1}
@@ -252,19 +258,19 @@ export default function DonorsLeaderBoard({
                           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                             {donor.username || truncateAddress(donor.donor)}
                             {donor.donor === address && (
-                              <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full">
+                              <span className={`ml-2 text-xs bg-${primaryColor}-100 dark:bg-${primaryColor}-900 text-${primaryColor}-600 dark:text-${primaryColor}-300 px-2 py-0.5 rounded-full`}>
                                 You
                               </span>
                             )}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {parseFloat(donor.amount).toFixed(2)} CELO
+                            {parseFloat(donor.amount).toFixed(2)} {currency}
                           </p>
                         </div>
                         {expandedDonor === donor.donor ? (
-                          <ChevronUp className="w-4 h-4 text-gray-500" />
+                          <ChevronUp className="w-4 h-4 text-gray-500 transition-transform duration-200" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-500" />
+                          <ChevronDown className="w-4 h-4 text-gray-500 transition-transform duration-200" />
                         )}
                       </div>
                     </button>
@@ -277,11 +283,11 @@ export default function DonorsLeaderBoard({
                         transition={{ duration: 0.2 }}
                         className="px-3 pb-3"
                       >
-                        <div className="pt-2 border-t border-purple-100 dark:border-purple-800">
+                        <div className={`pt-2 border-t border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
                           <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300">
                             <span>Total Donations:</span>
                             <span className="font-medium">
-                              {parseFloat(donor.amount).toFixed(2)} CELO
+                              {parseFloat(donor.amount).toFixed(2)} {currency}
                             </span>
                           </div>
                           <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mt-1">
@@ -312,15 +318,15 @@ export default function DonorsLeaderBoard({
 
         {/* Top Donor Highlight */}
         {donors.length > 0 && (
-          <div className="p-5 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
+          <div className={`p-5 bg-gradient-to-r from-${primaryColor}-50 to-${secondaryColor}-50 dark:from-${primaryColor}-900/30 dark:to-${secondaryColor}-900/30 rounded-2xl border border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
             <div className="flex items-center gap-3 mb-3">
-              <Award className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+              <Award className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
               <h3 className="font-medium text-gray-900 dark:text-white">
                 Top Donor
               </h3>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full">
+              <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full shadow-md">
                 <span className="text-sm font-bold text-white">1</span>
               </div>
               <div>
@@ -328,7 +334,7 @@ export default function DonorsLeaderBoard({
                   {donors[0].username || truncateAddress(donors[0].donor)}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  {parseFloat(donors[0].amount).toFixed(2)} CELO donated
+                  {parseFloat(donors[0].amount).toFixed(2)} {currency} donated
                 </p>
               </div>
             </div>
@@ -340,7 +346,7 @@ export default function DonorsLeaderBoard({
           <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
             <p className="text-sm text-center text-gray-600 dark:text-gray-300">
               Your rank: #{userRank} with {donors[userRank - 1]?.amount || "0"}{" "}
-              CELO donated
+              {currency} donated
             </p>
           </div>
         )}

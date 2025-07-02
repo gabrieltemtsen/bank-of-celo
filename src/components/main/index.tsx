@@ -10,18 +10,17 @@ import {
   useSwitchChain,
   useChainId,
   useSendTransaction,
+  useWriteContract,
+  usePublicClient,
 } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, parseEther, parseUnits } from "viem";
+import { encodeFunctionData, parseEther, parseUnits, maxUint256 } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { toast } from "sonner";
-import {
-  BANK_OF_CELO_CONTRACT_ABI,
-  BANK_OF_CELO_CONTRACT_ADDRESS,
-} from "~/lib/constants";
-import { celo } from "viem/chains";
+import { useBankContract, ERC20_ABI } from "~/hooks/contracts";
+import { celo, base } from "viem/chains";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { cubesImage } from "~/constants/images";
 import { useContractData } from "./hook/useMain";
@@ -32,6 +31,8 @@ import Header from "./Header";
 import TabContent from "./TabContent";
 import BottomNavigation from "./BottomNavigation";
 import { useSearchParams } from "next/navigation";
+import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -40,6 +41,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
+  const { writeContract, isPending } = useWriteContract();
+  const publicClient = usePublicClient();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
 
@@ -48,12 +51,13 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
-  const [isDonatePending, setIsDonatePending] = useState(false);
 
+  const { mode } = useChainMode();
+  const dynamicTitle = mode === "degen" ? "Bank of Celo" : title;
+  const { address: bankAddress, abi: bankAbi } = useBankContract();
   const chainId = useChainId();
-  const CELO_CHAIN_ID = celo.id;
-  const targetChain = celo;
-  const isCorrectChain = chain?.id === CELO_CHAIN_ID;
+  const targetChain = mode === "degen" ? base : celo;
+  const isCorrectChain = chain?.id === targetChain.id;
   const showSwitchNetworkBanner = isConnected && !isCorrectChain;
 
   // Use our custom hooks
@@ -131,9 +135,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       connectors.find((c) => c.id === "injected") || connectors[0];
     connect({
       connector,
-      chainId: CELO_CHAIN_ID,
+      chainId: targetChain.id,
     });
-  }, [connectors, connect, CELO_CHAIN_ID]);
+  }, [connectors, connect, targetChain]);
 
   const handleSignOut = useCallback(async () => {
     await signOut({ redirect: false });
@@ -153,7 +157,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const handleDonate = useCallback(
     async (amount: string) => {
       if (!isCorrectChain) {
-        toast.error("Please switch to Celo Network");
+        toast.error(`Please switch to ${targetChain.name} Network`);
         return;
       }
 
@@ -163,10 +167,49 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       }
 
       try {
-        setIsDonatePending(true);
+        if (!publicClient) {
+          toast.error("Public client not available");
+          return;
+        }
+        if (mode === "degen" && address) {
+          const tokenAddress = (await publicClient.readContract({
+            address: bankAddress as `0x${string}`,
+            abi: bankAbi,
+            functionName: "degenToken",
+          })) as `0x${string}`;
+          const decimals = (await publicClient.readContract({
+            address: tokenAddress,
+            abi: ERC20_ABI,
+            functionName: "decimals",
+          })) as number;
+          const amountParsed = parseUnits(amount, decimals);
+          const allowance = (await publicClient.readContract({
+            address: tokenAddress,
+            abi: ERC20_ABI,
+            functionName: "allowance",
+            args: [address, bankAddress],
+          })) as bigint;
+          if (allowance < amountParsed) {
+            await writeContract({
+              address: tokenAddress,
+              abi: ERC20_ABI,
+              functionName: "approve",
+              args: [bankAddress, maxUint256],
+            });
+          }
+          await writeContract({
+            address: bankAddress,
+            abi: bankAbi,
+            functionName: "donate",
+            args: [amountParsed],
+          });
+          toast.success("Donation successful!");
+          fetchContractData();
+          return;
+        }
         // 1. Encode the donate function call
         const donateData = encodeFunctionData({
-          abi: BANK_OF_CELO_CONTRACT_ABI,
+          abi: bankAbi,
           functionName: "donate",
         });
 
@@ -188,10 +231,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
         // 4. Send the transaction
         const hash = await sendTransactionAsync({
-          to: BANK_OF_CELO_CONTRACT_ADDRESS as `0x${string}`,
+          to: bankAddress as `0x${string}`,
           data: combinedData as `0x${string}`,
           value: parseEther(amount),
-          chainId: CELO_CHAIN_ID,
+          chainId: targetChain.id,
           maxFeePerGas: parseUnits("100", 9),
           maxPriorityFeePerGas: parseUnits("100", 9),
         });
@@ -206,11 +249,11 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         try {
           console.log("Submitting referral to Divi:", {
             txHash: hash,
-            chainId: CELO_CHAIN_ID,
+            chainId: targetChain.id,
           });
           await submitReferral({
             txHash: hash,
-            chainId: CELO_CHAIN_ID,
+            chainId: targetChain.id,
           });
           console.log("Referral submitted successfully");
         } catch (diviError) {
@@ -224,11 +267,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         toast.error(
           `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
-      } finally {
-        setIsDonatePending(false);
       }
     },
-    [isCorrectChain, sendTransactionAsync, CELO_CHAIN_ID, fetchContractData],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
   );
 
   // Show loading spinner if SDK is not loaded
@@ -238,7 +279,13 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-emerald-100 via-amber-50 to-emerald-100 dark:from-emerald-950 dark:via-gray-900 dark:to-emerald-950 flex flex-col"
+      className={cn(
+        "min-h-screen flex flex-col relative transition-all duration-500",
+        // Base background with proper theming
+        mode === "celo"
+          ? "bg-gradient-to-br from-emerald-50 via-white to-emerald-100 dark:from-emerald-950 dark:via-emerald-900 dark:to-emerald-950"
+          : "bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-purple-950 dark:via-purple-900 dark:to-purple-950"
+      )}
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
@@ -252,7 +299,24 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
-      <div className="min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+      {/* Enhanced Themed Overlay */}
+      <div 
+        className={cn(
+          "min-h-[100vh] fixed inset-0 transition-all duration-500",
+          mode === "celo"
+            ? "bg-gradient-to-br from-emerald-600/30 via-emerald-700/40 to-emerald-800/50"
+            : "bg-gradient-to-br from-purple-600/30 via-purple-700/40 to-purple-800/50"
+        )}
+      />
+
+      {/* Subtle Pattern Overlay */}
+      <div 
+        className="min-h-[100vh] fixed inset-0 opacity-10"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, ${mode === "celo" ? "rgb(34, 197, 94)" : "rgb(147, 51, 234)"} 1px, transparent 0)`,
+          backgroundSize: "20px 20px",
+        }}
+      />
 
       {/* Welcome Modal */}
       <WelcomeModal
@@ -263,7 +327,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
       {/* Header */}
       <Header
-        title={title}
+        title={dynamicTitle}
         isConnected={isConnected}
         address={address}
         status={status}
@@ -277,7 +341,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       />
 
       {/* Content */}
-      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative">
+      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative z-10">
         {isLoading && <LoadingSpinner />}
 
         <TabContent
@@ -289,7 +353,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           claimCooldown={claimCooldown}
           lastClaimAt={lastClaimAt}
           isCorrectChain={isCorrectChain}
-          isPending={isDonatePending}
+          isPending={isPending}
           onNavigate={setActiveTab}
           onDonate={handleDonate}
         />

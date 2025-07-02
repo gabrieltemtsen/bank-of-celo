@@ -10,6 +10,7 @@ import {
   Calculator,
   Banknote,
 } from "lucide-react";
+import { useChainMode } from "~/app/chain-mode/context";
 import SavingsModal from "./savings";
 import LoansModal from "./loan";
 
@@ -79,6 +80,9 @@ export default function ServicesTab({
   vaultBalance,
   isCorrectChain,
 }: ServicesTabProps) {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+  
   const [activeSavingsModal, setSavingsModal] = useState(false);
   const [activeLoansModal, setLoansModal] = useState(false);
 
@@ -96,11 +100,52 @@ export default function ServicesTab({
     "Collateral-backed loans",
   ];
 
+  // Dynamic colors based on mode
+  // const primaryColor = isDegen ? "purple" : "emerald";
+  // const secondaryColor = isDegen ? "pink" : "blue";
+  
+  // Background gradients
+  const backgroundGradient = isDegen
+    ? "from-purple-50 via-white to-pink-50"
+    : "from-emerald-50 via-white to-blue-50";
+  
+  const headerGradient = isDegen
+    ? "from-purple-500/5 to-transparent"
+    : "from-emerald-500/5 to-transparent";
+
+  // Service card gradients
+  const savingsGradient = isDegen
+    ? "bg-gradient-to-br from-purple-500 to-purple-600"
+    : "bg-gradient-to-br from-emerald-500 to-emerald-600";
+  
+  const loansGradient = isDegen
+    ? "bg-gradient-to-br from-pink-500 to-pink-600"
+    : "bg-gradient-to-br from-blue-500 to-blue-600";
+
+  // Icon colors
+  const savingsIconColor = isDegen ? "text-purple-600" : "text-emerald-600";
+  const loansIconColor = isDegen ? "text-pink-600" : "text-blue-600";
+  
+  // Stats colors
+  const trendingColor = isDegen ? "text-purple-600" : "text-emerald-600";
+  const shieldColor = isDegen ? "text-pink-600" : "text-blue-600";
+  
+  // Quick calculator colors
+  const percentColor = isDegen ? "text-purple-600" : "text-emerald-600";
+  const banknoteColor = isDegen ? "text-pink-600" : "text-blue-600";
+
+  // Security notice colors
+  const securityBg = isDegen ? "bg-purple-50" : "bg-amber-50";
+  const securityBorder = isDegen ? "border-purple-200" : "border-amber-200";
+  const securityIconColor = isDegen ? "text-purple-600" : "text-amber-600";
+  const securityTextColor = isDegen ? "text-purple-800" : "text-amber-800";
+  const securitySubTextColor = isDegen ? "text-purple-700" : "text-amber-700";
+
   return (
     <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-white to-blue-50" />
-      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-500/5 to-transparent" />
+      <div className={`absolute inset-0 bg-gradient-to-br ${backgroundGradient}`} />
+      <div className={`absolute top-0 left-0 w-full h-64 bg-gradient-to-b ${headerGradient}`} />
 
       <div className="relative z-1 p-6 pb-32">
         {/* Header */}
@@ -131,8 +176,8 @@ export default function ServicesTab({
         >
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-5 h-5 text-emerald-600" />
-              <span className="text-xs text-emerald-600 font-medium">
+              <TrendingUp className={`w-5 h-5 ${trendingColor}`} />
+              <span className={`text-xs ${trendingColor} font-medium`}>
                 +5.2%
               </span>
             </div>
@@ -142,8 +187,8 @@ export default function ServicesTab({
 
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-100 shadow-sm">
             <div className="flex items-center justify-between mb-2">
-              <Shield className="w-5 h-5 text-blue-600" />
-              <span className="text-xs text-blue-600 font-medium">Insured</span>
+              <Shield className={`w-5 h-5 ${shieldColor}`} />
+              <span className={`text-xs ${shieldColor} font-medium`}>Insured</span>
             </div>
             <p className="text-xs text-gray-500 mb-1">Total Secured</p>
             <p className="text-lg font-bold text-gray-900">$2.1M</p>
@@ -160,10 +205,10 @@ export default function ServicesTab({
             <ServiceCard
               title="Savings Account"
               description="Earn competitive interest on your crypto deposits with flexible terms"
-              icon={<PiggyBank className="w-6 h-6 text-emerald-600" />}
+              icon={<PiggyBank className={`w-6 h-6 ${savingsIconColor}`} />}
               features={savingsFeatures}
               onClick={() => setSavingsModal(true)}
-              gradient="bg-gradient-to-br from-emerald-500 to-emerald-600"
+              gradient={savingsGradient}
               iconBg="bg-white/20"
             />
           </motion.div>
@@ -176,10 +221,10 @@ export default function ServicesTab({
             <ServiceCard
               title="Crypto Loans"
               description="Access instant liquidity without selling your crypto assets"
-              icon={<CreditCard className="w-6 h-6 text-blue-600" />}
+              icon={<CreditCard className={`w-6 h-6 ${loansIconColor}`} />}
               features={loansFeatures}
               onClick={() => setLoansModal(true)}
-              gradient="bg-gradient-to-br from-blue-500 to-blue-600"
+              gradient={loansGradient}
               iconBg="bg-white/20"
             />
           </motion.div>
@@ -200,18 +245,18 @@ export default function ServicesTab({
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <Percent className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
+                <Percent className={`w-6 h-6 ${percentColor} mx-auto mb-2`} />
                 <p className="text-xs text-gray-500 mb-1">Monthly Interest</p>
-                <p className="text-lg font-bold text-emerald-600">$127.50</p>
+                <p className={`text-lg font-bold ${percentColor}`}>$127.50</p>
                 <p className="text-xs text-gray-400">On $18,000 deposit</p>
               </div>
             </div>
 
             <div className="text-center">
               <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-                <Banknote className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <Banknote className={`w-6 h-6 ${banknoteColor} mx-auto mb-2`} />
                 <p className="text-xs text-gray-500 mb-1">Available Credit</p>
-                <p className="text-lg font-bold text-blue-600">$12,600</p>
+                <p className={`text-lg font-bold ${banknoteColor}`}>$12,600</p>
                 <p className="text-xs text-gray-400">70% of collateral</p>
               </div>
             </div>
@@ -223,15 +268,15 @@ export default function ServicesTab({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="mt-6 bg-amber-50 border border-amber-200 rounded-xl p-4"
+          className={`mt-6 ${securityBg} border ${securityBorder} rounded-xl p-4`}
         >
           <div className="flex items-start">
-            <Shield className="w-5 h-5 text-amber-600 mr-3 mt-0.5 flex-shrink-0" />
+            <Shield className={`w-5 h-5 ${securityIconColor} mr-3 mt-0.5 flex-shrink-0`} />
             <div>
-              <p className="text-sm font-medium text-amber-800 mb-1">
+              <p className={`text-sm font-medium ${securityTextColor} mb-1`}>
                 Secured by Smart Contracts
               </p>
-              <p className="text-xs text-amber-700">
+              <p className={`text-xs ${securitySubTextColor}`}>
                 All funds are protected by audited smart contracts and backed by
                 over-collateralization.
               </p>

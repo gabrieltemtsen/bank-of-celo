@@ -14,7 +14,7 @@ contract DegenJackpot {
     
     IERC20 public constant degenToken = IERC20(0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed); // DEGEN on Base
     
-    uint256 public constant TICKET_PRICE = 250 * 1e18; // 250 DEGEN (fixed)
+    uint256 public constant TICKET_PRICE = 250 * 1e18; // 250 DEGEN (18 decimals)
     uint256 public constant DEV_FEE_PERCENT = 5; // 5% fee on winnings
     uint256 public constant WIN_PROBABILITY = 9; // 9% chance to win
     
@@ -36,6 +36,7 @@ contract DegenJackpot {
     mapping(address => uint256[]) public userRounds;
     mapping(address => uint256[]) public userWins;
     
+    // Frontend optimization
     address[] public allParticipants;
     mapping(address => bool) public isParticipant;
     mapping(uint256 => address[]) public roundWinners;
@@ -44,12 +45,14 @@ contract DegenJackpot {
     uint256 public drawInterval = 1 days;
     uint256 public totalJackpot;
     
-    event TicketPurchased(address buyer, uint256 roundId, uint256 amount);
-    event WinnerSelected(uint256 roundId, address winner, uint256 amount);
-    event WinningsClaimed(uint256 roundId, address winner, uint256 amount);
+    // Events
+    event TicketPurchased(address indexed buyer, uint256 roundId, uint256 amount);
+    event WinnerSelected(uint256 roundId, address indexed winner, uint256 amount);
+    event WinningsClaimed(uint256 roundId, address indexed winner, uint256 amount);
     event RoundAdvanced(uint256 newRoundId, uint256 carryOverPot);
 
     constructor(address _devWallet) {
+        require(_devWallet != address(0), "Invalid dev wallet");
         owner = msg.sender;
         devWallet = _devWallet;
         _startNewRound(0);
@@ -60,6 +63,7 @@ contract DegenJackpot {
     // ========================
 
     function buyTickets(uint256 ticketCount) external {
+        require(ticketCount > 0, "Must buy at least one ticket");
         uint256 totalCost = ticketCount * TICKET_PRICE;
         require(degenToken.transferFrom(msg.sender, address(this), totalCost), "DEGEN transfer failed");
         
@@ -111,7 +115,7 @@ contract DegenJackpot {
             uint256 runningTotal;
             address winner;
             
-            for (uint i = 0; i < currentRound.participantCount; i++) {
+            for (uint256 i = 0; i < currentRound.participantCount; i++) {
                 address participant = currentRound.participants[i];
                 runningTotal += userTickets[participant][currentRoundId] * TICKET_PRICE;
                 if (runningTotal > winningTicket) {
@@ -153,14 +157,117 @@ contract DegenJackpot {
     }
 
     // ========================
+    // View Functions
+    // ========================
+
+    function getTimeUntilDraw() public view returns (uint256) {
+        Round memory currentRound = rounds[currentRoundId];
+        if (block.timestamp >= currentRound.startTime + drawInterval) {
+            return 0;
+        }
+        return (currentRound.startTime + drawInterval) - block.timestamp;
+    }
+
+    function getCurrentRound() public view returns (Round memory) {
+        return rounds[currentRoundId];
+    }
+
+    function getRoundParticipants(uint256 roundId) public view returns (address[] memory) {
+        return rounds[roundId].participants;
+    }
+
+    function getUserRounds(address user) public view returns (uint256[] memory) {
+        return userRounds[user];
+    }
+
+    function getUserWins(address user) public view returns (uint256[] memory) {
+        return userWins[user];
+    }
+
+    function hasUnclaimedWinnings(address user) public view returns (bool) {
+        uint256[] memory wins = userWins[user];
+        for (uint256 i = 0; i < wins.length; i++) {
+            if (!rounds[wins[i]].claimed) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getUnclaimedRounds(address user) public view returns (uint256[] memory) {
+        uint256[] memory wins = userWins[user];
+        uint256 count = 0;
+        
+        for (uint256 i = 0; i < wins.length; i++) {
+            if (!rounds[wins[i]].claimed) {
+                count++;
+            }
+        }
+        
+        uint256[] memory unclaimed = new uint256[](count);
+        uint256 index = 0;
+        for (uint256 i = 0; i < wins.length; i++) {
+            if (!rounds[wins[i]].claimed) {
+                unclaimed[index] = wins[i];
+                index++;
+            }
+        }
+        
+        return unclaimed;
+    }
+
+    function getDashboardData(address user) public view returns (
+        uint256 currentRound,
+        uint256 timeUntilDraw,
+        uint256 currentPot,
+        uint256 userTicketsCurrentRound,
+        bool hasUnclaimed,
+        uint256 totalWinnings,
+        uint256 totalParticipants
+    ) {
+        currentRound = currentRoundId;
+        timeUntilDraw = getTimeUntilDraw();
+        currentPot = rounds[currentRoundId].pot;
+        userTicketsCurrentRound = userTickets[user][currentRoundId];
+        hasUnclaimed = hasUnclaimedWinnings(user);
+        totalWinnings = getTotalWinnings(user);
+        totalParticipants = allParticipants.length;
+        
+        return (
+            currentRound,
+            timeUntilDraw,
+            currentPot,
+            userTicketsCurrentRound,
+            hasUnclaimed,
+            totalWinnings,
+            totalParticipants
+        );
+    }
+
+    function getTotalWinnings(address user) public view returns (uint256) {
+        uint256[] memory wins = userWins[user];
+        uint256 total = 0;
+        for (uint256 i = 0; i < wins.length; i++) {
+            total += rounds[wins[i]].winningAmount;
+        }
+        return total;
+    }
+
+    // ========================
     // Admin Functions
     // ========================
+
     function setDrawInterval(uint256 newInterval) external onlyOwner {
         require(newInterval >= 1 hours && newInterval <= 7 days, "Invalid interval");
         drawInterval = newInterval;
     }
 
-    function emergencyWithdrawDEGEN() external onlyOwner {
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Invalid address");
+        owner = newOwner;
+    }
+
+    function emergencyWithdraw() external onlyOwner {
         uint256 balance = degenToken.balanceOf(address(this));
         require(degenToken.transfer(owner, balance), "Emergency withdraw failed");
     }
@@ -168,6 +275,7 @@ contract DegenJackpot {
     // ========================
     // Private Functions
     // ========================
+
     function _startNewRound(uint256 carryOverPot) private {
         currentRoundId++;
         rounds[currentRoundId] = Round({
@@ -185,8 +293,20 @@ contract DegenJackpot {
         emit RoundAdvanced(currentRoundId, carryOverPot);
     }
 
+    // ========================
+    // Modifiers
+    // ========================
+
     modifier onlyOwner() {
         require(msg.sender == owner, "Not owner");
         _;
+    }
+
+    // ========================
+    // Fallback
+    // ========================
+
+    receive() external payable {
+        revert("Use buyTickets() for DEGEN");
     }
 }
