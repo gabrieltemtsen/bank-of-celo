@@ -71,7 +71,7 @@ export default function Header({
                 className={cn(
                   "text-xs font-medium flex items-center rounded-full px-4 py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
                   mode === "celo"
-                    ? "bg-green-400/90  dark:bg-emerald-900/90 text-green-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-800 hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/50"
+                    ? "text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
                     : "bg-white/90 dark:bg-purple-900/90 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-800 hover:shadow-purple-200/50 dark:hover:shadow-purple-900/50"
                 )}
                 aria-label="Disconnect wallet"
