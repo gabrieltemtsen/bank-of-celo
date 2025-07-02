@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --primary: #fbcc5c;
+  --primary-hover: #e0ae32;
+  --gradient-from: #35d07f;
+  --gradient-to: #fbcc5c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --primary: #fbcc5c;
+    --primary-hover: #e0ae32;
+    --gradient-from: #35d07f;
+    --gradient-to: #fbcc5c;
+  }
+}
+
+html.degen-mode {
+  --primary: #7c65c1;
+  --primary-hover: #6952a3;
+  --gradient-from: #a855f7;
+  --gradient-to: #7c65c1;
+  transition: color 0.5s ease-in-out, background-color 0.5s ease-in-out;
+}
+
+html.celo-mode {
+  --primary: #fbcc5c;
+  --primary-hover: #e0ae32;
+  --gradient-from: #35d07f;
+  --gradient-to: #fbcc5c;
+  transition: color 0.5s ease-in-out, background-color 0.5s ease-in-out;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: "Inter", Helvetica, Arial, sans-serif;
+  background-size: 200% 200%;
+  animation: gradient-animation 10s ease infinite;
+}
+
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+html.degen-mode body {
+  background-image: linear-gradient(
+    45deg,
+    #2d004b,
+    #1a002a,
+    #0f001a,
+    #000000
+  );
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+  }
+}

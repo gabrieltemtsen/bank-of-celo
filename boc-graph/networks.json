@@ -1,0 +1,11 @@
+{
+  "celo": {
+    "BankOfCelo": {
+      "address": "0x18Ea8d1D41A3307D159D2d3C1fCfBCF139354A8F",
+      "startBlock": 35469999
+    },
+    "CeloJackpot": {
+      "address": "0x9602d02Bd17d9f1c1EB09028fCea26dD29383611"
+    }
+  }
+}
