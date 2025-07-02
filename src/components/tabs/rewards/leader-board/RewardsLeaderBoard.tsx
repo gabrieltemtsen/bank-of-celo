@@ -38,6 +38,11 @@ export default function RewardsLeaderBoard({
   const [loading, setLoading] = useState<boolean>(true);
   const { mode } = useChainMode();
 
+  // Dynamic color classes based on mode
+  const isDegen = mode === "degen";
+  const primaryColor = isDegen ? "purple" : "emerald";
+  const secondaryColor = isDegen ? "blue" : "emerald";
+
   // Fetch leaderboard from Convex
   const leaderboardData = useQuery(api.users.getLeaderboard, { limit: 50 });
   const users = leaderboardData || [];
@@ -87,25 +92,25 @@ export default function RewardsLeaderBoard({
       <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold flex items-center gap-3">
-            <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">
-              <Trophy className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+            <div className={`bg-${primaryColor}-100 dark:bg-${primaryColor}-900 p-2 rounded-lg`}>
+              <Trophy className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
             </div>
             <span className="text-gray-900 dark:text-white">{mode === "degen" ? "Degen" : "Celo"} Rewards</span>
           </h2>
           <button
             onClick={fetchLeaderboard}
             disabled={loading || !isCorrectChain}
-            className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-full py-1.5"
+            className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full py-1.5 transition-all duration-200"
           >
             {loading ? (
               <Loader2 className="w-3 h-3 animate-spin" />
             ) : (
-              <RefreshCcw />
+              <RefreshCcw className="w-3 h-3" />
             )}
           </button>
         </div>
 
-        <div className="p-5 mb-4 bg-gradient-to-r text-xs from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
+        <div className={`p-5 mb-4 bg-gradient-to-r text-xs from-${primaryColor}-50 to-${secondaryColor}-50 dark:from-${primaryColor}-900/30 dark:to-${secondaryColor}-900/30 rounded-2xl border border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
           Welcome to the {mode === "degen" ? "Degen" : "Celo"} Leaderboard where we display our users who cast
           via the {mode === "degen" ? "degen" : "celo"} channel!! In addition, users successfully verified using
           their passports through the Self Protocol will have a multiplier of
@@ -120,7 +125,7 @@ export default function RewardsLeaderBoard({
           </div>
         ) : loading && !leaderboardData ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+            <Loader2 className={`w-8 h-8 animate-spin text-${primaryColor}-500`} />
           </div>
         ) : sortedUsers.length === 0 ? (
           <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -138,11 +143,11 @@ export default function RewardsLeaderBoard({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 10 }}
                   transition={{ delay: index * 0.05 }}
-                  className={`overflow-hidden rounded-lg ${
+                  className={`overflow-hidden rounded-lg transition-all duration-200 ${
                     expandedDonor === user.address
-                      ? "bg-purple-50 dark:bg-purple-900/30 border border-purple-100 dark:border-purple-800"
-                      : "bg-gray-50 dark:bg-gray-700"
-                  } ${user.address === address ? "ring-2 ring-purple-500" : ""}`}
+                      ? `bg-${primaryColor}-50 dark:bg-${primaryColor}-900/30 border border-${primaryColor}-100 dark:border-${primaryColor}-800`
+                      : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                  } ${user.address === address ? `ring-2 ring-${primaryColor}-500` : ""}`}
                 >
                   <button
                     onClick={() =>
@@ -150,21 +155,21 @@ export default function RewardsLeaderBoard({
                         expandedDonor === user.address ? null : user.address,
                       )
                     }
-                    className="w-full flex items-center p-3"
+                    className="w-full flex items-center p-3 transition-all duration-200"
                   >
                     <div className="flex items-center w-full">
                       <div
-                        className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-full mr-3 transition-all duration-200 ${
                           index < 3
-                            ? "bg-gradient-to-br from-yellow-400 to-yellow-600"
-                            : "bg-purple-100 dark:bg-purple-900"
+                            ? "bg-gradient-to-br from-yellow-400 to-yellow-600 shadow-md"
+                            : `bg-${primaryColor}-100 dark:bg-${primaryColor}-900`
                         }`}
                       >
                         <span
                           className={`text-sm font-bold ${
                             index < 3
                               ? "text-white"
-                              : "text-purple-600 dark:text-purple-300"
+                              : `text-${primaryColor}-600 dark:text-${primaryColor}-300`
                           }`}
                         >
                           {index + 1}
@@ -174,7 +179,7 @@ export default function RewardsLeaderBoard({
                         <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {user.username || truncateAddress(user.address)}
                           {user.address === address && (
-                            <span className="ml-2 text-xs bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-2 py-0.5 rounded-full">
+                            <span className={`ml-2 text-xs bg-${primaryColor}-100 dark:bg-${primaryColor}-900 text-${primaryColor}-600 dark:text-${primaryColor}-300 px-2 py-0.5 rounded-full`}>
                               You
                             </span>
                           )}
@@ -184,9 +189,9 @@ export default function RewardsLeaderBoard({
                         </p>
                       </div>
                       {expandedDonor === user.address ? (
-                        <ChevronUp className="w-4 h-4 text-gray-500" />
+                        <ChevronUp className="w-4 h-4 text-gray-500 transition-transform duration-200" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-500" />
+                        <ChevronDown className="w-4 h-4 text-gray-500 transition-transform duration-200" />
                       )}
                     </div>
                   </button>
@@ -199,7 +204,7 @@ export default function RewardsLeaderBoard({
                       transition={{ duration: 0.2 }}
                       className="px-3 pb-3"
                     >
-                      <div className="pt-2 border-t border-purple-100 dark:border-purple-800">
+                      <div className={`pt-2 border-t border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
                         <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300">
                           <span>Total Points:</span>
                           <span className="font-medium">
@@ -223,7 +228,7 @@ export default function RewardsLeaderBoard({
                         {user.isOG && (
                           <div className="flex justify-between text-xs text-gray-600 dark:text-gray-300 mt-1">
                             <span>Status:</span>
-                            <span className="font-medium text-purple-600 dark:text-purple-300">
+                            <span className={`font-medium text-${primaryColor}-600 dark:text-${primaryColor}-300`}>
                               OG (2x multiplier)
                             </span>
                           </div>
@@ -240,15 +245,15 @@ export default function RewardsLeaderBoard({
 
       {/* Top User Highlight */}
       {sortedUsers.length > 0 && (
-        <div className="p-5 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 rounded-2xl border border-purple-100 dark:border-purple-800">
+        <div className={`p-5 bg-gradient-to-r from-${primaryColor}-50 to-${secondaryColor}-50 dark:from-${primaryColor}-900/30 dark:to-${secondaryColor}-900/30 rounded-2xl border border-${primaryColor}-100 dark:border-${primaryColor}-800`}>
           <div className="flex items-center gap-3 mb-3">
-            <Award className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+            <Award className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
             <h3 className="font-medium text-gray-900 dark:text-white">
               Top User
             </h3>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full">
+            <div className="w-10 h-10 flex items-center justify-center bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full shadow-md">
               <span className="text-sm font-bold text-white">1</span>
             </div>
             <div>

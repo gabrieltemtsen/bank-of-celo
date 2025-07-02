@@ -94,6 +94,52 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const userCheckIns = dashboardData?.userCheckIns ? Number(dashboardData.userCheckIns) : 0;
   const currentReward = dashboardData?.currentReward ? formatEther(dashboardData.currentReward) : "0";
 
+  // Dynamic theme classes
+  const isDegen = mode === "degen";
+  const progressBarClasses = isDegen
+    ? "bg-gradient-to-r from-purple-500 to-purple-600 h-2.5 rounded-full"
+    : "bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full";
+
+  const checkedInBorderClasses = isDegen
+    ? "bg-purple-500/20 border border-purple-500/30"
+    : "bg-emerald-500/20 border border-emerald-500/30";
+
+  const checkedInIconClasses = isDegen
+    ? "text-purple-400"
+    : "text-emerald-400";
+
+  const primaryButtonClasses = isDegen
+    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
+    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2";
+
+  const rewardButtonClasses = isDegen
+    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse";
+
+  const switchNetworkButtonClasses = isDegen
+    ? "w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
+    : "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium";
+
+  const successBgClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg flex items-center gap-2 text-purple-500"
+    : "p-3 bg-emerald-500/10 rounded-lg flex items-center gap-2 text-emerald-500";
+
+  const successStatusClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400 flex items-center justify-center gap-2"
+    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400 flex items-center justify-center gap-2";
+
+  const claimTimeBgClasses = isDegen
+    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400"
+    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400";
+
+  const roundNumberClasses = isDegen
+    ? "text-sm text-purple-400"
+    : "text-sm text-emerald-400";
+
+  const chevronIconClasses = isDegen
+    ? "w-4 h-4 mt-0.5 text-purple-400 flex-shrink-0"
+    : "w-4 h-4 mt-0.5 text-emerald-400 flex-shrink-0";
+
   function mapDashboardData(data: any[]): DashboardData {
     return {
       currentRoundNumber: data[0],
@@ -387,7 +433,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         )}
 
         {txHash && (
-          <div className="p-3 bg-green-500/10 rounded-lg flex items-center gap-2 text-green-500">
+          <div className={successBgClasses}>
             <CheckCircle2 className="w-5 h-5" />
             <span>
               Transaction successful!{" "}
@@ -411,7 +457,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
           <div className="w-full bg-gray-800 rounded-full h-2.5 mb-2">
             <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2.5 rounded-full"
+              className={progressBarClasses}
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -422,33 +468,10 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </div>
         </div>
 
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
-          <h3 className="font-medium text-gray-300 mb-3">Your Check-ins</h3>
-          <div className="grid grid-cols-7 gap-2">
-            {Array.from({ length: 7 }).map((_, index) => (
-              <div
-                key={index}
-                className={`flex flex-col items-center p-2 rounded-lg ${
-                  checkInStatus[index]
-                    ? "bg-blue-500/20 border border-blue-500/30"
-                    : "bg-gray-800/50 border border-gray-700"
-                }`}
-              >
-                <span className="text-xs text-gray-300">Day {index + 1}</span>
-                {checkInStatus[index] ? (
-                  <CheckCircle2 className="w-4 h-4 text-blue-400 mt-1" />
-                ) : (
-                  <div className="w-4 h-4 rounded-full bg-gray-700 mt-1" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
         {!isCorrectChain ? (
           <Button
             onClick={() => switchChainAsync({ chainId: targetChain.id })}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium"
+            className={switchNetworkButtonClasses}
           >
             Switch to {mode === "degen" ? "Base" : "Celo"} Network
           </Button>
@@ -464,13 +487,13 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         ) : !hasCheckedInToday ? (
           <Button
             onClick={handleCheckin}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
+            className={primaryButtonClasses}
           >
             <CheckCircle2 className="w-5 h-5" />
             Check In for Day {currentDay}
           </Button>
         ) : (
-          <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20 text-center text-green-400 flex items-center justify-center gap-2">
+          <div className={successStatusClasses}>
             <CheckCircle2 className="w-5 h-5" />
             Already checked in today
           </div>
@@ -479,7 +502,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         {canClaimReward && (
           <Button
             onClick={handleClaimReward}
-            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
+            className={rewardButtonClasses}
           >
             <Gift className="w-5 h-5" />
             Claim {currentReward} {currency} Reward
@@ -492,7 +515,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </div>
         )}
         {currentDay === 7 && userCheckIns === 7 && canClaimReward && (
-          <div className="p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400">
+          <div className={claimTimeBgClasses}>
             Claim time! You have 24 hours to claim your reward.
           </div>
         )}
@@ -500,7 +523,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-300">Current Round</h3>
-            <span className="text-sm text-blue-400">#{currentRoundNumber}</span>
+            <span className={roundNumberClasses}>#{currentRoundNumber}</span>
           </div>
 
           <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
@@ -520,19 +543,19 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           <h3 className="font-medium text-gray-300 mb-2">How It Works</h3>
           <ul className="space-y-2 text-sm text-gray-400">
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Check in daily ({formatEther(CHECK_IN_FEE)} {currency} fee per check-in)</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Complete all 7 days to claim your {currency} reward</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Rewards are distributed at the end of each round</span>
             </li>
             <li className="flex items-start gap-2">
-              <ChevronRight className="w-4 h-4 mt-0.5 text-blue-400 flex-shrink-0" />
+              <ChevronRight className={chevronIconClasses} />
               <span>Connect your Farcaster account to claim rewards</span>
             </li>
           </ul>
@@ -540,4 +563,4 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
       </motion.div>
     </BottomSheet>
   );
-};
+}

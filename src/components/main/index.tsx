@@ -10,8 +10,8 @@ import {
   useSwitchChain,
   useChainId,
   useSendTransaction,
-  usePublicClient,
   useWriteContract,
+  usePublicClient,
 } from "wagmi";
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
@@ -32,15 +32,16 @@ import TabContent from "./TabContent";
 import BottomNavigation from "./BottomNavigation";
 import { useSearchParams } from "next/navigation";
 import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
   const { disconnect } = useDisconnect();
   const { connect, connectors } = useConnect();
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
-    const { writeContractAsync, isPending } = useWriteContract();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
+  const { writeContract, isPending } = useWriteContract();
   const publicClient = usePublicClient();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
@@ -50,10 +51,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
-  const [isDonatePending, setIsDonatePending] = useState(false);
 
   const { mode } = useChainMode();
-  const dynamicTitle = mode === "degen" ? "Bank Of Celo" : title;
+  const dynamicTitle = mode === "degen" ? "Bank of Degen" : title;
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const chainId = useChainId();
   const targetChain = mode === "degen" ? base : celo;
@@ -190,14 +190,14 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
             args: [address, bankAddress],
           })) as bigint;
           if (allowance < amountParsed) {
-            await writeContractAsync({
+            await writeContract({
               address: tokenAddress,
               abi: ERC20_ABI,
               functionName: "approve",
               args: [bankAddress, maxUint256],
             });
           }
-          await writeContractAsync({
+          await writeContract({
             address: bankAddress,
             abi: bankAbi,
             functionName: "donate",
@@ -207,7 +207,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           fetchContractData();
           return;
         }
-        setIsDonatePending(true);
         // 1. Encode the donate function call
         const donateData = encodeFunctionData({
           abi: bankAbi,
@@ -268,11 +267,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         toast.error(
           `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
-      } finally {
-        setIsDonatePending(false);
       }
     },
-    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
   );
 
   // Show loading spinner if SDK is not loaded
@@ -282,7 +279,13 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-[var(--gradient-from)] via-white to-[var(--gradient-to)] dark:from-neutral-900 dark:via-neutral-900 dark:to-neutral-900 flex flex-col"
+      className={cn(
+        "min-h-screen flex flex-col relative transition-all duration-500",
+        // Base background with proper theming
+        mode === "celo"
+          ? "bg-gradient-to-br from-emerald-50 via-white to-emerald-100 dark:from-emerald-950 dark:via-emerald-900 dark:to-emerald-950"
+          : "bg-gradient-to-br from-purple-50 via-white to-purple-100 dark:from-purple-950 dark:via-purple-900 dark:to-purple-950"
+      )}
       style={{
         paddingTop: context?.client.safeAreaInsets?.top ?? 0,
         paddingBottom: context?.client.safeAreaInsets?.bottom ?? 60,
@@ -296,7 +299,24 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         minHeight: "100vh",
       }}
     >
-      <div className="min-h-[100vh] fixed inset-0 bg-emerald-800 opacity-50"></div>
+      {/* Enhanced Themed Overlay */}
+      <div 
+        className={cn(
+          "min-h-[100vh] fixed inset-0 transition-all duration-500",
+          mode === "celo"
+            ? "bg-gradient-to-br from-emerald-600/30 via-emerald-700/40 to-emerald-800/50"
+            : "bg-gradient-to-br from-purple-600/30 via-purple-700/40 to-purple-800/50"
+        )}
+      />
+
+      {/* Subtle Pattern Overlay */}
+      <div 
+        className="min-h-[100vh] fixed inset-0 opacity-10"
+        style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, ${mode === "celo" ? "rgb(34, 197, 94)" : "rgb(147, 51, 234)"} 1px, transparent 0)`,
+          backgroundSize: "20px 20px",
+        }}
+      />
 
       {/* Welcome Modal */}
       <WelcomeModal
@@ -321,7 +341,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       />
 
       {/* Content */}
-      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative">
+      <div className="flex-1 p-4 overflow-y-auto max-w-md mx-auto w-full relative z-10">
         {isLoading && <LoadingSpinner />}
 
         <TabContent
@@ -333,7 +353,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           claimCooldown={claimCooldown}
           lastClaimAt={lastClaimAt}
           isCorrectChain={isCorrectChain}
-          isPending={isDonatePending}
+          isPending={isPending}
           onNavigate={setActiveTab}
           onDonate={handleDonate}
         />

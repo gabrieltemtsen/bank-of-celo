@@ -20,6 +20,7 @@ import { APP_ICON_URL } from "~/lib/constants";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { toast } from "sonner";
+import { useChainMode } from "~/app/chain-mode/context";
 
 interface SelfProtocolComponentProps {
   onSuccess?: () => void;
@@ -30,6 +31,9 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
 }) => {
   const { address } = useAccount();
   const router = useRouter();
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+
   const [linkCopied, setLinkCopied] = useState<boolean>(false);
   const [showToast, setShowToast] = useState<boolean>(false);
   const [toastMessage, setToastMessage] = useState<string>("");
@@ -47,6 +51,39 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
   const minimumAge = 18;
   const requireName = true;
   const checkOFAC = true;
+
+  // Dynamic color classes based on mode
+  const gradientClasses = isDegen
+    ? "from-gray-900 via-gray-900 to-purple-900"
+    : "from-gray-900 via-gray-900 to-emerald-900";
+
+  const iconGradientClasses = isDegen
+    ? "from-purple-400 to-purple-600"
+    : "from-emerald-400 to-emerald-600";
+
+  const accentTextClasses = isDegen
+    ? "text-purple-400"
+    : "text-emerald-400";
+
+  const primaryButtonClasses = isDegen
+    ? "bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400"
+    : "bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400";
+
+  const accentBgClasses = isDegen
+    ? "bg-purple-500"
+    : "bg-emerald-500";
+
+  const benefitsBgClasses = isDegen
+    ? "bg-purple-500/10"
+    : "bg-emerald-500/10";
+
+  const benefitsBorderClasses = isDegen
+    ? "border-purple-500/20"
+    : "border-emerald-500/20";
+
+  const toastBgClasses = isDegen
+    ? "bg-purple-600"
+    : "bg-emerald-600";
 
   useEffect(() => {
     if (!address || isVerifiedOG) return;
@@ -119,11 +156,11 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
 
   if (isVerifiedOG) {
     return (
-      <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-900 to-emerald-900 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+      <div className={`min-h-screen w-full bg-gradient-to-br ${gradientClasses} flex flex-col items-center justify-center p-4 sm:p-6 md:p-8`}>
         <div className="text-center max-w-md mx-auto">
           {/* Verified OG Status */}
           <div className="mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className={`w-16 h-16 bg-gradient-to-br ${iconGradientClasses} rounded-full mx-auto mb-4 flex items-center justify-center`}>
               <Verified className="w-8 h-8 text-white" />
             </div>
             <h3 className="text-xl font-bold text-white mb-2">
@@ -136,12 +173,12 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
           </div>
 
           {/* Celebration Card */}
-          <div className="bg-emerald-500/10 rounded-xl p-6 border border-emerald-500/20 mb-6">
+          <div className={`${benefitsBgClasses} rounded-xl p-6 border ${benefitsBorderClasses} mb-6`}>
             <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center mb-3">
+              <div className={`w-12 h-12 ${accentBgClasses} rounded-full flex items-center justify-center mb-3`}>
                 <Verified className="w-6 h-6 text-white" />
               </div>
-              <h4 className="text-emerald-400 font-medium text-sm mb-2">
+              <h4 className={`${accentTextClasses} font-medium text-sm mb-2`}>
                 O.G Status Active
               </h4>
               <p className="text-gray-300 text-xs">
@@ -152,7 +189,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
 
           <button
             onClick={() => router.push("/")}
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-3 px-6 rounded-xl font-medium w-full"
+            className={`flex items-center justify-center gap-2 ${primaryButtonClasses} transition-colors text-white py-3 px-6 rounded-xl font-medium w-full`}
           >
             Continue to App
           </button>
@@ -162,11 +199,11 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-gray-900 via-gray-900 to-emerald-900 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8">
+    <div className={`min-h-screen w-full bg-gradient-to-br ${gradientClasses} flex flex-col items-center justify-center p-4 sm:p-6 md:p-8`}>
       <div className="text-center max-w-md mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div className={`w-16 h-16 bg-gradient-to-br ${iconGradientClasses} rounded-full mx-auto mb-4 flex items-center justify-center`}>
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-xl font-bold text-white mb-2">
@@ -179,27 +216,20 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
 
         {/* QR Code Container */}
         <div className="bg-white rounded-2xl p-4 mb-20 mt-10 mx-auto w-48">
-          {" "}
-          {/* Reduced container width and padding */}
           <div className="w-32 h-32 mx-auto flex items-center justify-center rounded-xl">
-            {" "}
-            {/* Reduced QR code container size */}
             {selfApp ? (
               <div className="">
                 <SelfQRcodeWrapper
                   selfApp={selfApp}
                   onSuccess={handleSuccessfulVerification}
-                  size={128} // If the component accepts a size prop, you can set it here
+                  size={128}
                 />
               </div>
             ) : (
               <div className="w-full h-full bg-gray-100 flex items-center justify-center rounded-xl border-2 border-gray-200">
                 <div className="text-center">
-                  <div className="w-8 h-8 bg-emerald-500 rounded-lg mx-auto mb-1 flex items-center justify-center animate-pulse">
-                    {" "}
-                    {/* Reduced icon size */}
-                    <Shield className="w-4 h-4 text-white" />{" "}
-                    {/* Reduced icon size */}
+                  <div className={`w-8 h-8 ${accentBgClasses} rounded-lg mx-auto mb-1 flex items-center justify-center animate-pulse`}>
+                    <Shield className="w-4 h-4 text-white" />
                   </div>
                   <p className="text-gray-600 text-xs">QR Code Loading...</p>
                 </div>
@@ -214,7 +244,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
             type="button"
             onClick={copyToClipboard}
             disabled={!universalLink}
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 transition-colors text-white py-3 px-4 rounded-xl font-medium disabled:bg-emerald-400 disabled:cursor-not-allowed"
+            className={`flex items-center justify-center gap-2 ${primaryButtonClasses} transition-colors text-white py-3 px-4 rounded-xl font-medium disabled:cursor-not-allowed`}
           >
             <Copy className="w-4 h-4" />
             {linkCopied ? "Copied!" : "Copy Universal Link"}
@@ -232,21 +262,21 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
         </div>
 
         {/* Verification Requirements */}
-        <div className="bg-emerald-500/10 rounded-xl p-4 border border-emerald-500/20">
-          <h4 className="text-emerald-400 font-medium text-sm mb-3">
+        <div className={`${benefitsBgClasses} rounded-xl p-4 border ${benefitsBorderClasses}`}>
+          <h4 className={`${accentTextClasses} font-medium text-sm mb-3`}>
             Verification Requirements:
           </h4>
           <ul className="text-gray-300 text-xs space-y-2">
             <li className="flex items-center gap-2">
-              <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <CheckCircle className={`w-3 h-3 ${accentTextClasses} flex-shrink-0`} />
               <span>Minimum Age: {minimumAge}+ years</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <CheckCircle className={`w-3 h-3 ${accentTextClasses} flex-shrink-0`} />
               <span>Name Verification Required</span>
             </li>
             <li className="flex items-center gap-2">
-              <CheckCircle className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+              <CheckCircle className={`w-3 h-3 ${accentTextClasses} flex-shrink-0`} />
               <span>OFAC Compliance Enabled</span>
             </li>
           </ul>
@@ -254,7 +284,7 @@ const SelfProtocolComponent: React.FC<SelfProtocolComponentProps> = ({
 
         {/* Toast notification */}
         {showToast && (
-          <div className="fixed bottom-4 right-4 bg-emerald-600 text-white py-2 px-4 rounded-lg shadow-lg text-sm z-50">
+          <div className={`fixed bottom-4 right-4 ${toastBgClasses} text-white py-2 px-4 rounded-lg shadow-lg text-sm z-50`}>
             {toastMessage}
           </div>
         )}
