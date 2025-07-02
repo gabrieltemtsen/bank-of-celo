@@ -10,7 +10,6 @@ import {
   useSwitchChain,
   useChainId,
   useSendTransaction,
-  useWriteContract,
   usePublicClient,
 } from "wagmi";
 import { useSession } from "next-auth/react";
@@ -40,7 +39,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
-  const { writeContract, isPending } = useWriteContract();
   const publicClient = usePublicClient();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
@@ -50,6 +48,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
+  const [isDonatePending, setIsDonatePending] = useState(false);
 
   const { mode } = useChainMode();
   const dynamicTitle = mode === "degen" ? "Bank of Degen" : title;
@@ -206,6 +205,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           fetchContractData();
           return;
         }
+        setIsDonatePending(true);
         // 1. Encode the donate function call
         const donateData = encodeFunctionData({
           abi: bankAbi,
@@ -266,6 +266,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         toast.error(
           `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
+      } finally {
+        setIsDonatePending(false);
       }
     },
     [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
@@ -329,7 +331,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           claimCooldown={claimCooldown}
           lastClaimAt={lastClaimAt}
           isCorrectChain={isCorrectChain}
-          isPending={isPending}
+          isPending={isDonatePending}
           onNavigate={setActiveTab}
           onDonate={handleDonate}
         />
