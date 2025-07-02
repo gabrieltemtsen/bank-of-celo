@@ -24,35 +24,74 @@ export default function ChainModeToggle() {
   };
 
   return (
-    <button
+    <motion.button
       onClick={handleToggle}
-      className={cn(
-        "relative flex items-center w-32 h-8 rounded-full p-1 transition-colors duration-300",
-        "focus:outline-none focus:ring-2 focus:ring-opacity-50",
-        mode === "celo" 
-          ? "bg-yellow-500 focus:ring-green-200" 
-          : "bg-purple-600 focus:ring-purple-100"
-      )}
+      className="relative flex items-center w-36 h-10 rounded-2xl p-1 glass-card"
+      style={{
+        background: `var(--surface-secondary)`,
+        border: `1px solid var(--glass-border)`,
+        boxShadow: `var(--shadow)`,
+      }}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      transition={{ duration: 0.2 }}
     >
       <motion.div
         layout
-        transition={{ type: "spring", stiffness: 600, damping: 30 }}
-        className="absolute flex items-center justify-center w-1/2 h-full rounded-full bg-green-400 shadow-sm"
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        className="absolute flex items-center justify-center w-1/2 h-full rounded-xl shadow-lg z-0"
+        style={{
+          background: mode === "celo" ? `var(--gradient-primary)` : `var(--gradient-secondary)`,
+          boxShadow: mode === "celo" ? `var(--glow-primary)` : `var(--glow-secondary)`,
+          left: mode === "celo" ? "4px" : "calc(50% - 4px)",
+        }}
       />
-      <div className="flex justify-around w-full z-10">
-        <span className={cn(
-          "text-xs font-medium px-3",
-          mode === "celo" ? "text-white" : "text-white"
-        )}>
-          Celo
-        </span>
-        <span className={cn(
-          "text-xs font-medium px-3",
-          mode === "degen" ? "text-white" : "text-gray-100"
-        )}>
-          Degen
-        </span>
+      
+      <div className="flex justify-between w-full z-10 relative px-2">
+        <motion.span
+          className="text-sm font-black px-3 py-1 rounded-lg transition-colors duration-200"
+          style={{
+            color: mode === "celo" ? "white" : `var(--foreground)`,
+            textShadow: mode === "celo" ? "0 2px 4px rgba(0,0,0,0.6)" : "0 1px 2px rgba(0,0,0,0.4)",
+          }}
+          animate={{
+            scale: mode === "celo" ? 1.05 : 1,
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          🟢 Celo
+        </motion.span>
+        
+        <motion.span
+          className="text-sm font-black px-3 py-1 rounded-lg transition-colors duration-200"
+          style={{
+            color: mode === "degen" ? "white" : `var(--foreground)`,
+            textShadow: mode === "degen" ? "0 2px 4px rgba(0,0,0,0.6)" : "0 1px 2px rgba(0,0,0,0.4)",
+          }}
+          animate={{
+            scale: mode === "degen" ? 1.05 : 1,
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          🟣 Degen
+        </motion.span>
       </div>
-    </button>
+      
+      {/* Subtle glow effect */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl opacity-20"
+        style={{
+          background: mode === "celo" ? `var(--gradient-primary)` : `var(--gradient-secondary)`,
+        }}
+        animate={{
+          opacity: [0.1, 0.3, 0.1],
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+    </motion.button>
   );
 }

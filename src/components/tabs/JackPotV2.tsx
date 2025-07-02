@@ -495,164 +495,527 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       className="space-y-6 max-w-2xl mx-auto"
     >
       {!isCorrectChain ? (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-300">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card-lg modern-card hover-lift p-6 text-center"
+          style={{
+            background: `var(--surface)`,
+            border: `1px solid var(--glass-border)`,
+          }}
+        >
+          <p style={{ color: `var(--foreground-secondary)` }}>
             Please switch to {mode === "degen" ? "Base" : "Celo"} Network to proceed
           </p>
-        </div>
+        </motion.div>
       ) : maintenanceMode ? (
-        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200 text-center">
-          Jackpot is currently under maintenance. Please check back later.
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card-lg modern-card hover-lift p-6 text-center relative overflow-hidden"
+          style={{
+            background: `rgba(245, 158, 11, 0.1)`,
+            border: `1px solid rgba(245, 158, 11, 0.3)`,
+          }}
+        >
+          <motion.div
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="inline-block text-2xl mb-2"
+          >
+            🚧
+          </motion.div>
+          <p 
+            className="font-semibold"
+            style={{ color: `var(--warning)` }}
+          >
+            JackpotV2 is currently under maintenance. Please check back later.
+          </p>
+        </motion.div>
       ) : (
         <>
           {maintenanceMode && (
-            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200 text-center">
-              Jackpot is currently under maintenance. Please check back later.
-            </div>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-card modern-card p-4 text-center"
+              style={{
+                background: `rgba(245, 158, 11, 0.1)`,
+                border: `1px solid rgba(245, 158, 11, 0.3)`,
+              }}
+            >
+              <p 
+                className="font-semibold"
+                style={{ color: `var(--warning)` }}
+              >
+                ⚠️ Jackpot is currently under maintenance. Please check back later.
+              </p>
+            </motion.div>
           )}
           {/* Jackpot Banner */}
           <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-gradient-to-r from-green-600 to-yellow-600 rounded-2xl p-6 shadow-lg"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
+            className="glass-card-lg modern-card hover-lift p-6 relative overflow-hidden"
+            style={{
+              background: mode === "degen" 
+                ? `var(--gradient-secondary)` 
+                : `linear-gradient(135deg, #16a34a, #eab308)`,
+              border: `1px solid var(--glass-border)`,
+              boxShadow: mode === "degen" 
+                ? `var(--glow-secondary)` 
+                : `0 0 30px rgba(16, 163, 74, 0.3)`,
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: mode === "degen" 
+                ? `var(--glow-secondary-intense)` 
+                : `0 0 40px rgba(16, 163, 74, 0.4)`,
+            }}
           >
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <p className="text-sm text-green-100 mb-5">
-                  BOC Jackpot - {drawDate}
-                </p>
-                <h3 className="text-3xl font-bold text-white mb-5">
-                  {dashboardData.currentPot} {currency}
-                </h3>
+            {/* Animated background overlay */}
+            <motion.div
+              className="absolute inset-0 opacity-10"
+              style={{ background: `linear-gradient(135deg, #eab308, #16a34a)` }}
+              animate={{
+                opacity: [0.05, 0.15, 0.05],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <motion.p 
+                  className="text-sm font-semibold mb-3"
+                  style={{ color: 'rgba(255, 255, 255, 0.8)' }}
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🎰 BOC JackpotV2 - {drawDate}
+                </motion.p>
+                <motion.h3 
+                  className="text-4xl font-black text-white mb-4 gradient-text"
+                  animate={{ 
+                    scale: [1, 1.02, 1],
+                    textShadow: ['0 0 10px rgba(255,255,255,0.3)', '0 0 20px rgba(255,255,255,0.5)', '0 0 10px rgba(255,255,255,0.3)']
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  💰 {dashboardData.currentPot} {currency}
+                </motion.h3>
 
-                <div className="flex items-center gap-2 text-green-100">
-                  <Clock className="w-4 h-4" />
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="p-2 rounded-xl"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <Clock className="w-5 h-5 text-white" />
+                  </motion.div>
                   {dashboardData.timeUntilDraw > 0 ? (
-                    <span className="text-sm font-mono">
-                      Draw in {countdown}
-                    </span>
-                  ) : (
-                    <Button
-                      onClick={handleTriggerDraw}
-                      disabled={lotteryPending}
-                      className="text-sm bg-gray-300 text-black hover:bg-gray-100 px-3 py-1"
+                    <motion.span 
+                      className="text-lg font-mono font-bold text-white px-3 py-2 rounded-xl"
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      animate={{ opacity: [1, 0.7, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
                     >
-                      {lotteryPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-green-600" />
-                      ) : (
-                        "Trigger Draw Now"
-                      )}
-                    </Button>
+                      ⏰ {countdown}
+                    </motion.span>
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        onClick={handleTriggerDraw}
+                        disabled={lotteryPending}
+                        className="btn-secondary text-sm font-bold px-4 py-2"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          color: mode === "degen" ? `var(--secondary)` : '#16a34a',
+                          boxShadow: '0 4px 20px rgba(255, 255, 255, 0.3)',
+                        }}
+                      >
+                        {lotteryPending ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Loader2 className="w-4 h-4" />
+                          </motion.div>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4" />
+                            🎯 Trigger Draw
+                          </span>
+                        )}
+                      </Button>
+                    </motion.div>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2 text-white">
-                <Trophy className="w-5 h-5" />
-                <span className="font-medium">
-                  {/* {dashboardData.totalParticipants} */}
-                </span>
-              </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-3 p-3 rounded-2xl"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Trophy className="w-6 h-6 text-white" />
+                </motion.div>
+                <div className="text-white">
+                  <p className="text-xs font-medium opacity-80">Prize Pool</p>
+                  <p className="text-xl font-bold">
+                    🎯 V2
+                  </p>
+                </div>
+              </motion.div>
             </div>
-            <div className="flex items-center gap-2 py-2 text-white">
-              <Users className="w-5 h-5" />
-              <span className="font-medium">
+            <motion.div 
+              className="relative z-10 flex items-center gap-3 mt-4 p-3 rounded-xl"
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(10px)',
+              }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="p-2 rounded-xl"
+                style={{ background: 'rgba(255, 255, 255, 0.2)' }}
+              >
+                <Users className="w-5 h-5 text-white" />
+              </motion.div>
+              <motion.span 
+                className="font-bold text-white"
+                animate={{ opacity: [0.8, 1, 0.8] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
                 {dashboardData.totalParticipants >= 3
-                  ? "Round active"
-                  : `Need ${3 - dashboardData.totalParticipants} more to draw`}
-              </span>
-            </div>
+                  ? "🎯 Round Active - Ready to Draw!"
+                  : `🎫 Need ${3 - dashboardData.totalParticipants} more players to activate draw`}
+              </motion.span>
+            </motion.div>
           </motion.div>
 
           {/* Info section */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                How It Works
-              </h3>
+            <div className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-3"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: `var(--surface-primary)` }}
+                >
+                  <Trophy className="w-6 h-6" style={{ color: `var(--primary)` }} />
+                </motion.div>
+                <h3 
+                  className="text-2xl font-bold gradient-text"
+                  style={{ 
+                    background: `var(--gradient-primary)`, 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent' 
+                  }}
+                >
+                  🎯 How JackpotV2 Works
+                </h3>
+              </motion.div>
 
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <Ticket className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div className="space-y-4">
+                <motion.div 
+                  className="flex items-start gap-4 p-4 glass-card rounded-xl"
+                  style={{
+                    background: `var(--surface-secondary)`,
+                    border: `1px solid var(--border)`,
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <motion.div 
+                    className="flex-shrink-0 p-2 rounded-xl"
+                    style={{ background: `var(--surface-primary)` }}
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Ticket className="w-6 h-6" style={{ color: `var(--primary)` }} />
+                  </motion.div>
+                  <div>
+                    <p 
+                      className="font-semibold mb-1"
+                      style={{ color: `var(--foreground)` }}
+                    >
+                      🎫 Buy Tickets
+                    </p>
+                    <p 
+                      className="text-sm"
+                      style={{ color: `var(--foreground-secondary)` }}
+                    >
+                      Buy tickets at {ticketPrice} {currency} each. More tickets = better odds!
+                    </p>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    Buy tickets at {ticketPrice} {currency} each. More tickets = better odds.
-                  </p>
-                </div>
+                </motion.div>
 
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <motion.div 
+                  className="flex items-start gap-4 p-4 glass-card rounded-xl"
+                  style={{
+                    background: `var(--surface-secondary)`,
+                    border: `1px solid var(--border)`,
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <motion.div 
+                    className="flex-shrink-0 p-2 rounded-xl"
+                    style={{ background: `var(--surface-primary)` }}
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Clock className="w-6 h-6" style={{ color: `var(--primary)` }} />
+                  </motion.div>
+                  <div>
+                    <p 
+                      className="font-semibold mb-1"
+                      style={{ color: `var(--foreground)` }}
+                    >
+                      ⏰ Daily Draws
+                    </p>
+                    <p 
+                      className="text-sm"
+                      style={{ color: `var(--foreground-secondary)` }}
+                    >
+                      Daily draws with guaranteed winner (minimum 3 participants required).
+                    </p>
                   </div>
-                  <p className="text-gray-700 dark:text-gray-300">
-                    Daily draws with guaranteed winner (min. 3 participants).
-                  </p>
-                </div>
+                </motion.div>
 
-                <div className="p-3 bg-green-50 dark:bg-green-900/10 rounded-lg border border-green-100 dark:border-green-800/50">
-                  <h4 className="font-semibold text-green-700 dark:text-green-300 mb-1">
-                    Prize Distribution:
-                  </h4>
-                  <ul className="space-y-1 text-sm text-green-800 dark:text-green-200">
-                    <li className="flex justify-between">
-                      <span>Winner:</span>
-                      <span className="font-medium">9% of pot</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Dev:</span>
-                      <span className="font-medium">1% fee</span>
-                    </li>
-                    <li className="flex justify-between">
-                      <span>Next round:</span>
-                      <span className="font-medium">90% carried over</span>
-                    </li>
+                <motion.div 
+                  className="p-4 glass-card rounded-xl"
+                  style={{
+                    background: `rgba(16, 185, 129, 0.1)`,
+                    border: `1px solid rgba(16, 185, 129, 0.3)`,
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  whileHover={{ 
+                    scale: 1.02,
+                    boxShadow: `0 0 20px rgba(16, 185, 129, 0.2)`,
+                  }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-2xl"
+                    >
+                      💰
+                    </motion.div>
+                    <h4 
+                      className="font-bold"
+                      style={{ color: `var(--success)` }}
+                    >
+                      Prize Distribution:
+                    </h4>
+                  </div>
+                  <ul className="space-y-2">
+                    <motion.li 
+                      className="flex justify-between items-center p-2 rounded-lg"
+                      style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <span 
+                        className="text-sm font-semibold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        🏆 Winner:
+                      </span>
+                      <span 
+                        className="font-bold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        9% of pot
+                      </span>
+                    </motion.li>
+                    <motion.li 
+                      className="flex justify-between items-center p-2 rounded-lg"
+                      style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <span 
+                        className="text-sm font-semibold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        ⚙️ Development:
+                      </span>
+                      <span 
+                        className="font-bold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        1% fee
+                      </span>
+                    </motion.li>
+                    <motion.li 
+                      className="flex justify-between items-center p-2 rounded-lg"
+                      style={{ background: 'rgba(16, 185, 129, 0.1)' }}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <span 
+                        className="text-sm font-semibold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        🔄 Next Round:
+                      </span>
+                      <span 
+                        className="font-bold"
+                        style={{ color: `var(--success)` }}
+                      >
+                        90% carried over
+                      </span>
+                    </motion.li>
                   </ul>
-                </div>
+                </motion.div>
               </div>
             </div>
           </motion.div>
 
           {/* Buy Tickets Section */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <div className="space-y-5">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Join the Jackpot
-              </h3>
+            <div className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-3"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: `var(--surface-primary)` }}
+                >
+                  <Ticket className="w-6 h-6" style={{ color: `var(--primary)` }} />
+                </motion.div>
+                <h3 
+                  className="text-2xl font-bold gradient-text"
+                  style={{ 
+                    background: `var(--gradient-primary)`, 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent' 
+                  }}
+                >
+                  🎫 Join JackpotV2
+                </h3>
+              </motion.div>
 
               {txHash && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-                  <span>
-                    Tickets purchased successfully!{" "}
-                    <a
-                      href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 glass-card rounded-xl"
+                  style={{
+                    background: `rgba(16, 185, 129, 0.1)`,
+                    border: `1px solid rgba(16, 185, 129, 0.3)`,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="p-2 rounded-full"
+                      style={{ background: `rgba(16, 185, 129, 0.2)` }}
                     >
-                      View on {mode === "degen" ? "BaseScan" : "CeloScan"}
-                    </a>
-                  </span>
-                </div>
+                      <Trophy className="w-5 h-5" style={{ color: `var(--success)` }} />
+                    </motion.div>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: `var(--success)` }}>
+                        🎉 Tickets purchased successfully!
+                      </p>
+                      <motion.a
+                        href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold underline"
+                        style={{ color: `var(--primary)` }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        📊 View on {mode === "degen" ? "BaseScan" : "CeloScan"}
+                      </motion.a>
+                    </div>
+                  </div>
+                </motion.div>
               )}
 
-              <div>
+              <div className="space-y-4">
                 <label
                   htmlFor="ticket-count"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block text-sm font-semibold"
+                  style={{ color: `var(--foreground-secondary)` }}
                 >
-                  Number of Tickets ({ticketPrice} {currency} each)
+                  🎰 Number of Tickets ({ticketPrice} {currency} each)
                 </label>
 
                 {/* Quick Select Buttons */}

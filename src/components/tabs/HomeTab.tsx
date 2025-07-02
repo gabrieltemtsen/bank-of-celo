@@ -83,58 +83,74 @@ export default function HomeTab({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.7 }}
-      className="space-y-5"
+      className="space-y-6"
     >
-      {/* Vault Balance Card */}
+      {/* Vault Balance Card - Enhanced with new theme system */}
       <motion.div
         custom={0}
         variants={cardVariants}
         initial="hidden"
         animate="visible"
         whileHover={{ scale: 1.01 }}
-        className="relative overflow-hidden p-6 bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-emerald-100/50 dark:border-emerald-800/30"
+        className="relative overflow-hidden glass-card-lg p-8 modern-card hover-lift floating-element"
+        style={{
+          background: `var(--surface-primary)`,
+          border: `1px solid var(--glass-border)`,
+        }}
       >
-        {/* Background decoration elements */}
+        {/* Enhanced Background decoration elements */}
         <motion.div
-          className="absolute top-0 right-0 w-32 h-32 rounded-full bg-emerald-300/10 dark:bg-emerald-700/10"
+          className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-20"
+          style={{ background: `var(--gradient-secondary)` }}
           animate={{
             scale: [1, 1.2, 1],
-            x: [0, 10, 0],
-            opacity: [0.3, 0.2, 0.3],
+            x: [0, 15, 0],
+            opacity: [0.1, 0.2, 0.1],
           }}
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-cyan-300/10 dark:bg-cyan-700/10"
+          className="absolute bottom-0 left-0 w-24 h-24 rounded-full opacity-15"
+          style={{ background: `var(--gradient-primary)` }}
           animate={{
-            scale: [1, 1.3, 1],
-            y: [0, -5, 0],
-            opacity: [0.2, 0.3, 0.2],
+            scale: [1, 1.4, 1],
+            y: [0, -8, 0],
+            opacity: [0.1, 0.15, 0.1],
           }}
           transition={{ duration: 7, repeat: Infinity, delay: 1 }}
         />
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Droplet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Vault Balance
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <motion.div
+              whileHover={{ rotate: 10 }}
+              className="p-2 rounded-xl"
+              style={{ background: `var(--surface-secondary)` }}
+            >
+              <Droplet className="w-5 h-5" style={{ color: `var(--primary)` }} />
+            </motion.div>
+            <p className="text-sm font-bold text-glass-readable">
+              💰 Vault Balance
             </p>
           </div>
           <motion.div
-            className="flex items-center bg-emerald-100 dark:bg-emerald-800/60 px-2 py-1 rounded-full"
+            className="flex items-center px-3 py-2 rounded-full glass-card"
             whileHover={{ scale: 1.05 }}
+            style={{ background: `var(--surface-secondary)` }}
           >
-            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 mr-1" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
-              Secured
+            <ShieldCheck className="w-4 h-4 mr-2" style={{ color: `var(--success)` }} />
+            <span className="text-xs font-bold text-shadow-sm" style={{ color: `var(--success)` }}>
+              🔒 Secured
             </span>
           </motion.div>
         </div>
 
         {isLoading ? (
-          <div className="h-14 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="h-16 flex items-center justify-center">
+            <div 
+              className="w-10 h-10 border-3 border-t-transparent rounded-full animate-spin"
+              style={{ borderColor: `var(--primary)` }}
+            />
           </div>
         ) : (
           <motion.div
@@ -142,30 +158,34 @@ export default function HomeTab({
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 15 }}
-            className="flex items-center justify-center my-4"
+            className="flex items-center justify-center my-6"
           >
             <motion.div
               variants={pulseVariants as Variants}
               animate="pulse"
               className="relative flex items-baseline"
             >
-              <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
+              <span 
+                className="text-5xl font-black gradient-text text-shadow-lg"
+                style={{ background: `var(--gradient-primary)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
+              >
                 {parseFloat(vaultBalance).toFixed(2)}
               </span>
-              <span className="ml-2 text-lg font-semibold text-gray-600 dark:text-gray-300">
+              <span className="ml-3 text-xl font-bold text-high-contrast">
                 {currency}
               </span>
             </motion.div>
           </motion.div>
         )}
 
-        <div className="mt-4 flex justify-between items-center px-2 py-3 bg-white/60 dark:bg-gray-800/40 rounded-xl backdrop-blur-sm">
+        <div className="mt-6 flex justify-between items-center p-4 glass-card rounded-xl">
           <div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Available for Claims
+            <p className="label-enhanced">
+              💵 Available for Claims
             </p>
             <motion.p
-              className="text-sm font-medium text-emerald-700 dark:text-emerald-300"
+              className="text-sm font-bold mt-1 text-shadow-sm"
+              style={{ color: `var(--primary)` }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -174,19 +194,20 @@ export default function HomeTab({
             </motion.p>
           </div>
           <motion.div
-            whileHover={{ rotate: 15 }}
-            className="flex items-center gap-1"
+            whileHover={{ rotate: 15, scale: 1.1 }}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg"
+            style={{ background: `var(--surface-secondary)` }}
           >
-            <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              +2.5%
+            <TrendingUp className="w-4 h-4" style={{ color: `var(--success)` }} />
+            <span className="text-sm font-bold text-shadow-sm" style={{ color: `var(--success)` }}>
+              📈 +2.5%
             </span>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Quick Actions - Enhanced with modern Web3 design */}
+      <div className="grid grid-cols-2 gap-5">
         <motion.div
           custom={1}
           variants={cardVariants}
@@ -194,26 +215,36 @@ export default function HomeTab({
           animate="visible"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
+          className="floating-element"
         >
           <Button
             onClick={() => onNavigate?.("transact")}
-            className="flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/50 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-md shadow-emerald-100/20 dark:shadow-emerald-900/20"
+            className="flex flex-col items-center justify-center p-6 h-full w-full glass-card-lg modern-card hover-lift"
+            style={{
+              background: `var(--surface-secondary)`,
+              border: `1px solid var(--glass-border)`,
+            }}
             disabled={!isCorrectChain}
             aria-label="Donate to the vault"
           >
             <motion.div
               whileHover={{
                 rotate: [0, -10, 10, -10, 0],
-                transition: { duration: 0.5 },
+                scale: [1, 1.1, 1],
+                transition: { duration: 0.6 },
               }}
-              className="mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md"
+              className="mb-4 p-4 rounded-2xl glass-card"
+              style={{ 
+                background: `var(--gradient-primary)`,
+                boxShadow: `var(--glow-primary)`,
+              }}
             >
-              <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <Gift className="w-7 h-7 text-white" />
             </motion.div>
-            <span className="font-medium text-emerald-800 dark:text-emerald-200">
-              Donate
+            <span className="font-black text-glass-readable text-base mb-1">
+              🎁 Donate
             </span>
-            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+            <span className="label-enhanced">
               Support Ecosystem
             </span>
           </Button>
@@ -226,93 +257,112 @@ export default function HomeTab({
           animate="visible"
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.98 }}
+          className="floating-element"
         >
           <Button
             onClick={() => onNavigate?.("transact")}
             disabled={!canClaim() || !isCorrectChain}
-            className={`flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br ${
-              canClaim()
-                ? "from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-amber-800/50 shadow-md shadow-amber-100/20 dark:shadow-amber-900/20"
-                : "from-gray-50 to-gray-100 dark:from-gray-800/50 dark:to-gray-700/50"
-            } rounded-2xl border ${
-              canClaim()
-                ? "border-amber-100 dark:border-amber-800/50"
-                : "border-gray-200 dark:border-gray-700/50"
-            }`}
+            className="flex flex-col items-center justify-center p-6 h-full w-full glass-card-lg modern-card hover-lift"
+            style={{
+              background: canClaim() ? `var(--surface-secondary)` : `var(--surface)`,
+              border: `1px solid ${canClaim() ? `var(--glass-border)` : `var(--border)`}`,
+              opacity: canClaim() ? 1 : 0.6,
+            }}
             aria-label={`Claim ${maxClaim} ${currency}`}
           >
             <motion.div
               whileHover={
                 canClaim()
                   ? {
-                      y: [0, -5, 0],
-                      transition: { duration: 0.5 },
+                      y: [0, -8, 0],
+                      scale: [1, 1.1, 1],
+                      transition: { duration: 0.6 },
                     }
                   : {}
               }
-              className={`mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md ${
-                !canClaim() && "opacity-60"
-              }`}
+              className="mb-4 p-4 rounded-2xl glass-card"
+              style={{
+                background: canClaim() ? `var(--gradient-secondary)` : `var(--surface)`,
+                boxShadow: canClaim() ? `var(--glow-secondary)` : 'none',
+              }}
             >
               <HandCoins
-                className={`w-6 h-6 ${
-                  canClaim()
-                    ? "text-amber-600 dark:text-amber-400"
-                    : "text-gray-400 dark:text-gray-500"
-                }`}
+                className="w-7 h-7"
+                style={{
+                  color: canClaim() ? 'white' : `var(--foreground-muted)`,
+                }}
               />
             </motion.div>
             <span
-              className={`font-medium ${
-                canClaim()
-                  ? "text-amber-800 dark:text-amber-200"
-                  : "text-gray-500 dark:text-gray-400"
-              }`}
+              className="font-black text-base mb-1 text-shadow"
+              style={{
+                color: canClaim() ? `var(--foreground)` : `var(--foreground-subtle)`,
+              }}
             >
-              Claim {maxClaim} {currency}
+              💰 Claim {maxClaim} {currency}
             </span>
 
-            {!canClaim() && nextClaimTime && (
-              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center">
+            {!canClaim() && nextClaimTime ? (
+              <div className="text-xs text-medium-contrast mt-1 flex items-center">
                 <Clock className="w-3 h-3 mr-1" />
                 <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
+                  ⏰ {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
                 </motion.span>
               </div>
+            ) : (
+              <span className="label-enhanced">
+                ✅ Available Now
+              </span>
             )}
           </Button>
         </motion.div>
       </div>
 
-      {/* About Card */}
+      {/* About Card - Enhanced with modern Web3 design */}
       <motion.div
         custom={3}
         variants={cardVariants}
         initial="hidden"
         animate="visible"
         whileHover={{ scale: 1.01 }}
-        className="relative overflow-hidden p-5 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-gray-100 dark:border-gray-700/50"
+        className="relative overflow-hidden glass-card-lg p-6 modern-card hover-lift floating-element"
+        style={{
+          background: `var(--surface)`,
+          border: `1px solid var(--glass-border)`,
+        }}
       >
-        {/* Background decoration */}
+        {/* Enhanced background decoration */}
         <motion.div
-          className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-emerald-100/30 dark:bg-emerald-900/20"
+          className="absolute -bottom-8 -right-8 w-36 h-36 rounded-full opacity-10"
+          style={{ background: `var(--gradient-accent)` }}
           animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 10, 0],
+            scale: [1, 1.2, 1],
+            rotate: [0, 15, 0],
           }}
-          transition={{ duration: 10, repeat: Infinity }}
+          transition={{ duration: 12, repeat: Infinity }}
         />
 
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-4 mb-5">
           <motion.div
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-600 p-2.5 rounded-xl shadow-md"
+            whileHover={{ rotate: 360, scale: 1.1 }}
+            transition={{ duration: 0.6 }}
+            className="p-3 rounded-2xl glass-card"
+            style={{
+              background: `var(--gradient-primary)`,
+              boxShadow: `var(--glow-primary)`,
+            }}
           >
-            <Info className="w-5 h-5 text-white" />
+            <Info className="w-6 h-6 text-white" />
           </motion.div>
-          <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200">
-            About Bank of {mode === "degen" ? "Celo" : "Celo"}
+          <h2 
+            className="text-xl font-black gradient-text text-shadow-lg"
+            style={{ 
+              background: `var(--gradient-primary)`, 
+              WebkitBackgroundClip: 'text', 
+              WebkitTextFillColor: 'transparent' 
+            }}
+          >
+            ℹ️ About Bank of {mode === "degen" ? "Degen" : "Celo"}
           </h2>
         </div>
 
@@ -320,12 +370,40 @@ export default function HomeTab({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="relative z-10 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+          className="relative z-10 text-sm leading-relaxed text-glass-readable"
         >
-          Support the {mode === "degen" ? "Degen" : "Celo"} ecosystem by donating {currency} or claim {maxClaim} {currency}
-          to explore the blockchain. Swap tokens to {mode === "degen" ? "Degen" : "Celo"} using our bridge and
-          track top contributors on the leaderboard!
+          🚀 Support the {mode === "degen" ? "Degen" : "Celo"} ecosystem by donating {currency} or claim {maxClaim} {currency}{" "}
+          to explore the blockchain. 🔄 Swap tokens to {mode === "degen" ? "Degen" : "Celo"} using our bridge and
+          🏆 track top contributors on the leaderboard!
         </motion.p>
+
+        {/* Additional modern elements */}
+        <div className="flex items-center gap-2 mt-4 pt-4 border-t border-glass-border">
+          <motion.div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div 
+              className="w-2 h-2 rounded-full"
+              style={{ background: `var(--success)` }}
+            />
+            <span className="text-xs font-bold text-shadow-sm text-success">
+              🟢 Live Network
+            </span>
+          </motion.div>
+          <motion.div
+            className="flex items-center gap-2 px-3 py-2 rounded-lg glass-card"
+            whileHover={{ scale: 1.05 }}
+          >
+            <div 
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{ background: `var(--primary)` }}
+            />
+            <span className="text-xs font-bold text-shadow-sm" style={{ color: `var(--primary)` }}>
+              {mode === "degen" ? "🟣 Degen Mode" : "🟢 Celo Mode"}
+            </span>
+          </motion.div>
+        </div>
       </motion.div>
     </motion.div>
   );

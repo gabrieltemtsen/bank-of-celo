@@ -461,454 +461,1163 @@ const handleBuyTickets = async () => {
       className="space-y-6 max-w-2xl mx-auto"
     >
       {!isCorrectChain ? (
-        <div className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-gray-600 dark:text-gray-300">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-card-lg modern-card hover-lift p-6 text-center"
+          style={{
+            background: `var(--surface)`,
+            border: `1px solid var(--glass-border)`,
+          }}
+        >
+          <p className="text-glass-readable text-shadow">
             Please switch to {mode === "degen" ? "Base" : "Celo"} Network to proceed
           </p>
-        </div>
+        </motion.div>
       ) : (
         <>
           <motion.div
-            initial={{ scale: 0.95 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-6 shadow-lg"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, type: "spring", stiffness: 300 }}
+            className="glass-card-lg modern-card hover-lift p-6 relative overflow-hidden"
+            style={{
+              background: `var(--gradient-primary)`,
+              border: `1px solid var(--glass-border)`,
+              boxShadow: `var(--glow-primary)`,
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: `var(--glow-primary-intense)`,
+            }}
           >
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div>
-                <p className="text-sm text-purple-100 mb-5">
-                  BOC Jackpot - {drawDate}
-                </p>
-                <h3 className="text-3xl font-bold text-white mb-5">
-                  {dashboardData.currentPot} {currency}
-                </h3>
-                <div className="flex items-center gap-2 text-purple-100">
-                  <Clock className="w-4 h-4" />
+            {/* Animated background overlay */}
+            <motion.div
+              className="absolute inset-0 opacity-10"
+              style={{ background: `var(--gradient-secondary)` }}
+              animate={{
+                opacity: [0.05, 0.15, 0.05],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-4">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
+              >
+                <motion.p 
+                  className="text-sm font-black mb-3 text-shadow"
+                  style={{ color: 'white' }}
+                  animate={{ y: [0, -2, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  🎰 BOC Jackpot - {drawDate}
+                </motion.p>
+                <motion.h3 
+                  className="text-4xl font-black text-white mb-4 gradient-text"
+                  animate={{ 
+                    scale: [1, 1.02, 1],
+                    textShadow: ['0 0 10px rgba(255,255,255,0.3)', '0 0 20px rgba(255,255,255,0.5)', '0 0 10px rgba(255,255,255,0.3)']
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  💰 {dashboardData.currentPot} {currency}
+                </motion.h3>
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="p-2 rounded-xl"
+                    style={{ background: 'rgba(255, 255, 255, 0.1)' }}
+                  >
+                    <Clock className="w-5 h-5 text-white" />
+                  </motion.div>
                   {dashboardData.timeUntilDraw > 0 ? (
-                    <span className="text-sm font-mono">
-                      Draw in {countdown}
-                    </span>
-                  ) : (
-                    <Button
-                      onClick={handleTriggerDraw}
-                      disabled={lotteryPending}
-                      className="text-sm bg-purple-400 text-black hover:bg-purple-600 px-3 py-1"
+                    <motion.span 
+                      className="text-lg font-mono font-bold text-white px-3 py-2 rounded-xl"
+                      style={{ 
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                      }}
+                      animate={{ opacity: [1, 0.7, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
                     >
-                      {lotteryPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
-                      ) : (
-                        "Trigger Draw Now"
-                      )}
-                    </Button>
+                      ⏰ {countdown}
+                    </motion.span>
+                  ) : (
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Button
+                        onClick={handleTriggerDraw}
+                        disabled={lotteryPending}
+                        className="btn-secondary text-sm font-bold px-4 py-2"
+                        style={{
+                          background: 'rgba(255, 255, 255, 0.9)',
+                          color: `var(--primary)`,
+                          boxShadow: '0 4px 20px rgba(255, 255, 255, 0.3)',
+                        }}
+                      >
+                        {lotteryPending ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Loader2 className="w-4 h-4" />
+                          </motion.div>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4" />
+                            🎯 Trigger Draw
+                          </span>
+                        )}
+                      </Button>
+                    </motion.div>
                   )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2 text-white">
-                <Trophy className="w-5 h-5" />
-                <span className="font-medium">
-                  {dashboardData.totalParticipants}
-                </span>
-              </div>
+              </motion.div>
+              <motion.div 
+                className="flex items-center gap-3 p-3 rounded-2xl"
+                style={{ 
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: 'rgba(255, 255, 255, 0.2)' }}
+                >
+                  <Trophy className="w-6 h-6 text-white" />
+                </motion.div>
+                <div className="text-white">
+                  <p className="text-xs font-bold text-shadow-sm opacity-90">Players</p>
+                  <p className="text-xl font-black text-shadow">
+                    {dashboardData.totalParticipants}
+                  </p>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <div className="space-y-5">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Join the Jackpot
-              </h3>
+            <div className="space-y-6">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-3"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: `var(--surface-primary)` }}
+                >
+                  <Ticket className="w-6 h-6" style={{ color: `var(--primary)` }} />
+                </motion.div>
+                <h3 
+                  className="text-2xl font-bold gradient-text"
+                  style={{ 
+                    background: `var(--gradient-primary)`, 
+                    WebkitBackgroundClip: 'text', 
+                    WebkitTextFillColor: 'transparent' 
+                  }}
+                >
+                  🎫 Join the Jackpot
+                </h3>
+              </motion.div>
 
               {txHash && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-                  <span>
-                    Tickets purchased successfully!{" "}
-                    <a
-                      href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="underline"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 glass-card rounded-xl"
+                  style={{
+                    background: `rgba(16, 185, 129, 0.1)`,
+                    border: `1px solid rgba(16, 185, 129, 0.3)`,
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 1, repeat: Infinity }}
+                      className="p-2 rounded-full"
+                      style={{ background: `rgba(16, 185, 129, 0.2)` }}
                     >
-                      View on {mode === "degen" ? "BaseScan" : "CeloScan"}
-                    </a>
-                  </span>
-                </div>
+                      <Trophy className="w-5 h-5" style={{ color: `var(--success)` }} />
+                    </motion.div>
+                    <div>
+                      <p className="text-sm font-bold" style={{ color: `var(--success)` }}>
+                        🎉 Tickets purchased successfully!
+                      </p>
+                      <motion.a
+                        href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-semibold underline"
+                        style={{ color: `var(--primary)` }}
+                        whileHover={{ scale: 1.05 }}
+                      >
+                        📊 View on {mode === "degen" ? "BaseScan" : "CeloScan"}
+                      </motion.a>
+                    </div>
+                  </div>
+                </motion.div>
               )}
 
-              <div>
+              <div className="space-y-4">
                 <label
                   htmlFor="ticket-count"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                  className="block label-enhanced"
                 >
-                  Number of Tickets ({ticketPrice} {currency} each)
+                  🎰 Number of Tickets ({ticketPrice} {currency} each)
                 </label>
 
-                <div className="flex gap-2 mb-3">
+                <div className="flex gap-3 mb-4">
                   {TICKET_PRESETS.map((num) => (
-                    <button
+                    <motion.button
                       key={num}
                       type="button"
                       onClick={() => setTicketCount(num.toString())}
-                      className={`px-3 py-1 text-sm rounded-full border ${
-                        ticketCount === num.toString()
-                          ? "bg-purple-600 border-purple-600 text-white"
-                          : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
-                      }`}
+                      className="px-4 py-2 text-sm font-bold rounded-xl transition-all hover-lift"
+                      style={{
+                        background: ticketCount === num.toString() 
+                          ? `var(--gradient-primary)` 
+                          : `var(--surface-hover)`,
+                        border: `1px solid ${
+                          ticketCount === num.toString() 
+                            ? 'transparent' 
+                            : `var(--border)`
+                        }`,
+                        color: ticketCount === num.toString() 
+                          ? 'white' 
+                          : `var(--foreground)`,
+                        boxShadow: ticketCount === num.toString() 
+                          ? `var(--glow-primary)` 
+                          : 'none',
+                      }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        y: -1,
+                      }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       {num}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
 
-                <Input
-                  id="ticket-count"
-                  type="number"
-                  value={ticketCount}
-                  onChange={(e) => setTicketCount(e.target.value)}
-                  placeholder="1"
-                  className="w-full py-3 text-black dark:text-white dark:bg-gray-700"
-                  min="1"
-                  step="1"
-                />
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Total cost:{" "}
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {ticketCount && !isNaN(parseInt(ticketCount))
-                      ? parseInt(ticketCount) * ticketPrice
-                      : 0}{" "}
-                    {currency}
-                  </span>
-                </p>
+                <div className="relative">
+                  <Input
+                    id="ticket-count"
+                    type="number"
+                    value={ticketCount}
+                    onChange={(e) => setTicketCount(e.target.value)}
+                    placeholder="1"
+                    className="modern-input w-full py-4 pr-20 text-lg font-semibold"
+                    style={{
+                      background: `var(--surface-hover)`,
+                      border: `1px solid var(--border)`,
+                      color: `var(--foreground)`,
+                    }}
+                    min="1"
+                    step="1"
+                  />
+                  <div 
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-bold px-2 py-1 rounded-lg"
+                    style={{ 
+                      background: `var(--surface-primary)`,
+                      color: `var(--primary)`,
+                    }}
+                  >
+                    🎫
+                  </div>
+                </div>
+                <motion.div 
+                  className="p-3 glass-card rounded-xl"
+                  style={{
+                    background: `var(--surface-secondary)`,
+                    border: `1px solid var(--border)`,
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="label-enhanced">
+                      💰 Total Cost:
+                    </span>
+                    <motion.span 
+                      className="text-lg font-black text-shadow"
+                      style={{ color: `var(--primary)` }}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {ticketCount && !isNaN(parseInt(ticketCount))
+                        ? parseInt(ticketCount) * ticketPrice
+                        : 0}{" "}
+                      {currency}
+                    </motion.span>
+                  </div>
+                </motion.div>
               </div>
 
-              <Button
-                onClick={handleBuyTickets}
-                disabled={
-                  lotteryPending ||
-                  !ticketCount ||
-                  isNaN(parseInt(ticketCount)) ||
-                  parseInt(ticketCount) < 1
-                }
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white shadow-md"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {lotteryPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <Ticket className="w-5 h-5" />
-                    <span className="font-semibold">
-                      Buy{" "}
-                      {ticketCount && !isNaN(parseInt(ticketCount))
-                        ? parseInt(ticketCount)
-                        : 1}{" "}
-                      Ticket{parseInt(ticketCount) !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-                )}
-              </Button>
+                <Button
+                  onClick={handleBuyTickets}
+                  disabled={
+                    lotteryPending ||
+                    !ticketCount ||
+                    isNaN(parseInt(ticketCount)) ||
+                    parseInt(ticketCount) < 1
+                  }
+                  className="btn-primary w-full py-4 text-lg font-bold"
+                  style={{
+                    background: `var(--gradient-primary)`,
+                    boxShadow: `var(--glow-primary)`,
+                  }}
+                >
+                  {lotteryPending ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Loader2 className="w-6 h-6" />
+                    </motion.div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Ticket className="w-6 h-6" />
+                      </motion.div>
+                      <span>
+                        🎫 Buy{" "}
+                        {ticketCount && !isNaN(parseInt(ticketCount))
+                          ? parseInt(ticketCount)
+                          : 1}{" "}
+                        Ticket{parseInt(ticketCount) !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                  )}
+                </Button>
+              </motion.div>
             </div>
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                Your Tickets in Current Round
-              </h3>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+            <div className="flex justify-between items-center mb-6">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="flex items-center gap-3"
+              >
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: `var(--surface-primary)` }}
+                >
+                  <Ticket className="w-5 h-5" style={{ color: `var(--primary)` }} />
+                </motion.div>
+                <h3 className="text-lg font-black text-glass-readable">
+                  🎫 Your Current Tickets
+                </h3>
+              </motion.div>
+              <motion.span 
+                className="text-sm font-semibold px-3 py-1 rounded-xl"
+                style={{ 
+                  background: `var(--surface-secondary)`,
+                  color: `var(--foreground-secondary)`,
+                }}
+                whileHover={{ scale: 1.05 }}
+              >
                 Round #{dashboardData.currentRound}
-              </span>
+              </motion.span>
             </div>
 
             {isLoading ? (
-              <div className="text-center py-4">
-                <Loader2 className="w-5 h-5 animate-spin text-purple-500 mx-auto" />
-              </div>
+              <motion.div 
+                className="text-center py-8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="mx-auto mb-3 w-fit"
+                >
+                  <Loader2 
+                    className="w-8 h-8"
+                    style={{ color: `var(--primary)` }}
+                  />
+                </motion.div>
+                <p className="label-enhanced">
+                  Loading your tickets...
+                </p>
+              </motion.div>
             ) : (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="bg-purple-100 dark:bg-purple-900 p-2 rounded-lg">
-                    <Ticket className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+              <motion.div 
+                className="p-6 glass-card rounded-2xl"
+                style={{
+                  background: `var(--surface-secondary)`,
+                  border: `1px solid var(--border)`,
+                }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.4 }}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: `var(--shadow)`,
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <motion.div
+                      className="p-3 rounded-2xl"
+                      style={{ background: `var(--gradient-primary)` }}
+                      animate={{ 
+                        rotate: [0, 5, -5, 0],
+                        scale: [1, 1.05, 1],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Ticket className="w-6 h-6 text-white" />
+                    </motion.div>
+                    <div>
+                      <motion.p 
+                        className="text-3xl font-black"
+                        style={{ color: `var(--primary)` }}
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        {dashboardData.userTicketsCurrentRound}
+                      </motion.p>
+                      <p className="label-enhanced">
+                        Active Ticket
+                        {dashboardData.userTicketsCurrentRound !== 1 ? "s" : ""}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {dashboardData.userTicketsCurrentRound}
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Ticket
-                      {dashboardData.userTicketsCurrentRound !== 1 ? "s" : ""}
-                    </p>
-                  </div>
+                  {dashboardData.userTicketsCurrentRound > 0 && (
+                    <motion.div
+                      className="text-right"
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <p className="text-2xl">🍀</p>
+                      <p 
+                        className="text-xs font-black text-shadow-sm"
+                        style={{ color: `var(--success)` }}
+                      >
+                        Good Luck!
+                      </p>
+                    </motion.div>
+                  )}
                 </div>
-              </div>
+              </motion.div>
             )}
           </motion.div>
 
           {dashboardData.hasUnclaimed && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-              className="p-6 bg-amber-50 dark:bg-amber-900/20 rounded-2xl shadow-sm border border-amber-200 dark:border-amber-800"
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 300 }}
+              className="glass-card-lg modern-card hover-lift p-6 relative overflow-hidden"
+              style={{
+                background: `rgba(245, 158, 11, 0.05)`,
+                border: `1px solid rgba(245, 158, 11, 0.2)`,
+                boxShadow: `0 0 30px rgba(245, 158, 11, 0.2)`,
+              }}
+              whileHover={{ 
+                scale: 1.02,
+                boxShadow: `0 0 40px rgba(245, 158, 11, 0.3)`,
+              }}
             >
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-bold text-amber-800 dark:text-amber-200">
-                  🎰 Unclaimed Winnings
-                </h3>
-                <Trophy className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+              {/* Animated background */}
+              <motion.div
+                className="absolute inset-0 opacity-10"
+                style={{ background: `linear-gradient(135deg, #f59e0b, #d97706)` }}
+                animate={{
+                  opacity: [0.05, 0.15, 0.05],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              />
+              <div className="relative z-10 flex justify-between items-center mb-6">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="flex items-center gap-3"
+                >
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1],
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="p-3 rounded-2xl"
+                    style={{ background: `rgba(245, 158, 11, 0.2)` }}
+                  >
+                    <Trophy className="w-6 h-6" style={{ color: `var(--warning)` }} />
+                  </motion.div>
+                  <h3 
+                    className="text-xl font-black text-shadow-lg"
+                    style={{ color: `var(--warning)` }}
+                  >
+                    🏆 Unclaimed Winnings!
+                  </h3>
+                </motion.div>
+                <motion.div
+                  animate={{ 
+                    y: [0, -5, 0],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="text-2xl"
+                >
+                  💰
+                </motion.div>
               </div>
 
-              <div className="space-y-3">
-                {unclaimedRounds.map((roundId) => (
-                  <div
+              <div className="relative z-10 space-y-4">
+                {unclaimedRounds.map((roundId, index) => (
+                  <motion.div
                     key={roundId}
-                    className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-amber-100 dark:border-amber-800/50"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    className="flex items-center justify-between p-4 glass-card rounded-xl hover-lift"
+                    style={{
+                      background: `var(--surface)`,
+                      border: `1px solid rgba(245, 158, 11, 0.3)`,
+                    }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      boxShadow: `0 0 20px rgba(245, 158, 11, 0.2)`,
+                    }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="bg-amber-100 dark:bg-amber-900 p-2 rounded-lg">
-                        <Trophy className="w-5 h-5 text-amber-600 dark:text-amber-300" />
-                      </div>
+                    <div className="flex items-center gap-4">
+                      <motion.div
+                        className="p-3 rounded-2xl"
+                        style={{ background: `rgba(245, 158, 11, 0.2)` }}
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                          rotate: [0, 5, -5, 0],
+                        }}
+                        transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                      >
+                        <Trophy className="w-6 h-6" style={{ color: `var(--warning)` }} />
+                      </motion.div>
                       <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          Round {roundId}
-                        </p>
-                        <p className="text-sm text-amber-600 dark:text-amber-400">
-                          You won this round!
+                        <motion.p 
+                          className="text-lg font-black text-shadow"
+                          style={{ color: `var(--foreground)` }}
+                          animate={{ y: [0, -1, 0] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                        >
+                          🎉 Round {roundId}
+                        </motion.p>
+                        <p 
+                          className="text-sm font-bold text-shadow-sm"
+                          style={{ color: `var(--warning)` }}
+                        >
+                          Congratulations! You won! 🎊
                         </p>
                       </div>
                     </div>
-                    <Button
-                      onClick={() => handleClaimWinnings(roundId)}
-                      disabled={lotteryPending}
-                      className="bg-amber-600 hover:bg-amber-700 text-white shadow"
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      {lotteryPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        "Claim"
-                      )}
-                    </Button>
-                  </div>
+                      <Button
+                        onClick={() => handleClaimWinnings(roundId)}
+                        disabled={lotteryPending}
+                        className="btn-warning px-6 py-3 text-base font-bold"
+                        style={{
+                          background: `linear-gradient(135deg, #f59e0b, #d97706)`,
+                          boxShadow: `0 0 20px rgba(245, 158, 11, 0.4)`,
+                          color: 'white',
+                        }}
+                      >
+                        {lotteryPending ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Loader2 className="w-5 h-5" />
+                          </motion.div>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4" />
+                            💎 Claim Prize
+                          </span>
+                        )}
+                      </Button>
+                    </motion.div>
+                  </motion.div>
                 ))}
-                <div className="text-xs text-amber-700 dark:text-amber-300/80 mt-2 px-1">
-                  Note: There is a 5% fee on claimed prizes to help cover
-                  infrastructure costs.
-                </div>
+                <motion.div 
+                  className="relative z-10 mt-4 p-3 glass-card rounded-xl"
+                  style={{
+                    background: `rgba(245, 158, 11, 0.1)`,
+                    border: `1px solid rgba(245, 158, 11, 0.2)`,
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  <p 
+                    className="text-xs font-bold flex items-center gap-2 text-shadow-sm"
+                    style={{ color: `var(--warning)` }}
+                  >
+                    ℹ️ <span>5% fee applies to help cover infrastructure costs</span>
+                  </p>
+                </motion.div>
               </div>
             </motion.div>
           )}
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <button
+            <motion.button
               onClick={() => setShowPastTickets(!showPastTickets)}
               className="flex items-center justify-between w-full text-left group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                Your Ticket History
-              </h3>
-              <ChevronRight
-                className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform ${showPastTickets ? "rotate-90" : ""}`}
-              />
-            </button>
+              <div className="flex items-center gap-3">
+                <motion.div
+                  animate={{ rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="p-2 rounded-xl"
+                  style={{ background: `var(--surface-primary)` }}
+                >
+                  <Clock className="w-5 h-5" style={{ color: `var(--primary)` }} />
+                </motion.div>
+                <h3 className="text-lg font-black text-glass-readable transition-colors group-hover:text-primary">
+                  📜 Your Ticket History
+                </h3>
+              </div>
+              <motion.div
+                animate={{ rotate: showPastTickets ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+                className="p-2 rounded-xl"
+                style={{ background: `var(--surface-hover)` }}
+              >
+                <ChevronRight
+                  className="w-5 h-5"
+                  style={{ color: `var(--foreground-secondary)` }}
+                />
+              </motion.div>
+            </motion.button>
 
             {showPastTickets && (
-              <div className="mt-4 space-y-4">
+              <motion.div 
+                className="mt-6 space-y-4"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
                 {isLoading ? (
-                  <div className="text-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-purple-500 mx-auto" />
-                  </div>
+                  <motion.div 
+                    className="text-center py-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="mx-auto mb-3 w-fit"
+                    >
+                      <Loader2 
+                        className="w-8 h-8"
+                        style={{ color: `var(--primary)` }}
+                      />
+                    </motion.div>
+                    <p className="label-enhanced">
+                      Loading history...
+                    </p>
+                  </motion.div>
                 ) : pastTickets.length === 0 ? (
-                  <div className="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                    <p className="text-gray-500 dark:text-gray-400">
+                  <motion.div 
+                    className="text-center py-8 glass-card rounded-xl"
+                    style={{
+                      background: `var(--surface-secondary)`,
+                      border: `1px solid var(--border)`,
+                    }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                  >
+                    <motion.div
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="text-4xl mb-3"
+                    >
+                      🎫
+                    </motion.div>
+                    <p className="text-base font-bold text-glass-readable">
                       No past tickets found. Buy tickets to join the jackpot!
                     </p>
-                  </div>
+                  </motion.div>
                 ) : (
                   <>
                     {pastTickets
                       .sort((a, b) => b.roundId - a.roundId)
-                      .map((ticket) => {
+                      .map((ticket, index) => {
                         const randomStatement = MOTIVATIONAL_STATEMENTS[Math.floor(Math.random() * MOTIVATIONAL_STATEMENTS.length)];
 
                         return (
-                          <div key={ticket.roundId} className="space-y-3">
-                            <div
-                              className={`p-4 rounded-lg flex justify-between items-center border ${
-                                ticket.hasWon
-                                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                                  : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-                              }`}
+                          <motion.div 
+                            key={ticket.roundId} 
+                            className="space-y-3"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                          >
+                            <motion.div
+                              className="p-4 glass-card rounded-xl flex justify-between items-center hover-lift"
+                              style={{
+                                background: ticket.hasWon 
+                                  ? `rgba(16, 185, 129, 0.1)` 
+                                  : `var(--surface-secondary)`,
+                                border: ticket.hasWon 
+                                  ? `1px solid rgba(16, 185, 129, 0.3)` 
+                                  : `1px solid var(--border)`,
+                                boxShadow: ticket.hasWon 
+                                  ? `0 0 20px rgba(16, 185, 129, 0.2)` 
+                                  : 'none',
+                              }}
+                              whileHover={{ 
+                                scale: 1.02,
+                                y: -2,
+                              }}
                             >
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={`p-3 rounded-full ${
-                                    ticket.hasWon
-                                      ? "bg-green-100 dark:bg-green-800 text-green-600 dark:text-green-300"
-                                      : "bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
-                                  }`}
+                              <div className="flex items-center gap-4">
+                                <motion.div
+                                  className="p-3 rounded-2xl"
+                                  style={{
+                                    background: ticket.hasWon 
+                                      ? `rgba(16, 185, 129, 0.2)` 
+                                      : `var(--surface-primary)`,
+                                  }}
+                                  animate={{ 
+                                    rotate: ticket.hasWon ? [0, 5, -5, 0] : 0,
+                                    scale: ticket.hasWon ? [1, 1.1, 1] : 1,
+                                  }}
+                                  transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
                                 >
                                   {ticket.hasWon ? (
-                                    <Trophy className="w-5 h-5" />
+                                    <Trophy className="w-6 h-6" style={{ color: `var(--success)` }} />
                                   ) : (
-                                    <Ticket className="w-5 h-5" />
+                                    <Ticket className="w-6 h-6" style={{ color: `var(--primary)` }} />
                                   )}
-                                </div>
+                                </motion.div>
                                 <div>
-                                  <p className="font-medium text-gray-900 dark:text-white">
-                                    Round #{ticket.roundId}
-                                  </p>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  <motion.p 
+                                    className="text-lg font-bold"
+                                    style={{ color: `var(--foreground)` }}
+                                    animate={{ y: [0, -1, 0] }}
+                                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                                  >
+                                    {ticket.hasWon ? "🏆" : "🎫"} Round #{ticket.roundId}
+                                  </motion.p>
+                                  <p 
+                                    className="text-sm font-semibold"
+                                    style={{ color: `var(--foreground-secondary)` }}
+                                  >
                                     {ticket.date} • {ticket.tickets} Ticket
                                     {ticket.tickets !== 1 ? "s" : ""}
                                   </p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p
-                                  className={`text-sm font-medium ${
-                                    ticket.hasWon
-                                      ? "text-green-600 dark:text-green-400"
-                                      : ticket.roundActive
-                                        ? "text-green-500 dark:text-green-400"
-                                        : "text-gray-500 dark:text-gray-400"
-                                  }`}
+                                <motion.div
+                                  className="px-3 py-2 rounded-xl"
+                                  style={{
+                                    background: ticket.hasWon 
+                                      ? `rgba(16, 185, 129, 0.2)` 
+                                      : ticket.roundActive 
+                                        ? `rgba(34, 197, 94, 0.2)` 
+                                        : `var(--surface-hover)`,
+                                  }}
+                                  animate={ticket.hasWon && unclaimedRounds.includes(ticket.roundId) ? {
+                                    scale: [1, 1.05, 1],
+                                    opacity: [0.8, 1, 0.8],
+                                  } : {}}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
                                 >
-                                  {ticket.hasWon
-                                    ? unclaimedRounds.includes(ticket.roundId)
-                                      ? "🏆 Unclaimed Prize!"
-                                      : "💰 Prize Claimed"
-                                    : `${ticket.roundActive ? "Active" : "Completed"} Round`}
-                                </p>
+                                  <p
+                                    className="text-sm font-black text-shadow-sm"
+                                    style={{
+                                      color: ticket.hasWon
+                                        ? `var(--success)`
+                                        : ticket.roundActive
+                                          ? `var(--success)`
+                                          : `var(--foreground-secondary)`,
+                                    }}
+                                  >
+                                    {ticket.hasWon
+                                      ? unclaimedRounds.includes(ticket.roundId)
+                                        ? "🏆 Unclaimed!"
+                                        : "💰 Claimed"
+                                      : `${ticket.roundActive ? "🔄 Active" : "✅ Complete"}`}
+                                  </p>
+                                </motion.div>
                               </div>
-                            </div>
+                            </motion.div>
 
                             {!ticket.hasWon && (
-                              <div className="px-4 py-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-100 dark:border-purple-800/50">
-                                <div className="flex items-start gap-2">
-                                  <svg
-                                    className="w-5 h-5 text-purple-500 dark:text-purple-400 mt-0.5 flex-shrink-0"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
+                              <motion.div 
+                                className="px-4 py-3 glass-card rounded-xl"
+                                style={{
+                                  background: `var(--surface-secondary)`,
+                                  border: `1px solid var(--border)`,
+                                }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.1 + 0.2 }}
+                              >
+                                <div className="flex items-start gap-3">
+                                  <motion.div
+                                    animate={{ rotate: [0, 10, -10, 0] }}
+                                    transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
+                                    className="p-2 rounded-xl mt-0.5"
+                                    style={{ background: `var(--surface-primary)` }}
                                   >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth="2"
-                                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                                    />
-                                  </svg>
-                                  <p className="text-sm text-purple-800 dark:text-purple-200">
-                                    {randomStatement}
+                                    <svg
+                                      className="w-4 h-4"
+                                      style={{ color: `var(--primary)` }}
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"
+                                      />
+                                    </svg>
+                                  </motion.div>
+                                  <p className="text-sm font-bold text-glass-readable">
+                                    💬 {randomStatement}
                                   </p>
                                 </div>
-                              </div>
+                              </motion.div>
                             )}
-                          </div>
+                          </motion.div>
                         );
                       })}
 
-                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600">
+                    <motion.div 
+                      className="mt-6 p-6 glass-card rounded-2xl"
+                      style={{
+                        background: `var(--surface-secondary)`,
+                        border: `1px solid var(--border)`,
+                      }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 }}
+                      whileHover={{ 
+                        scale: 1.02,
+                        boxShadow: `var(--shadow)`,
+                      }}
+                    >
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Wallet className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Total Winnings:
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            animate={{ 
+                              rotate: [0, 5, -5, 0],
+                              scale: [1, 1.1, 1],
+                            }}
+                            transition={{ duration: 3, repeat: Infinity }}
+                            className="p-3 rounded-2xl"
+                            style={{ background: `var(--gradient-primary)` }}
+                          >
+                            <Wallet className="w-6 h-6 text-white" />
+                          </motion.div>
+                          <p className="text-base font-black text-glass-readable">
+                            💰 Total Lifetime Winnings:
                           </p>
                         </div>
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        <motion.p 
+                          className="text-2xl font-black text-shadow"
+                          style={{ color: `var(--primary)` }}
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
                           {dashboardData.totalWinnings} {currency}
-                        </p>
+                        </motion.p>
                       </div>
-                    </div>
+                    </motion.div>
                   </>
                 )}
-              </div>
+              </motion.div>
             )}
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className="p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700"
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="glass-card-lg modern-card hover-lift p-6"
+            style={{
+              background: `var(--surface)`,
+              border: `1px solid var(--glass-border)`,
+            }}
+            whileHover={{ 
+              y: -2,
+              boxShadow: `var(--shadow-xl)`,
+            }}
           >
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Past Rounds
-            </h3>
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-center gap-3 mb-6"
+            >
+              <motion.div
+                animate={{ rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="p-2 rounded-xl"
+                style={{ background: `var(--surface-primary)` }}
+              >
+                <Clock className="w-6 h-6" style={{ color: `var(--primary)` }} />
+              </motion.div>
+              <h3 
+                className="text-xl font-bold gradient-text"
+                style={{ 
+                  background: `var(--gradient-primary)`, 
+                  WebkitBackgroundClip: 'text', 
+                  WebkitTextFillColor: 'transparent' 
+                }}
+              >
+                📊 Past Rounds
+              </h3>
+            </motion.div>
 
             {pastRounds.length === 0 ? (
-              <div className="text-center py-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <p className="text-gray-500 dark:text-gray-400">
+              <motion.div 
+                className="text-center py-8 glass-card rounded-xl"
+                style={{
+                  background: `var(--surface-secondary)`,
+                  border: `1px solid var(--border)`,
+                }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.7 }}
+              >
+                <motion.div
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-4xl mb-3"
+                >
+                  📊
+                </motion.div>
+                <p className="text-base font-bold text-glass-readable">
                   No past rounds data available
                 </p>
-              </div>
+              </motion.div>
             ) : (
-              <div className="space-y-3">
-                {pastRounds.map((round) => (
-                  <div
+              <div className="space-y-4">
+                {pastRounds.map((round, index) => (
+                  <motion.div
                     key={round.roundId}
-                    className={`p-4 rounded-lg border ${
-                      round.winner !==
-                      "0x0000000000000000000000000000000000000000"
-                        ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800"
-                        : "bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-                    }`}
+                    className="p-4 glass-card rounded-xl hover-lift"
+                    style={{
+                      background: round.winner !== "0x0000000000000000000000000000000000000000"
+                        ? `rgba(16, 185, 129, 0.1)`
+                        : `var(--surface-secondary)`,
+                      border: round.winner !== "0x0000000000000000000000000000000000000000"
+                        ? `1px solid rgba(16, 185, 129, 0.3)`
+                        : `1px solid var(--border)`,
+                      boxShadow: round.winner !== "0x0000000000000000000000000000000000000000"
+                        ? `0 0 20px rgba(16, 185, 129, 0.1)`
+                        : 'none',
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.7 + index * 0.1 }}
+                    whileHover={{ 
+                      scale: 1.02,
+                      y: -2,
+                    }}
                   >
                     <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          Round #{round.roundId}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {format(
-                            new Date(round.startTime * 1000),
-                            "MMMM d, yyyy",
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className="p-2 rounded-xl"
+                          style={{
+                            background: round.winner !== "0x0000000000000000000000000000000000000000"
+                              ? `rgba(16, 185, 129, 0.2)`
+                              : `var(--surface-primary)`,
+                          }}
+                          animate={{ 
+                            rotate: round.winner !== "0x0000000000000000000000000000000000000000" ? [0, 5, -5, 0] : 0,
+                            scale: round.winner !== "0x0000000000000000000000000000000000000000" ? [1, 1.1, 1] : 1,
+                          }}
+                          transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                        >
+                          {round.winner !== "0x0000000000000000000000000000000000000000" ? (
+                            <Trophy className="w-5 h-5" style={{ color: `var(--success)` }} />
+                          ) : (
+                            <Clock className="w-5 h-5" style={{ color: `var(--primary)` }} />
                           )}
-                        </p>
+                        </motion.div>
+                        <div>
+                          <motion.p 
+                            className="text-lg font-black text-shadow"
+                            style={{ color: `var(--foreground)` }}
+                            animate={{ y: [0, -1, 0] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: index * 0.3 }}
+                          >
+                            {round.winner !== "0x0000000000000000000000000000000000000000" ? "🏆" : "🔄"} Round #{round.roundId}
+                          </motion.p>
+                          <p className="label-enhanced">
+                            {format(
+                              new Date(round.startTime * 1000),
+                              "MMMM d, yyyy",
+                            )}
+                          </p>
+                        </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-black font-medium">
-                          {round.pot} {currency}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {round.participantCount} participants
+                        <motion.p 
+                          className="text-lg font-black text-shadow"
+                          style={{ color: `var(--primary)` }}
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: index * 0.1 }}
+                        >
+                          💰 {round.pot} {currency}
+                        </motion.p>
+                        <p className="text-xs font-bold text-shadow-sm" style={{ color: `var(--foreground-secondary)` }}>
+                          👥 {round.participantCount} players
                         </p>
                       </div>
                     </div>
 
                     {round.winner !==
                     "0x0000000000000000000000000000000000000000" ? (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <p className="text-sm font-medium text-green-600 dark:text-green-400">
-                          Winner: {round.winner.slice(0, 6)}...
-                          {round.winner.slice(-4)}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Won {round.winningAmount} {currency}
-                        </p>
-                      </div>
+                      <motion.div 
+                        className="mt-4 pt-4 glass-card rounded-xl p-3"
+                        style={{
+                          background: `rgba(16, 185, 129, 0.1)`,
+                          border: `1px solid rgba(16, 185, 129, 0.2)`,
+                        }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.1 + 0.8 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            animate={{ scale: [1, 1.1, 1] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                            className="text-2xl"
+                          >
+                            🎉
+                          </motion.div>
+                          <div>
+                            <p 
+                              className="text-sm font-black text-shadow-sm"
+                              style={{ color: `var(--success)` }}
+                            >
+                              🏆 Winner: {round.winner.slice(0, 6)}...{round.winner.slice(-4)}
+                            </p>
+                            <p className="text-xs font-bold text-shadow-sm" style={{ color: `var(--foreground-secondary)` }}>
+                              💰 Prize: {round.winningAmount} {currency}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
                     ) : (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          No winner - Pot carried over
-                        </p>
-                      </div>
+                      <motion.div 
+                        className="mt-4 pt-4 glass-card rounded-xl p-3"
+                        style={{
+                          background: `var(--surface-hover)`,
+                          border: `1px solid var(--border)`,
+                        }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.1 + 0.8 }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <motion.div
+                            animate={{ rotate: [0, 180, 360] }}
+                            transition={{ duration: 3, repeat: Infinity, delay: index * 0.5 }}
+                            className="text-xl"
+                          >
+                            🔄
+                          </motion.div>
+                          <p className="text-sm font-bold text-shadow-sm" style={{ color: `var(--foreground-secondary)` }}>
+                            💵 No winner - Pot rolled over to next round
+                          </p>
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             )}

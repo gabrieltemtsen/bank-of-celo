@@ -531,63 +531,49 @@ const handleClaim = async () => {
       className="space-y-6 w-full"
     >
       <div className="flex flex-col gap-4 w-full">
-        <div className="flex flex-wrap bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1 w-full">
-          <button
-            onClick={() => setActiveTab("donate")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "donate"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Donate tab"
-            role="tab"
-            aria-selected={activeTab === "donate"}
-          >
-            <Gift className="w-4 h-4" />
-            <span className="whitespace-nowrap">Donate</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("claim")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "claim"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Claim tab"
-            role="tab"
-            aria-selected={activeTab === "claim"}
-          >
-            <HandCoins className="w-4 h-4" />
-            <span className="whitespace-nowrap">Claim</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("lottery")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "lottery"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery"}
-          >
-            <Ticket className="w-4 h-4" />
-            <span className="whitespace-nowrap">Jackpot</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("lottery2")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "lottery2"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-green-800 dark:text-green-800"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery2"}
-          >
-            <Ticket className="w-4 h-4" />
-            <span className="whitespace-nowrap">JackpotV2</span>
-          </button>
+        <div 
+          className="flex flex-wrap glass-card rounded-2xl p-2 gap-2 w-full"
+          style={{
+            background: `var(--surface)`,
+            border: `1px solid var(--border)`,
+          }}
+        >
+          {[
+            { id: "donate", icon: Gift, label: "Donate", color: "primary" },
+            { id: "claim", icon: HandCoins, label: "Claim", color: "secondary" },
+            { id: "lottery", icon: Ticket, label: "Jackpot", color: "accent" },
+            { id: "lottery2", icon: Ticket, label: "JackpotV2", color: "success" },
+          ].map((tab) => (
+            <motion.button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className="flex-1 min-w-[120px] py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 hover-lift"
+              style={{
+                background: activeTab === tab.id ? `var(--gradient-primary)` : 'transparent',
+                color: activeTab === tab.id ? 'white' : `var(--foreground-secondary)`,
+                boxShadow: activeTab === tab.id ? `var(--glow-primary)` : 'none',
+              }}
+              whileHover={{ 
+                scale: 1.02,
+                y: -1,
+              }}
+              whileTap={{ scale: 0.98 }}
+              aria-label={`${tab.label} tab`}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+            >
+              <motion.div
+                animate={{
+                  rotate: activeTab === tab.id ? [0, 5, -5, 0] : 0,
+                  scale: activeTab === tab.id ? 1.1 : 1,
+                }}
+                transition={{ duration: 0.3 }}
+              >
+                <tab.icon className="w-5 h-5" />
+              </motion.div>
+              <span className="whitespace-nowrap text-sm">{tab.label}</span>
+            </motion.button>
+          ))}
         </div>
       </div>
 
@@ -596,42 +582,82 @@ const handleClaim = async () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
+          className="glass-card-lg modern-card hover-lift p-6"
+          style={{
+            background: `var(--surface)`,
+            border: `1px solid var(--glass-border)`,
+          }}
         >
-          <div className="space-y-4">
-            <div>
+          <div className="space-y-6">
+            <div className="space-y-3">
               <label
                 htmlFor="donate-amount"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-semibold text-foreground-secondary"
               >
                 Amount to Donate ({currency})
               </label>
-              <Input
-                id="donate-amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.0"
-                className="w-full py-3 text-black"
-                min="0"
-                step="0.01"
-              />
-            </div>
-            <Button
-              onClick={() => handleDonate(amount)}
-              disabled={isPending || !amount}
-              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
-              aria-label={`Donate ${currency}`}
-            >
-              {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <Send className="w-5 h-5" />
-                  <span>Donate {currency}</span>
+              <div className="relative">
+                <Input
+                  id="donate-amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.0"
+                  className="modern-input w-full py-4 text-lg font-semibold"
+                  style={{
+                    background: `var(--surface-hover)`,
+                    border: `1px solid var(--border)`,
+                    color: `var(--foreground)`,
+                  }}
+                  min="0"
+                  step="0.01"
+                />
+                <div 
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-bold px-2 py-1 rounded-lg"
+                  style={{ 
+                    background: `var(--surface-primary)`,
+                    color: `var(--primary)`,
+                  }}
+                >
+                  {currency}
                 </div>
+              </div>
+              {tokenBalance && (
+                <p className="text-xs text-foreground-muted">
+                  Available: {parseFloat(tokenBalance.formatted).toFixed(4)} {currency}
+                </p>
               )}
-            </Button>
+            </div>
+            
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Button
+                onClick={() => handleDonate(amount)}
+                disabled={isPending || !amount}
+                className="btn-primary w-full py-4 text-base font-bold"
+                style={{
+                  background: `var(--gradient-primary)`,
+                  boxShadow: `var(--glow-primary)`,
+                }}
+                aria-label={`Donate ${currency}`}
+              >
+                {isPending ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <div className="flex items-center justify-center gap-3">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Send className="w-5 h-5" />
+                    </motion.div>
+                    <span>Donate {currency}</span>
+                  </div>
+                )}
+              </Button>
+            </motion.div>
           </div>
         </motion.div>
       ) : activeTab === "claim" ? (
@@ -639,86 +665,204 @@ const handleClaim = async () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
+          className="glass-card-lg modern-card hover-lift p-6"
+          style={{
+            background: `var(--surface)`,
+            border: `1px solid var(--glass-border)`,
+          }}
         >
           {isUnderMaintenance ? (
-            <div className="text-center space-y-4">
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center space-y-6"
+            >
+              <div 
+                className="p-6 glass-card rounded-2xl"
+                style={{
+                  background: `rgba(245, 158, 11, 0.1)`,
+                  border: `1px solid rgba(245, 158, 11, 0.3)`,
+                }}
+              >
                 <div className="flex flex-col items-center">
-                  <AlertTriangle className="w-8 h-8 mb-2 text-yellow-500" />
-                  <h3 className="text-lg font-medium">
+                  <motion.div
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="mb-4 p-3 rounded-2xl"
+                    style={{ background: `rgba(245, 158, 11, 0.2)` }}
+                  >
+                    <AlertTriangle 
+                      className="w-10 h-10" 
+                      style={{ color: `var(--warning)` }}
+                    />
+                  </motion.div>
+                  <h3 
+                    className="text-xl font-bold mb-2"
+                    style={{ color: `var(--warning)` }}
+                  >
                     Maintenance in Progress
                   </h3>
-                  <p className="mt-1 text-sm">
-                    The claim feature is under maintenance. Please check back
-                    later.
+                  <p 
+                    className="text-base font-medium"
+                    style={{ color: `var(--foreground-secondary)` }}
+                  >
+                    The claim feature is under maintenance. Please check back later.
                   </p>
                 </div>
               </div>
-              <Button
-                onClick={() => window.location.reload()}
-                className="w-full"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Refresh Page
-              </Button>
-            </div>
+                <Button
+                  onClick={() => window.location.reload()}
+                  className="w-full py-3 text-base font-bold"
+                  style={{
+                    background: `var(--warning)`,
+                    color: 'white',
+                    boxShadow: `0 0 20px rgba(245, 158, 11, 0.4)`,
+                  }}
+                >
+                  <RefreshCw className="w-5 h-5 mr-2" />
+                  Refresh Page
+                </Button>
+              </motion.div>
+            </motion.div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {!canClaim() && nextClaimTime && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
-                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="p-4 glass-card rounded-xl flex items-center gap-3"
+                  style={{
+                    background: `rgba(245, 158, 11, 0.1)`,
+                    border: `1px solid rgba(245, 158, 11, 0.3)`,
+                  }}
+                >
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Clock 
+                      className="w-5 h-5 flex-shrink-0" 
+                      style={{ color: `var(--warning)` }}
+                    />
+                  </motion.div>
+                  <span 
+                    className="text-sm font-semibold"
+                    style={{ color: `var(--warning)` }}
+                  >
                     You can claim again{" "}
                     {formatDistanceToNow(nextClaimTime, { addSuffix: true })}
                   </span>
-                </div>
+                </motion.div>
               )}
 
               {txHash && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
-                  <span>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-4 glass-card rounded-xl"
+                  style={{
+                    background: `rgba(16, 185, 129, 0.1)`,
+                    border: `1px solid rgba(16, 185, 129, 0.3)`,
+                  }}
+                >
+                  <span 
+                    className="text-sm font-semibold"
+                    style={{ color: `var(--success)` }}
+                  >
                     Claim successful!{" "}
-                    <a
+                    <motion.a
                       href={`https://${mode === "degen" ? "basescan.org" : "celoscan.io"}/tx/${txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline"
+                      className="underline font-bold"
+                      whileHover={{ scale: 1.05 }}
+                      style={{ color: `var(--primary)` }}
                     >
                       View on {mode === "degen" ? "BaseScan" : "CeloScan"}
-                    </a>
+                    </motion.a>
                   </span>
-                </div>
+                </motion.div>
               )}
 
               {fidLoading ? (
-                <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
-                  <p className="text-gray-600 dark:text-gray-300">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-6 text-center glass-card rounded-xl"
+                  style={{
+                    background: `var(--surface-secondary)`,
+                    border: `1px solid var(--border)`,
+                  }}
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="mx-auto mb-3 w-fit"
+                  >
+                    <Loader2 
+                      className="w-8 h-8"
+                      style={{ color: `var(--primary)` }}
+                    />
+                  </motion.div>
+                  <p 
+                    className="text-base font-semibold"
+                    style={{ color: `var(--foreground-secondary)` }}
+                  >
                     Fetching Farcaster ID...
                   </p>
-                </div>
+                </motion.div>
               ) : fidError || !fid ? (
-                <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
-                  <p className="text-sm text-red-700 dark:text-red-300">
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-6 text-center glass-card rounded-xl"
+                  style={{
+                    background: `rgba(239, 68, 68, 0.1)`,
+                    border: `1px solid rgba(239, 68, 68, 0.3)`,
+                  }}
+                >
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="mx-auto mb-3 w-fit p-2 rounded-xl"
+                    style={{ background: `rgba(239, 68, 68, 0.2)` }}
+                  >
+                    <AlertCircle 
+                      className="w-6 h-6" 
+                      style={{ color: `var(--error)` }}
+                    />
+                  </motion.div>
+                  <p 
+                    className="text-sm font-semibold mb-3"
+                    style={{ color: `var(--error)` }}
+                  >
                     {fidError ||
                       "No Farcaster ID found. Please link your address to Farcaster to claim."}
                   </p>
-                  <a
+                  <motion.a
                     href="https://warpcast.com/~/settings"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm text-blue-600 dark:text-blue-400 underline mt-2 inline-block"
+                    className="text-sm font-bold underline inline-block px-4 py-2 rounded-lg"
+                    style={{ 
+                      color: `var(--primary)`,
+                      background: `var(--surface-primary)`,
+                    }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
                     Link on Warpcast
-                  </a>
-                </div>
+                  </motion.a>
+                </motion.div>
               ) : (
-                <div>
+                <div className="space-y-3">
                   <label
                     htmlFor="farcaster-id"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                    className="block text-sm font-semibold text-foreground-secondary"
                   >
                     Your Farcaster ID / Quality Score
                   </label>
@@ -727,39 +871,74 @@ const handleClaim = async () => {
                     type="text"
                     value={`${fid} || ${qualityScore}` || username || ""}
                     disabled
-                    className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
+                    className="modern-input w-full py-3 text-base font-semibold"
+                    style={{
+                      background: `var(--surface-hover)`,
+                      border: `1px solid var(--border)`,
+                      color: `var(--foreground)`,
+                    }}
                     aria-readonly="true"
                   />
                 </div>
               )}
 
-              <Button
-                onClick={handleSubmit}
-                disabled={
-                  isPending ||
-                  claimPending ||
-                  !fid ||
-                  !canClaim() ||
-                  !!fidError ||
-                  !isCorrectChain ||
-                  hasClaimed
-                }
-                className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
-                aria-label={`Claim ${maxClaim} ${currency}`}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                {claimPending || isPending ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <div className="flex items-center justify-center gap-2">
-                    <HandCoins className="w-5 h-5" />
-                    {hasClaimed ? (
-                      <span>You have already claimed</span>
-                    ) : (
-                      <span>Claim {maxClaim} {currency}</span>
-                    )}
-                  </div>
-                )}
-              </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    isPending ||
+                    claimPending ||
+                    !fid ||
+                    !canClaim() ||
+                    !!fidError ||
+                    !isCorrectChain ||
+                    hasClaimed
+                  }
+                  className="w-full py-4 text-base font-bold rounded-xl"
+                  style={{
+                    background: hasClaimed || !canClaim() 
+                      ? `var(--surface)` 
+                      : `var(--gradient-secondary)`,
+                    boxShadow: hasClaimed || !canClaim() 
+                      ? 'none' 
+                      : `var(--glow-secondary)`,
+                    color: hasClaimed || !canClaim() 
+                      ? `var(--foreground-muted)` 
+                      : 'white',
+                    opacity: hasClaimed || !canClaim() ? 0.6 : 1,
+                  }}
+                  aria-label={`Claim ${maxClaim} ${currency}`}
+                >
+                  {claimPending || isPending ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Loader2 className="w-6 h-6" />
+                    </motion.div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-3">
+                      <motion.div
+                        animate={!hasClaimed && canClaim() ? { 
+                          y: [0, -3, 0],
+                          rotate: [0, 5, -5, 0] 
+                        } : {}}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <HandCoins className="w-6 h-6" />
+                      </motion.div>
+                      {hasClaimed ? (
+                        <span>You have already claimed</span>
+                      ) : (
+                        <span>Claim {maxClaim} {currency}</span>
+                      )}
+                    </div>
+                  )}
+                </Button>
+              </motion.div>
             </div>
           )}
         </motion.div>
