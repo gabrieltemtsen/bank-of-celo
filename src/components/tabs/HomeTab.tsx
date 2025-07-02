@@ -65,7 +65,7 @@ export default function HomeTab({
   isCorrectChain,
 }: HomeTabProps) {
   const { mode } = useChainMode();
-  const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
+  const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
   const currency = mode === "degen" ? "DEGEN" : "CELO";
   const isDegen = mode === "degen";
 
@@ -349,7 +349,7 @@ export default function HomeTab({
               ? "from-purple-700 to-violet-600 dark:from-purple-300 dark:to-violet-200"
               : "from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200"
           }`}>
-            About Bank of {mode === "degen" ? "Degen" : "Celo"}
+            About Bank of {mode === "degen" ? "Celo" : "Celo"}
           </h2>
         </div>
 
