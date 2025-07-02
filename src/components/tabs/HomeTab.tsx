@@ -65,7 +65,7 @@ export default function HomeTab({
   isCorrectChain,
 }: HomeTabProps) {
   const { mode } = useChainMode();
-  const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
+  const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
   const currency = mode === "degen" ? "DEGEN" : "CELO";
 
   const canClaim = () => {

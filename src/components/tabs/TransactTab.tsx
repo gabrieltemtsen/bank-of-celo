@@ -24,6 +24,7 @@ import {
   useSendTransaction,
   useChainId,
   useWriteContract,
+  useBalance,
 } from "wagmi";
 import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
 import JackPot from "./JackPot";
@@ -80,7 +81,12 @@ export default function TransactTab({
   const [isUnderMaintenance, setIsUnderMaintenance] = useState(false);
   const { mode } = useChainMode();
   const currency = mode === "degen" ? "DEGEN" : "CELO";
-  const maxClaim = mode === "degen" ? "250" : initialMaxClaim;
+  const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
+  const { data: tokenBalance } = useBalance({
+  address,
+  token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined, // DEGEN on Base
+  chainId: mode === "degen" ? base.id : undefined,
+});
 
     const chainId = useChainId()
     const targetChain = mode === "degen" ? base : celo;
@@ -338,155 +344,156 @@ export default function TransactTab({
     ? new Date((lastClaimAt + claimCooldown) * 1000)
     : null;
 
-  const handleClaim = async () => {
-    if (!fid || !address || !publicClient) {
-      toast.error("Farcaster ID or address missing");
-      return;
-    }
-    if (availableForClaim < maxClaim) {
-      toast.error("Insufficient vault balance to claim");
-      return;
-    }
+const handleClaim = async () => {
+  if (!fid || !address || !publicClient) {
+    toast.error("Farcaster ID or address missing");
+    return;
+  }
+  if (availableForClaim < maxClaim) {
+    toast.error("Insufficient vault balance to claim");
+    return;
+  }
 
-    setClaimPending(true);
-    setTxHash(null);
+  setClaimPending(true);
+  setTxHash(null);
 
+  try {
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+
+    const nonce = (await publicClient.readContract({
+      address: bankAddress,
+      abi: bankAbi,
+      functionName: "nonces",
+      args: [address],
+    })) as bigint;
+
+    const domain = {
+      name: mode === "degen" ? "BankOfDegen" : "BankOfCelo",
+      version: "1",
+      chainId: targetChain.id,
+      verifyingContract: bankAddress,
+    };
+
+    const types = {
+      Claim: [
+        { name: "claimer", type: "address" },
+        { name: "fid", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "nonce", type: "uint256" },
+      ],
+    };
+
+    const message = {
+      claimer: address,
+      fid: BigInt(fid),
+      deadline: BigInt(deadline),
+      nonce,
+    };
+
+    const signature = await signTypedDataAsync({
+      domain,
+      types,
+      primaryType: "Claim",
+      message,
+    });
+
+    let dataSuffix;
     try {
-      const deadline = Math.floor(Date.now() / 1000) + 3600;
-
-      const nonce = (await publicClient.readContract({
-        address: bankAddress,
-        abi: bankAbi,
-        functionName: "nonces",
-        args: [address],
-      })) as bigint;
-
-      const domain = {
-        name: mode === "degen" ? "BankOfDegen" : "BankOfCelo",
-        version: "1",
-        chainId: mode === "degen" ? 8453 : 42220,
-        verifyingContract: bankAddress,
-      };
-
-      const types = {
-        Claim: [
-          { name: "claimer", type: "address" },
-          { name: "fid", type: "uint256" },
-          { name: "deadline", type: "uint256" },
-          { name: "nonce", type: "uint256" },
+      dataSuffix = getDataSuffix({
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
         ],
-      };
+      });
+    } catch (diviError) {
+      console.log("Divi getDataSuffix error:", diviError);
+      throw new Error("Failed to generate referral data");
+    }
 
-      const message = {
-        claimer: address,
-        fid: BigInt(fid),
-        deadline: BigInt(deadline),
-        nonce,
-      };
+    // Check native balance for gas fees (ETH on Base, CELO on Celo)
+    const balance = await publicClient.getBalance({ address });
+    const minBalance = parseEther("0.001"); // Minimum 0.001 ETH/CELO for gas
+    const hasSufficientGas = balance >= minBalance;
 
-      const signature = await signTypedDataAsync({
-        domain,
-        types,
-        primaryType: "Claim",
-        message,
+    const contractData = encodeFunctionData({
+      abi: bankAbi,
+      functionName: "claim",
+      args: [BigInt(fid), BigInt(deadline), signature],
+    });
+
+    const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
+    let hash: `0x${string}`;
+    if (hasSufficientGas) {
+      // Direct transaction with gas payment
+      hash = await sendTransactionAsync({
+        to: bankAddress,
+        data: finalData as `0x${string}`,
+        value: 0n, // No native currency value for claim
+        chainId: targetChain.id,
+        maxFeePerGas: parseUnits("100", 9),
+        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
-      let dataSuffix;
       try {
-        dataSuffix = getDataSuffix({
-          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-          providers: [
-            "0x0423189886d7966f0dd7e7d256898daeee625dca",
-            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-          ],
+        await submitReferral({
+          txHash: hash,
+          chainId: targetChain.id,
         });
       } catch (diviError) {
-        console.log("Divi getDataSuffix error:", diviError);
-        throw new Error("Failed to generate referral data");
+        console.log("Divi submitReferral error:", diviError);
+        toast.warning("Claim succeeded, but referral tracking failed");
       }
 
-      const balance = await publicClient.getBalance({ address });
-      const minBalance = parseEther("0.001");
+      setTxHash(hash);
+      toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
+    } else {
+      // Gasless claim via API
+      const requestBody = {
+        address,
+        fid: fid.toString(),
+        deadline: deadline.toString(),
+        signature,
+        nonce: nonce.toString(),
+        dataSuffix,
+      };
 
-      if (balance >= minBalance) {
-        const contractData = encodeFunctionData({
-          abi: bankAbi,
-          functionName: "claim",
-          args: [BigInt(fid), BigInt(deadline), signature],
-        });
+      const response = await fetch("/api/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
 
-        const finalData = dataSuffix ? contractData + dataSuffix : contractData;
-
-        const hash = await sendTransactionAsync({
-          to: bankAddress,
-          data: finalData as `0x${string}`,
-          value: 0n,
-          maxFeePerGas: parseUnits("100", 9),
-          maxPriorityFeePerGas: parseUnits("100", 9),
-        });
-
-        try {
-          await submitReferral({
-            txHash: hash,
-            chainId: mode === "degen" ? 8453 : 42220,
-          });
-        } catch (diviError) {
-          console.log("Divi submitReferral error:", diviError);
-          toast.warning("Claim succeeded, but referral tracking failed");
-        }
-
-        setTxHash(hash);
-        toast.success(
-          `Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`,
-        );
-      } else {
-        const requestBody = {
-          address,
-          fid: fid.toString(),
-          deadline: deadline.toString(),
-          signature,
-          nonce: nonce.toString(),
-          dataSuffix,
-        };
-
-        const response = await fetch("/api/claim", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to process claim");
-        }
-
-        const result = await response.json();
-        setTxHash(result.transactionHash);
-
-        try {
-          await submitReferral({
-            txHash: result.transactionHash,
-            chainId: mode === "degen" ? 8453 : 42220,
-          });
-        } catch (diviError) {
-          console.log("Divi submitReferral error:", diviError);
-          toast.warning("Claim succeeded, but referral tracking failed");
-        }
-
-        toast.success(
-          `Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${result.transactionHash.slice(0, 6)}...`,
-        );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to process claim");
       }
-    } catch (error) {
-      console.log("Claim error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to process claim",
-      );
-    } finally {
-      setClaimPending(false);
+
+      const result = await response.json();
+      hash = result.transactionHash;
+
+      try {
+        await submitReferral({
+          txHash: hash,
+          chainId: targetChain.id,
+        });
+      } catch (diviError) {
+        console.log("Divi submitReferral error:", diviError);
+        toast.warning("Claim succeeded, but referral tracking failed");
+      }
+
+      setTxHash(hash);
+      toast.success(`Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${hash.slice(0, 6)}...`);
     }
-  };
+  } catch (error) {
+    console.log("Claim error:", error);
+    toast.error(error instanceof Error ? error.message : "Failed to process claim");
+  } finally {
+    setClaimPending(false);
+  }
+};
 
   const handleSubmit = () => {
     if (!isCorrectChain) {
