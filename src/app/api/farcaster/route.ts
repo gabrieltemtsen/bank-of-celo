@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     const data = await response.json();
     const user = data[address.toLowerCase()];
     const fid = user?.[0]?.fid;
+    const userScore = user?.[0]?.experimental.neynar_user_score;
 
     if (!fid) {
       return NextResponse.json(
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ fid });
+    return NextResponse.json({ fid, userScore }, { status: 200 });
   } catch (error) {
     console.error("Neynar API error:", error);
     return NextResponse.json(

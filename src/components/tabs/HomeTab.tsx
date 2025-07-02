@@ -312,7 +312,7 @@ export default function HomeTab({
             <Info className="w-5 h-5 text-white" />
           </motion.div>
           <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200">
-            About Bank of {mode === "degen" ? "Degen" : "Celo"}
+            About Bank of {mode === "degen" ? "Celo" : "Celo"}
           </h2>
         </div>
 

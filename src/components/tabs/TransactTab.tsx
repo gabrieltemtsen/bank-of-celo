@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import { Input } from "../ui/input";
 import {
   useAccount,
@@ -47,6 +47,7 @@ interface TransactTabProps {
 
 interface NeynarResponse {
   fid: number | null;
+  userScore?: number | null;
   error?: string;
 }
 
@@ -69,6 +70,7 @@ export default function TransactTab({
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
+  const [qualityScore, setQualityScore] = useState<number | null>(null);
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -119,6 +121,7 @@ export default function TransactTab({
       }
 
       setFid(data.fid);
+      setQualityScore(data.userScore || null);
       const username = await getUsername(address);
       setUsername(username);
       if (!data.fid) {
@@ -127,12 +130,13 @@ export default function TransactTab({
         if (!publicClient) {
           throw new Error("Public client is not available");
         }
-        const isBlacklisted = await publicClient.readContract({
-          address: bankAddress,
-          abi: bankAbi,
-          functionName: "fidBlacklisted",
-          args: [BigInt(data.fid)],
-        });
+        // const isBlacklisted = await publicClient.readContract({
+        //   address: bankAddress,
+        //   abi: bankAbi,
+        //   functionName: "fidBlacklisted",
+        //   args: [BigInt(data.fid)],
+        // });
+        const isBlacklisted = false; // Placeholder, replace with actual check if needed - TODO: Implement blacklist check
         if (isBlacklisted) {
           setFidError("This Farcaster ID is blacklisted");
           setFid(null);
@@ -345,6 +349,10 @@ export default function TransactTab({
     : null;
 
 const handleClaim = async () => {
+  if(qualityScore && qualityScore < 0.39) {
+    toast.error("You need a positive quality score to claim rewards, keep being active on Farcaster!");
+    return;
+  }
   if (!fid || !address || !publicClient) {
     toast.error("Farcaster ID or address missing");
     return;
@@ -712,12 +720,12 @@ const handleClaim = async () => {
                     htmlFor="farcaster-id"
                     className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                   >
-                    Your Farcaster username/ ID
+                    Your Farcaster ID / Quality Score
                   </label>
                   <Input
                     id="farcaster-id"
-                    type="number"
-                    value={fid || username || ""}
+                    type="text"
+                    value={`${fid} || ${qualityScore}` || username || ""}
                     disabled
                     className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
                     aria-readonly="true"
