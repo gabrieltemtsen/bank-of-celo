@@ -2,7 +2,8 @@
 
 **Powering the Future of DeFi on Farcaster**
 
-Bank of Celo is the first open-source DeFi banking platform built specifically for the **Farcaster** ecosystem. We're bridging the gap between social engagement and financial infrastructure, enabling creators and community builders to monetize their participation while supporting the broader **Celo** ecosystem.
+Bank of Celo is the first open-source DeFi banking platform built specifically for the **Farcaster** ecosystem. We're bridging the gap between social engagement and financial infrastructure, enabling creators and community builders to monetize their participation while supporting the broader **Celo** ecosystem. The project includes a Next.js front-end and a suite of smart contracts that power gamified check-ins, donation leaderboards and token jackpots for active community members.
+
 
 ---
 
@@ -61,16 +62,10 @@ Built with modern Web3 infrastructure:
 
 ## 🧑‍💻 Getting Started
 
-### Create a New Frames Project
+Install dependencies and start the development server:
 
 ```bash
-npx @neynar/create-farcaster-mini-app@latest
-```
-
-### Run the Project
-
-```bash
-cd <PROJECT_NAME>
+npm install
 npm run dev
 ```
 
@@ -106,7 +101,7 @@ Visit the live app: [https://bank-of-celo.vercel.app/](https://bank-of-celo.verc
 
 ## 🚀 Deploying to Vercel
 
-For projects with minimal changes to the quickstart template:
+Deploy the app using the provided script:
 
 ```bash
 npm run deploy:vercel
@@ -124,15 +119,22 @@ npm run build
 
 ---
 
-## 📦 Importing the CLI
+## 📜 Contract Addresses
 
-To use the CLI directly in JavaScript:
+The following deployments are available on Celo Mainnet unless otherwise noted:
 
-```javascript
-import { init } from "@neynar/create-farcaster-mini-app";
-```
-
----
+- **BankOfCelo**: `0x18Ea8d1D41A3307D159D2d3C1fCfBCF139354A8F`
+- **BankOfCelo (legacy)**: `0x6DD5608Bf1F68C23Bf5D519161128240C7D764Fc`
+- **CeloDailyCheckIn**: `0xaFbFAaac9c495C74de33c039C0B56172b393d2Ad`
+- **CeloDailyCheckInV2**: `0xd9771bAE9A9647Fd83C9066f981ef91373A56B36`
+- **CeloJackpot**: `0x9602d02Bd17d9f1c1EB09028fCea26dD29383611`
+- **CeloJackpotV2**: `0xB6cF643d413D055a467cDd4a4224047831dD92b2`
+- **BankOfDegen**: `0xaFbFAaac9c495C74de33c039C0B56172b393d2Ad`
+- **DegenDailyCheckIn**: `0xb2e22CdfaB5274186498CedD66b5801e80e98299`
+- **DegenJackpot**: `0xD8407eE0b2B1008FAb9e2bD8Ab9005F2dA8BEE67`
+- **FarQuest**: `0x80695F4477eF8480A3084D027983E14Eb7e86476`
+- **FootyScoresClaim**: `0x727556F2afF622797228CC80cf6Af46b10ad126e`
+- **LoyaltyRewards**: `0x18Ea8d1D41A3307D159D2d3C1fCfBCF139354A8F`
 
 Built with ❤️ for the **Farcaster** and **Celo** communities.  
 Let's build the future of social finance together.
