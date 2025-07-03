@@ -132,9 +132,7 @@ The following deployments are available on Celo Mainnet unless otherwise noted:
 - **BankOfDegen**: `0xaFbFAaac9c495C74de33c039C0B56172b393d2Ad`
 - **DegenDailyCheckIn**: `0xb2e22CdfaB5274186498CedD66b5801e80e98299`
 - **DegenJackpot**: `0xD8407eE0b2B1008FAb9e2bD8Ab9005F2dA8BEE67`
-- **FarQuest**: `0x80695F4477eF8480A3084D027983E14Eb7e86476`
-- **FootyScoresClaim**: `0x727556F2afF622797228CC80cf6Af46b10ad126e`
-- **LoyaltyRewards**: `0x18Ea8d1D41A3307D159D2d3C1fCfBCF139354A8F`
+
 
 Built with ❤️ for the **Farcaster** and **Celo** communities.  
 Let's build the future of social finance together.
