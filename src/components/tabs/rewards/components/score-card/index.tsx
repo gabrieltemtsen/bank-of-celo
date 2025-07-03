@@ -1,3 +1,4 @@
+// ScoreCardsComponent with dynamic colors
 import React, { useState, useEffect } from "react";
 import {
   Zap,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { farcasterIcon } from "~/constants/images";
+import { useChainMode } from "~/app/chain-mode/context";
 
 // Enhanced ScoreCard with Share functionality
 type ScoreCardProps = {
@@ -21,17 +23,53 @@ type ScoreCardProps = {
 };
 
 const ScoreCard = ({ onShare }: ScoreCardProps) => {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+
+  // Dynamic colors based on mode
+  const primaryColor = isDegen ? "purple" : "emerald";
+  // const secondaryColor = isDegen ? "pink" : "teal";
+  
+  const backgroundGradient = isDegen
+    ? "from-purple-500/20 via-purple-400/15 to-pink-500/20"
+    : "from-emerald-500/20 via-emerald-400/15 to-teal-500/20";
+    
+  const borderColor = isDegen ? "border-purple-200/50" : "border-emerald-200/50";
+  
+  const decorativeGradient1 = isDegen
+    ? "from-purple-300/20 to-transparent"
+    : "from-emerald-300/20 to-transparent";
+    
+  const decorativeGradient2 = isDegen
+    ? "from-pink-300/20 to-transparent"
+    : "from-teal-300/20 to-transparent";
+    
+  const iconColor1 = isDegen ? "text-purple-400/30" : "text-emerald-400/30";
+  const iconColor2 = isDegen ? "text-pink-400/30" : "text-teal-400/30";
+  
+  const statusBgColor = isDegen ? "bg-purple-100" : "bg-emerald-100";
+  const statusTextColor = isDegen ? "text-purple-700" : "text-emerald-700";
+  const statusIconColor = isDegen ? "text-purple-500" : "text-emerald-500";
+  
+  const dividerGradient = isDegen
+    ? "from-transparent via-purple-300/50 to-transparent"
+    : "from-transparent via-emerald-300/50 to-transparent";
+    
+  const dividerDotColor = isDegen ? "bg-purple-400" : "bg-emerald-400";
+  const clockIconColor = isDegen ? "text-purple-500" : "text-emerald-500";
+  const dividerBorderColor = isDegen ? "border-purple-200/30" : "border-emerald-200/30";
+
   return (
-    <div className="relative bg-gradient-to-br from-emerald-500/20 via-emerald-400/15 to-teal-500/20 rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 border border-emerald-200/50 shadow-xl overflow-hidden">
+    <div className={`relative bg-gradient-to-br ${backgroundGradient} rounded-3xl p-4 sm:p-6 lg:p-8 mb-8 border ${borderColor} shadow-xl overflow-hidden`}>
       {/* Background decorative elements */}
-      <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-bl from-emerald-300/20 to-transparent rounded-full -translate-y-12 sm:-translate-y-16 translate-x-12 sm:translate-x-16" />
-      <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr from-teal-300/20 to-transparent rounded-full translate-y-8 sm:translate-y-12 -translate-x-8 sm:-translate-x-12" />
+      <div className={`absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-bl ${decorativeGradient1} rounded-full -translate-y-12 sm:-translate-y-16 translate-x-12 sm:translate-x-16`} />
+      <div className={`absolute bottom-0 left-0 w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-tr ${decorativeGradient2} rounded-full translate-y-8 sm:translate-y-12 -translate-x-8 sm:-translate-x-12`} />
 
       {/* Floating icons */}
-      <div className="absolute top-3 right-3 sm:top-4 sm:right-4 text-emerald-400/30">
+      <div className={`absolute top-3 right-3 sm:top-4 sm:right-4 ${iconColor1}`}>
         <Zap className="w-4 h-4 sm:w-6 sm:h-6" />
       </div>
-      <div className="absolute bottom-3 left-3 sm:bottom-4 sm:left-4 text-teal-400/30">
+      <div className={`absolute bottom-3 left-3 sm:bottom-4 sm:left-4 ${iconColor2}`}>
         <Star className="w-4 h-4 sm:w-5 sm:h-5" />
       </div>
 
@@ -51,14 +89,14 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
             <div className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-2 relative">
               &lt; 500
               <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-emerald-500 rounded-full animate-pulse" />
+                <div className={`w-3 h-3 sm:w-4 sm:h-4 bg-${primaryColor}-500 rounded-full animate-pulse`} />
               </div>
             </div>
 
             {/* Score status indicator */}
             <div className="flex items-center justify-center mt-2 sm:mt-3 mb-4 sm:mb-6">
-              <div className="bg-emerald-100 text-emerald-700 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2">
-                <Flame className="w-3 h-3 sm:w-4 sm:h-4" />
+              <div className={`${statusBgColor} ${statusTextColor} px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold flex items-center gap-1.5 sm:gap-2`}>
+                <Flame className={`w-3 h-3 sm:w-4 sm:h-4 ${statusIconColor}`} />
                 Growing
               </div>
             </div>
@@ -67,16 +105,16 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
 
         {/* Enhanced divider */}
         <div className="relative mb-4 sm:mb-6">
-          <div className="h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
+          <div className={`h-px bg-gradient-to-r ${dividerGradient}`} />
           <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full" />
+            <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${dividerDotColor} rounded-full`} />
           </div>
         </div>
 
         {/* Bottom info with enhanced styling */}
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
-            <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+            <Clock className={`w-3 h-3 sm:w-4 sm:h-4 ${clockIconColor}`} />
             <span className="text-xs sm:text-sm font-medium">Round ends</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -88,7 +126,7 @@ const ScoreCard = ({ onShare }: ScoreCardProps) => {
         </div>
 
         {/* Additional stats row */}
-        <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-emerald-200/30">
+        <div className={`mt-4 sm:mt-6 pt-4 sm:pt-6 border-t ${dividerBorderColor}`}>
           <div className="flex justify-between items-center text-xs sm:text-sm">
             <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
               <Award className="w-3 h-3 sm:w-4 sm:h-4 text-purple-500" />
@@ -113,9 +151,31 @@ type ShareDrawerProps = {
 };
 
 const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+  
   const [copied, setCopied] = useState(false);
   const shareUrl = "https://bank-of-celo.vercel.app/?tab=rewards";
   const shareText = `Check out my progress on Bank of Celo! Join me in exploring DeFi on Celo 🌱`;
+
+  // Dynamic colors
+  // const primaryColor = isDegen ? "purple" : "emerald";
+  // const secondaryColor = isDegen ? "pink" : "teal";
+  
+  const profileGradient = isDegen
+    ? "from-purple-50 to-pink-50"
+    : "from-emerald-50 to-teal-50";
+    
+  const avatarGradient = isDegen
+    ? "from-purple-400 to-pink-500"
+    : "from-emerald-400 to-teal-500";
+    
+  const flameIconColor = isDegen ? "text-purple-500" : "text-emerald-500";
+  const statusTextColor = isDegen ? "text-purple-600" : "text-emerald-600";
+  
+  const copyButtonBg = isDegen 
+    ? "bg-purple-500 hover:bg-purple-600"
+    : "bg-emerald-500 hover:bg-emerald-600";
 
   const copyToClipboard = async () => {
     try {
@@ -193,9 +253,9 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
         </div>
 
         {/* User Profile Section */}
-        <div className="p-6 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-100">
+        <div className={`p-6 bg-gradient-to-r ${profileGradient} border-b border-gray-100`}>
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center">
+            <div className={`w-16 h-16 bg-gradient-to-br ${avatarGradient} rounded-full flex items-center justify-center`}>
               {userProfile?.profileImage ? (
                 <Image
                   src={userProfile.profileImage}
@@ -214,8 +274,8 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
               </h3>
               <p className="text-sm text-gray-600">Score: &lt; 500</p>
               <div className="flex items-center gap-1 mt-1">
-                <Flame className="w-4 h-4 text-emerald-500" />
-                <span className="text-sm text-emerald-600 font-medium">
+                <Flame className={`w-4 h-4 ${flameIconColor}`} />
+                <span className={`text-sm ${statusTextColor} font-medium`}>
                   Growing
                 </span>
               </div>
@@ -237,7 +297,7 @@ const ShareDrawer = ({ isOpen, onClose, userProfile }: ShareDrawerProps) => {
             />
             <button
               onClick={copyToClipboard}
-              className="flex items-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1 rounded-md text-sm transition-colors"
+              className={`flex items-center gap-1 ${copyButtonBg} text-white px-3 py-1 rounded-md text-sm transition-colors`}
             >
               <Copy className="w-4 h-4" />
               {copied ? "Copied!" : "Copy"}

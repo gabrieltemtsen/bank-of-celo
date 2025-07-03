@@ -21,7 +21,7 @@ import { ERC20_ABI, useJackpotContract } from "~/hooks/contracts";
 import { encodeFunctionData, parseEther, formatEther, parseUnits } from "viem";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { Input } from "../ui/input";
-import { base, celo } from "wagmi/chains";
+import { base, celo } from "viem/chains";
 import { useChainMode } from "~/app/chain-mode/context";
 
 interface CeloJackpotProps {
@@ -50,7 +50,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
   const targetChain = mode === "degen" ? base : celo;
   const currency = mode === "degen" ? "DEGEN" : "CELO";
   const ticketPrice = mode === "degen" ? 250 : 1;
-  const { address: jackpotAddress, abi: jackpotAbi } = useJackpotContract(); // Assuming this returns mode-based values
+  const { address: jackpotAddress, abi: jackpotAbi } = useJackpotContract();
   const { data: tokenBalance } = useBalance({
     address,
     token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined, // DEGEN on Base
@@ -60,6 +60,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
   const [ticketCount, setTicketCount] = useState("1");
   const [lotteryPending, setLotteryPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+
   const [dashboardData, setDashboardData] = useState<{
     currentRound: number;
     timeUntilDraw: number;
@@ -118,7 +119,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
       });
 
       const ticketsPromises = userRounds.map(async (roundId: bigint) => {
-        const tickets = await publicClient.readContract({
+        const tickets: any = await publicClient.readContract({
           address: jackpotAddress,
           abi: jackpotAbi,
           functionName: "userTickets",
@@ -132,18 +133,24 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
           args: [roundId],
         });
 
-        const winnerAddress = roundData[6] as `0x${string}`;
+        const winnerAddress = roundData[5] as `0x${string}`;
         const hasWon = winnerAddress === address;
         const startTime = Number(roundData[1]);
-        const formattedDate = format(new Date(startTime * 1000), "MMMM d");
+        const timeInSeconds = Number(startTime);
+        const startTimeDate = new Date(timeInSeconds * 1000);
+        const formattedDate = format(startTimeDate, "MMMM d");
 
-        const currentRound: any = await publicClient.readContract({
+        const getCurrentRound: any = await publicClient.readContract({
           address: jackpotAddress,
           abi: jackpotAbi,
           functionName: "getCurrentRound",
           args: [],
         });
-        const isRoundActive = currentRound.roundId === roundId;
+        const isRoundActive = getCurrentRound.roundId === roundId;
+        const timestampSeconds = Number(getCurrentRound.startTime);
+        const date = new Date(timestampSeconds * 1000);
+        const formattedDrawDate = format(date, "MMMM d");
+        setDrawDate(formattedDrawDate);
 
         return {
           roundId: Number(roundId),
@@ -221,7 +228,7 @@ export default function CeloJackpot({ isCorrectChain }: CeloJackpotProps) {
     fetchPastRounds();
     const syncInterval = setInterval(fetchDashboardData, 3000);
     return () => clearInterval(syncInterval);
-  }, [fetchDashboardData, fetchPastRounds, targetChain.id]); // Added targetChain.id
+  }, [fetchDashboardData, fetchPastRounds, targetChain.id]);
 
   const handleTriggerDraw = async () => {
     if (!address || !publicClient || !isCorrectChain) {
@@ -280,7 +287,6 @@ const handleBuyTickets = async () => {
     let balanceCheck;
 
     if (mode === "degen") {
-      // Debug balance fetch
       console.log("Token Balance Data:", tokenBalance);
       balanceCheck = tokenBalance?.value || 0n;
       console.log(`DEGEN Balance: ${formatEther(balanceCheck)} DEGEN, Total Cost: ${formatEther(totalCost)} DEGEN`);
@@ -288,7 +294,6 @@ const handleBuyTickets = async () => {
         toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balanceCheck)} DEGEN, Required: ${formatEther(totalCost)} DEGEN`);
         return;
       }
-      // Approve DEGEN if needed
       const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
       const allowance = await publicClient.readContract({
         address: degenTokenAddress,

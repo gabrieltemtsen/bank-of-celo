@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { toast } from "sonner";
-import { formatDistanceToNow, set } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { Input } from "../ui/input";
 import {
   useAccount,
@@ -65,7 +65,7 @@ export default function TransactTab({
   const publicClient = usePublicClient();
   const { signTypedDataAsync } = useSignTypedData();
   const { sendTransactionAsync } = useSendTransaction();
-    const { writeContractAsync } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
   
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [amount, setAmount] = useState("");
@@ -92,6 +92,62 @@ export default function TransactTab({
 
     const chainId = useChainId()
     const targetChain = mode === "degen" ? base : celo;
+
+  // Dynamic color classes based on mode, matching BottomNavigation
+  const isDegen = mode === "degen";
+  const activeButtonClasses = isDegen
+    ? "text-white bg-gradient-to-r from-purple-500 to-purple-600 shadow-md"
+    : "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md";
+
+  const inactiveButtonClasses = isDegen
+    ? "text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
+    : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400";
+
+  const indicatorClasses = isDegen
+    ? "bg-purple-300"
+    : "bg-emerald-300";
+
+  const getDonateButtonClasses = () => {
+    return isDegen
+      ? "w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+      : "w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white";
+  };
+
+  const getClaimButtonClasses = () => {
+    return isDegen
+      ? "w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
+      : "w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white";
+  };
+
+  const getFidLoadingClasses = () => {
+    return isDegen
+      ? "p-4 text-center bg-purple-50 dark:bg-purple-900/30 rounded-lg"
+      : "p-4 text-center bg-emerald-50 dark:bg-emerald-900/30 rounded-lg";
+  };
+
+  const getFidErrorClasses = () => {
+    return isDegen
+      ? "p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg"
+      : "p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg"; // Keeping red for errors in both modes
+  };
+
+  const getTxSuccessClasses = () => {
+    return isDegen
+      ? "p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm text-purple-800 dark:text-purple-200 flex items-center"
+      : "p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-200 flex items-center";
+  };
+
+  const getClaimCooldownClasses = () => {
+    return isDegen
+      ? "p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm text-purple-800 dark:text-purple-200 flex items-center"
+      : "p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-200 flex items-center";
+  };
+
+  const getMaintenanceClasses = () => {
+    return isDegen
+      ? "p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200"
+      : "p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200"; // Keeping yellow for maintenance
+  };
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
     if (!userAddress) return null;
@@ -130,12 +186,6 @@ export default function TransactTab({
         if (!publicClient) {
           throw new Error("Public client is not available");
         }
-        // const isBlacklisted = await publicClient.readContract({
-        //   address: bankAddress,
-        //   abi: bankAbi,
-        //   functionName: "fidBlacklisted",
-        //   args: [BigInt(data.fid)],
-        // });
         const isBlacklisted = false; // Placeholder, replace with actual check if needed - TODO: Implement blacklist check
         if (isBlacklisted) {
           setFidError("This Farcaster ID is blacklisted");
@@ -152,6 +202,7 @@ export default function TransactTab({
       setFidLoading(false);
     }
   }, [address, publicClient, bankAbi, bankAddress]);
+
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
       toast.error(`Please switch to ${targetChain.name} Network`);
@@ -178,78 +229,65 @@ export default function TransactTab({
       let transactionParams: Parameters<typeof sendTransactionAsync>[0];
   
       if (mode === "degen") {
-        // Base chain: DEGEN token donation
-        const degenAmount = parseUnits(amount, 18); // DEGEN has 18 decimals
-        const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed"; // DEGEN on Base mainnet
+        const degenAmount = parseUnits(amount, 18);
+        const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
         const bankContractAddress = bankAddress as `0x${string}`;
   
-        // 1. Check DEGEN token balance (debugging)
         const balance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
           functionName: "balanceOf",
           args: [address],
         }) as bigint;
-        console.log(`DEGEN Balance: ${formatEther(balance)} DEGEN`);
         if (balance < degenAmount) {
           toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balance)} DEGEN`);
           return;
         }
   
-        // 2. Check DEGEN token allowance
         const allowance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
           functionName: "allowance",
           args: [address, bankContractAddress],
         }) as bigint;
-        console.log(`Current Allowance: ${formatEther(allowance)} DEGEN`);
-  
-        // 3. Approve DEGEN tokens if allowance is insufficient
         if (allowance < degenAmount) {
           toast.info("Approving DEGEN tokens for donation...");
           const approveHash = await writeContractAsync({
             address: degenTokenAddress as `0x${string}`,
             abi: ERC20_ABI,
             functionName: "approve",
-            args: [bankContractAddress, degenAmount], // Exact amount approval
+            args: [bankContractAddress, degenAmount],
             chainId: targetChain.id,
           });
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
           toast.success("DEGEN token approval successful!");
         }
   
-        // 4. Verify allowance after approval
         const updatedAllowance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
           functionName: "allowance",
           args: [address, bankContractAddress],
         }) as bigint;
-        console.log(`Updated Allowance: ${formatEther(updatedAllowance)} DEGEN`);
         if (updatedAllowance < degenAmount) {
           throw new Error("Approval amount insufficient after update");
         }
   
-        // 5. Encode donate function call with amount
         donateData = encodeFunctionData({
           abi: bankAbi,
           functionName: "donate",
           args: [degenAmount],
         });
   
-        // 6. Set transaction params (no value for ERC-20, confirming DEGEN donation)
         transactionParams = {
           to: bankContractAddress,
           data: donateData,
-          chainId: targetChain.id, // 8453 for Base mainnet
-          maxFeePerGas: parseUnits("100", 9), // Fixed gas for now
-          maxPriorityFeePerGas: parseUnits("100", 9), // Fixed gas for now
+          chainId: targetChain.id,
+          maxFeePerGas: parseUnits("100", 9),
+          maxPriorityFeePerGas: parseUnits("100", 9),
         };
-        console.log("Transaction Params:", transactionParams);
       } else {
-        // Celo chain: CELO native currency donation
-        const celoAmount = parseEther(amount); // CELO has 18 decimals
+        const celoAmount = parseEther(amount);
         donateData = encodeFunctionData({
           abi: bankAbi,
           functionName: "donate",
@@ -259,13 +297,12 @@ export default function TransactTab({
           to: bankAddress as `0x${string}`,
           data: donateData,
           value: celoAmount,
-          chainId: targetChain.id, // 42220 for Celo mainnet
+          chainId: targetChain.id,
           maxFeePerGas: parseUnits("100", 9),
           maxPriorityFeePerGas: parseUnits("100", 9),
         };
       }
   
-      // 5. Get the referral data suffix
       const dataSuffix = getDataSuffix({
         consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
         providers: [
@@ -275,31 +312,21 @@ export default function TransactTab({
         ],
       });
   
-      // 6. Combine the data
       const combinedData = dataSuffix
         ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
         : donateData;
   
-      // 7. Update transaction params with combined data
       transactionParams.data = combinedData as `0x${string}`;
   
-      // 8. Send the transaction
       const hash = await sendTransactionAsync(transactionParams);
   
-      // 9. Show success toast and update contract data
       toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
   
-      // 10. Report to Divi in a separate try-catch
       try {
-        console.log("Submitting referral to Divi:", {
-          txHash: hash,
-          chainId: targetChain.id,
-        });
         await submitReferral({
           txHash: hash,
           chainId: targetChain.id,
         });
-        console.log("Referral submitted successfully");
       } catch (diviError) {
         console.error("Divi submitReferral error:", diviError);
         toast.warning(
@@ -311,7 +338,6 @@ export default function TransactTab({
       toast.error(
         `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
-      // Log detailed error for debugging
       if (error.cause) console.error("Detailed error cause:", error.cause);
     }
   };
@@ -514,9 +540,7 @@ const handleClaim = async () => {
         toast.error("Please enter a valid amount");
         return;
       }
-      console.log(mode, "mode");
-      const donate = onDonate(amount);
-      console.log("Donate function called:", donate);
+      onDonate(amount);
       setAmount("");
     } else if (activeTab === "claim") {
       handleClaim();
@@ -531,63 +555,33 @@ const handleClaim = async () => {
       className="space-y-6 w-full"
     >
       <div className="flex flex-col gap-4 w-full">
-        <div className="flex flex-wrap bg-gray-100 dark:bg-gray-800 rounded-xl p-1 gap-1 w-full">
-          <button
-            onClick={() => setActiveTab("donate")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "donate"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-emerald-600 dark:text-emerald-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Donate tab"
-            role="tab"
-            aria-selected={activeTab === "donate"}
-          >
-            <Gift className="w-4 h-4" />
-            <span className="whitespace-nowrap">Donate</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("claim")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "claim"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-amber-600 dark:text-amber-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="Claim tab"
-            role="tab"
-            aria-selected={activeTab === "claim"}
-          >
-            <HandCoins className="w-4 h-4" />
-            <span className="whitespace-nowrap">Claim</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("lottery")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "lottery"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-purple-600 dark:text-purple-400"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery"}
-          >
-            <Ticket className="w-4 h-4" />
-            <span className="whitespace-nowrap">Jackpot</span>
-          </button>
-          <button
-            onClick={() => setActiveTab("lottery2")}
-            className={`flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
-              activeTab === "lottery2"
-                ? "bg-white dark:bg-gray-700 shadow-sm text-green-800 dark:text-green-800"
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-            }`}
-            aria-label="jackpot tab"
-            role="tab"
-            aria-selected={activeTab === "lottery2"}
-          >
-            <Ticket className="w-4 h-4" />
-            <span className="whitespace-nowrap">JackpotV2</span>
-          </button>
+        <div className="flex flex-wrap bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-xl p-1 gap-1 w-full border border-gray-200 dark:border-gray-700">
+          {[
+            { id: "donate", icon: <Gift className="w-4 h-4" />, label: "Donate" },
+            { id: "claim", icon: <HandCoins className="w-4 h-4" />, label: "Claim" },
+            { id: "lottery", icon: <Ticket className="w-4 h-4" />, label: "Jackpot" },
+            { id: "lottery2", icon: <Ticket className="w-4 h-4" />, label: "JackpotV2" },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`relative flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+                activeTab === tab.id ? activeButtonClasses : inactiveButtonClasses
+              }`}
+              aria-label={`${tab.label} tab`}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+            >
+              {tab.icon}
+              <span className="whitespace-nowrap">{tab.label}</span>
+              {activeTab === tab.id && (
+                <motion.div
+                  layoutId="activeTabIndicator"
+                  className={`absolute bottom-0 w-1/2 h-1 ${indicatorClasses} rounded-full`}
+                />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -596,7 +590,7 @@ const handleClaim = async () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
+          className="p-4 sm:p-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
         >
           <div className="space-y-4">
             <div>
@@ -612,15 +606,15 @@ const handleClaim = async () => {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.0"
-                className="w-full py-3 text-black"
+                className="w-full py-3 text-black dark:text-white bg-gray-100 dark:bg-gray-800"
                 min="0"
                 step="0.01"
               />
             </div>
             <Button
-              onClick={() => handleDonate(amount)}
+              onClick={handleSubmit}
               disabled={isPending || !amount}
-              className="w-full py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
+              className={getDonateButtonClasses()}
               aria-label={`Donate ${currency}`}
             >
               {isPending ? (
@@ -639,11 +633,11 @@ const handleClaim = async () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
+          className="p-4 sm:p-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 w-full"
         >
           {isUnderMaintenance ? (
             <div className="text-center space-y-4">
-              <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200">
+              <div className={getMaintenanceClasses()}>
                 <div className="flex flex-col items-center">
                   <AlertTriangle className="w-8 h-8 mb-2 text-yellow-500" />
                   <h3 className="text-lg font-medium">
@@ -657,7 +651,7 @@ const handleClaim = async () => {
               </div>
               <Button
                 onClick={() => window.location.reload()}
-                className="w-full"
+                className={getDonateButtonClasses()}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh Page
@@ -666,7 +660,7 @@ const handleClaim = async () => {
           ) : (
             <div className="space-y-4">
               {!canClaim() && nextClaimTime && (
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg text-sm text-amber-800 dark:text-amber-200 flex items-center">
+                <div className={getClaimCooldownClasses()}>
                   <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>
                     You can claim again{" "}
@@ -676,7 +670,7 @@ const handleClaim = async () => {
               )}
 
               {txHash && (
-                <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg text-sm text-green-800 dark:text-green-200 flex items-center">
+                <div className={getTxSuccessClasses()}>
                   <span>
                     Claim successful!{" "}
                     <a
@@ -692,14 +686,14 @@ const handleClaim = async () => {
               )}
 
               {fidLoading ? (
-                <div className="p-4 text-center bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <Loader2 className="w-5 h-5 animate-spin text-amber-500 mx-auto mb-2" />
+                <div className={getFidLoadingClasses()}>
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-500 dark:text-purple-400" />
                   <p className="text-gray-600 dark:text-gray-300">
                     Fetching Farcaster ID...
                   </p>
                 </div>
               ) : fidError || !fid ? (
-                <div className="p-4 text-center bg-red-50 dark:bg-red-900/30 rounded-lg">
+                <div className={getFidErrorClasses()}>
                   <AlertCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
                   <p className="text-sm text-red-700 dark:text-red-300">
                     {fidError ||
@@ -727,7 +721,7 @@ const handleClaim = async () => {
                     type="text"
                     value={`${fid} || ${qualityScore}` || username || ""}
                     disabled
-                    className="w-full py-3 text-black bg-gray-100 dark:bg-gray-700"
+                    className="w-full py-3 text-black dark:text-white bg-gray-100 dark:bg-gray-800"
                     aria-readonly="true"
                   />
                 </div>
@@ -744,7 +738,7 @@ const handleClaim = async () => {
                   !isCorrectChain ||
                   hasClaimed
                 }
-                className="w-full py-3 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
+                className={getClaimButtonClasses()}
                 aria-label={`Claim ${maxClaim} ${currency}`}
               >
                 {claimPending || isPending ? (

@@ -67,6 +67,11 @@ export default function HomeTab({
   const { mode } = useChainMode();
   const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
   const currency = mode === "degen" ? "DEGEN" : "CELO";
+  const isDegen = mode === "degen";
+
+  // Dynamic color classes based on mode
+  const primaryColor = isDegen ? "purple" : "emerald";
+  // const secondaryColor = isDegen ? "violet" : "teal";
 
   const canClaim = () => {
     if (!lastClaimAt) return true;
@@ -92,11 +97,19 @@ export default function HomeTab({
         initial="hidden"
         animate="visible"
         whileHover={{ scale: 1.01 }}
-        className="relative overflow-hidden p-6 bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-lg border border-emerald-100/50 dark:border-emerald-800/30"
+        className={`relative overflow-hidden p-6 bg-gradient-to-br ${
+          isDegen
+            ? "from-purple-50 to-violet-50 dark:from-gray-800 dark:to-gray-900 border-purple-100/50 dark:border-purple-800/30"
+            : "from-emerald-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 border-emerald-100/50 dark:border-emerald-800/30"
+        } rounded-3xl shadow-lg border`}
       >
         {/* Background decoration elements */}
         <motion.div
-          className="absolute top-0 right-0 w-32 h-32 rounded-full bg-emerald-300/10 dark:bg-emerald-700/10"
+          className={`absolute top-0 right-0 w-32 h-32 rounded-full ${
+            isDegen
+              ? "bg-purple-300/10 dark:bg-purple-700/10"
+              : "bg-emerald-300/10 dark:bg-emerald-700/10"
+          }`}
           animate={{
             scale: [1, 1.2, 1],
             x: [0, 10, 0],
@@ -105,7 +118,11 @@ export default function HomeTab({
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute bottom-0 left-0 w-20 h-20 rounded-full bg-cyan-300/10 dark:bg-cyan-700/10"
+          className={`absolute bottom-0 left-0 w-20 h-20 rounded-full ${
+            isDegen
+              ? "bg-violet-300/10 dark:bg-violet-700/10"
+              : "bg-cyan-300/10 dark:bg-cyan-700/10"
+          }`}
           animate={{
             scale: [1, 1.3, 1],
             y: [0, -5, 0],
@@ -116,17 +133,17 @@ export default function HomeTab({
 
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Droplet className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <Droplet className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-400`} />
             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
               Vault Balance
             </p>
           </div>
           <motion.div
-            className="flex items-center bg-emerald-100 dark:bg-emerald-800/60 px-2 py-1 rounded-full"
+            className={`flex items-center bg-${primaryColor}-100 dark:bg-${primaryColor}-800/60 px-2 py-1 rounded-full`}
             whileHover={{ scale: 1.05 }}
           >
-            <ShieldCheck className="w-3 h-3 text-emerald-600 dark:text-emerald-400 mr-1" />
-            <span className="text-xs font-medium text-emerald-700 dark:text-emerald-300">
+            <ShieldCheck className={`w-3 h-3 text-${primaryColor}-600 dark:text-${primaryColor}-400 mr-1`} />
+            <span className={`text-xs font-medium text-${primaryColor}-700 dark:text-${primaryColor}-300`}>
               Secured
             </span>
           </motion.div>
@@ -134,7 +151,7 @@ export default function HomeTab({
 
         {isLoading ? (
           <div className="h-14 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className={`w-8 h-8 border-2 border-${primaryColor}-500 border-t-transparent rounded-full animate-spin`} />
           </div>
         ) : (
           <motion.div
@@ -149,7 +166,11 @@ export default function HomeTab({
               animate="pulse"
               className="relative flex items-baseline"
             >
-              <span className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300">
+              <span className={`text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r ${
+                isDegen
+                  ? "from-purple-600 to-violet-500 dark:from-purple-400 dark:to-violet-300"
+                  : "from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300"
+              }`}>
                 {parseFloat(vaultBalance).toFixed(2)}
               </span>
               <span className="ml-2 text-lg font-semibold text-gray-600 dark:text-gray-300">
@@ -165,7 +186,7 @@ export default function HomeTab({
               Available for Claims
             </p>
             <motion.p
-              className="text-sm font-medium text-emerald-700 dark:text-emerald-300"
+              className={`text-sm font-medium text-${primaryColor}-700 dark:text-${primaryColor}-300`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
@@ -177,8 +198,8 @@ export default function HomeTab({
             whileHover={{ rotate: 15 }}
             className="flex items-center gap-1"
           >
-            <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <TrendingUp className={`w-4 h-4 text-${primaryColor}-500 dark:text-${primaryColor}-400`} />
+            <span className={`text-xs font-medium text-${primaryColor}-600 dark:text-${primaryColor}-400`}>
               +2.5%
             </span>
           </motion.div>
@@ -197,7 +218,11 @@ export default function HomeTab({
         >
           <Button
             onClick={() => onNavigate?.("transact")}
-            className="flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/50 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-md shadow-emerald-100/20 dark:shadow-emerald-900/20"
+            className={`flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br ${
+              isDegen
+                ? "from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/50 border-purple-100 dark:border-purple-800/50 shadow-md shadow-purple-100/20 dark:shadow-purple-900/20"
+                : "from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/50 border-emerald-100 dark:border-emerald-800/50 shadow-md shadow-emerald-100/20 dark:shadow-emerald-900/20"
+            } rounded-2xl border`}
             disabled={!isCorrectChain}
             aria-label="Donate to the vault"
           >
@@ -208,12 +233,12 @@ export default function HomeTab({
               }}
               className="mb-3 p-3 bg-white dark:bg-gray-800 rounded-full shadow-md"
             >
-              <Gift className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <Gift className={`w-6 h-6 text-${primaryColor}-600 dark:text-${primaryColor}-400`} />
             </motion.div>
-            <span className="font-medium text-emerald-800 dark:text-emerald-200">
+            <span className={`font-medium text-${primaryColor}-800 dark:text-${primaryColor}-200`}>
               Donate
             </span>
-            <span className="text-xs text-emerald-600/70 dark:text-emerald-400/70 mt-1">
+            <span className={`text-xs text-${primaryColor}-600/70 dark:text-${primaryColor}-400/70 mt-1`}>
               Support Ecosystem
             </span>
           </Button>
@@ -295,7 +320,11 @@ export default function HomeTab({
       >
         {/* Background decoration */}
         <motion.div
-          className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-emerald-100/30 dark:bg-emerald-900/20"
+          className={`absolute -bottom-6 -right-6 w-32 h-32 rounded-full ${
+            isDegen
+              ? "bg-purple-100/30 dark:bg-purple-900/20"
+              : "bg-emerald-100/30 dark:bg-emerald-900/20"
+          }`}
           animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 10, 0],
@@ -307,11 +336,19 @@ export default function HomeTab({
           <motion.div
             whileHover={{ rotate: 360 }}
             transition={{ duration: 0.5 }}
-            className="bg-gradient-to-br from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-600 p-2.5 rounded-xl shadow-md"
+            className={`bg-gradient-to-br ${
+              isDegen
+                ? "from-purple-400 to-violet-500 dark:from-purple-500 dark:to-violet-600"
+                : "from-emerald-400 to-teal-500 dark:from-emerald-500 dark:to-teal-600"
+            } p-2.5 rounded-xl shadow-md`}
           >
             <Info className="w-5 h-5 text-white" />
           </motion.div>
-          <h2 className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200">
+          <h2 className={`text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r ${
+            isDegen
+              ? "from-purple-700 to-violet-600 dark:from-purple-300 dark:to-violet-200"
+              : "from-emerald-700 to-teal-600 dark:from-emerald-300 dark:to-teal-200"
+          }`}>
             About Bank of {mode === "degen" ? "Celo" : "Celo"}
           </h2>
         </div>
