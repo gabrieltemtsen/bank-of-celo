@@ -51,10 +51,10 @@ export default function Header({
           : "bg-purple-50/95 dark:bg-purple-950/95 border-purple-200/50 dark:border-purple-800/50"
       )}
     >
-      <div className="flex items-center justify-between mx-0 md:mx-20">
+      <div className="flex items-center justify-between mx-2 md:mx-20">
         {/* Title with proper gradient theming */}
         <h1 className={cn(
-          "text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300",
+          "text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 truncate max-w-[150px] sm:max-w-none",
           mode === "celo"
             ? "from-emerald-600 to-emerald-800 dark:from-emerald-400 dark:to-emerald-600"
             : "from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600"
@@ -62,29 +62,30 @@ export default function Header({
           {title}
         </h1>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           {isConnected ? (
             <>
               {/* Wallet Address Button */}
               <Button
                 onClick={onDisconnect}
                 className={cn(
-                  "text-xs font-medium flex items-center rounded-full px-4 py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
+                  "text-xs font-medium flex items-center rounded-full px-2 sm:px-4 py-2 sm:py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border min-h-[40px]",
                   mode === "celo"
-                    ? "text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500 rounded-full px-3 py-1.5"
-                    :"text-xs text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-purple-600 to-purple-300 rounded-full px-3 py-1.5"
+                    ? "text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-emerald-600 to-amber-500"
+                    : "text-black font-medium flex hover:bg-gray-200 bg-gradient-to-r from-purple-600 to-purple-300"
                 )}
                 aria-label="Disconnect wallet"
               >
-                <Wallet className="w-4 h-4 mr-2" />
-                {truncateAddress(address!)}
+                <Wallet className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">{truncateAddress(address!)}</span>
+                <span className="sm:hidden">{truncateAddress(address!, 3, 3)}</span>
               </Button>
               
               {/* Sign Out Button */}
               {status === "authenticated" && (
                 <Button
                   onClick={onSignOut}
-                  className="text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-full p-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border border-red-400 hover:shadow-red-200/50"
+                  className="text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-full p-2 sm:p-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border border-red-400 hover:shadow-red-200/50 min-h-[40px] min-w-[40px]"
                   aria-label="Sign out from Farcaster"
                 >
                   <LogOut className="w-4 h-4" />
@@ -96,20 +97,21 @@ export default function Header({
             <Button
               onClick={onConnect}
               className={cn(
-                "text-xs font-medium flex items-center rounded-full px-5 py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
+                "text-xs font-medium flex items-center rounded-full px-3 sm:px-5 py-2 sm:py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white min-h-[40px]",
                 mode === "celo"
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 border-emerald-400 hover:shadow-emerald-200/50"
                   : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50"
               )}
               aria-label="Connect wallet"
             >
-              <Wallet className="w-4 h-4 mr-2" /> 
-              Connect Wallet
+              <Wallet className="w-4 h-4 mr-1 sm:mr-2" /> 
+              <span className="hidden sm:inline">Connect Wallet</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           )}
           
           {/* Chain Mode Toggle */}
-          <div className="ml-2">
+          <div className="ml-1 sm:ml-2">
             <ChainModeToggle />
           </div>
         </div>
@@ -122,7 +124,7 @@ export default function Header({
           animate={{ opacity: 1, y: 0 }}
           style={{ zIndex: 10000 }}
           className={cn(
-            "mt-5 border-l-4 p-4 text-center flex flex-col sm:flex-row items-center justify-center gap-3 rounded-r-lg shadow-lg",
+            "mt-3 sm:mt-5 border-l-4 p-3 sm:p-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 rounded-r-lg shadow-lg mx-2 sm:mx-0",
             mode === "celo"
               ? "bg-amber-50 dark:bg-amber-900/50 border-amber-500 dark:border-amber-400"
               : "bg-orange-50 dark:bg-orange-900/50 border-orange-500 dark:border-orange-400"
@@ -136,12 +138,13 @@ export default function Header({
                 : "text-orange-600 dark:text-orange-300"
             )} />
             <span className={cn(
-              "font-medium",
+              "font-medium text-sm sm:text-base text-center sm:text-left",
               mode === "celo"
                 ? "text-amber-800 dark:text-amber-100"
                 : "text-orange-800 dark:text-orange-100"
             )}>
-              You are on the wrong network
+              <span className="hidden sm:inline">You are on the wrong network</span>
+              <span className="sm:hidden">Wrong network</span>
             </span>
           </div>
           
@@ -149,7 +152,7 @@ export default function Header({
             onClick={onSwitchChain}
             disabled={isSwitchChainPending}
             className={cn(
-              "text-sm py-2 px-4 rounded-full flex items-center gap-2 text-white font-medium shadow-md transition-all duration-300 transform hover:scale-105",
+              "text-xs sm:text-sm py-2 px-3 sm:px-4 rounded-full flex items-center gap-1 sm:gap-2 text-white font-medium shadow-md transition-all duration-300 transform hover:scale-105 min-h-[36px]",
               mode === "celo"
                 ? "bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400"
                 : "bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400"
@@ -164,7 +167,8 @@ export default function Header({
             ) : (
               <ArrowLeftRight className="w-4 h-4" />
             )}
-            Switch to {targetChain.name}
+            <span className="hidden sm:inline">Switch to {targetChain.name}</span>
+            <span className="sm:hidden">Switch</span>
           </Button>
         </motion.div>
       )}
