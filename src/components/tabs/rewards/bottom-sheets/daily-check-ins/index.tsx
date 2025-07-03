@@ -303,22 +303,31 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         args: [BigInt(currentDay), signature],
       });
 
-      let dataSuffix = "";
+      const dataSuffix = getDataSuffix({
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+        ],
+      });
+
+      const processedSuffix = dataSuffix?.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix || "";
+      const combinedData = (checkInData + processedSuffix) as `0x${string}`;
+      
+      // Try to estimate gas for better wallet compatibility
+      let gasEstimate;
       try {
-        const suffix = await getDataSuffix({
-          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-          providers: [
-            "0x0423189886d7966f0dd7e7d256898daeee625dca",
-            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-          ],
+        gasEstimate = await publicClient.estimateGas({
+          account: address,
+          to: checkInAddress,
+          data: combinedData,
+          value: mode === "degen" ? 0n : CHECK_IN_FEE,
         });
-        dataSuffix = suffix.startsWith("0x") ? suffix.slice(2) : suffix;
-      } catch (diviError) {
-        console.warn("Divi referral tracking failed:", diviError);
+      } catch (gasError) {
+        console.warn("Gas estimation failed, using defaults:", gasError);
       }
 
-      const combinedData = (checkInData + dataSuffix) as `0x${string}`;
       const hash = await sendTransactionAsync({
         to: checkInAddress,
         data: combinedData,
@@ -326,7 +335,11 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
+        ...(gasEstimate && { gas: gasEstimate }),
       });
+
+      // Wait for transaction confirmation before showing success message
+      await publicClient.waitForTransactionReceipt({ hash });
 
       try {
         await submitReferral({

@@ -320,6 +320,9 @@ export default function TransactTab({
   
       const hash = await sendTransactionAsync(transactionParams);
   
+      // Wait for transaction confirmation before showing success message
+      await publicClient.waitForTransactionReceipt({ hash });
+
       toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
   
       try {

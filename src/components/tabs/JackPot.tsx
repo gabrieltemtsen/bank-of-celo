@@ -323,20 +323,14 @@ const handleBuyTickets = async () => {
       }
     }
 
-    let dataSuffix;
-    try {
-      dataSuffix = getDataSuffix({
-        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-        providers: [
-          "0x0423189886d7966f0dd7e7d256898daeee625dca",
-          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-        ],
-      });
-    } catch (diviError) {
-      console.error("Divi getDataSuffix error:", diviError);
-      throw new Error("Failed to generate referral data");
-    }
+    const dataSuffix = getDataSuffix({
+      consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+      providers: [
+        "0x0423189886d7966f0dd7e7d256898daeee625dca",
+        "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+        "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+      ],
+    });
 
     const contractData = encodeFunctionData({
       abi: jackpotAbi,
@@ -346,6 +340,19 @@ const handleBuyTickets = async () => {
 
     const finalData = dataSuffix ? contractData + dataSuffix : contractData;
 
+    // Try to estimate gas for better wallet compatibility
+    let gasEstimate;
+    try {
+      gasEstimate = await publicClient.estimateGas({
+        account: address,
+        to: jackpotAddress,
+        data: finalData as `0x${string}`,
+        value: mode === "degen" ? 0n : totalCost,
+      });
+    } catch (gasError) {
+      console.warn("Gas estimation failed, using defaults:", gasError);
+    }
+
     const hash = await sendTransactionAsync({
       to: jackpotAddress,
       data: finalData as `0x${string}`,
@@ -353,7 +360,11 @@ const handleBuyTickets = async () => {
       chainId: targetChain.id,
       maxFeePerGas: parseUnits("100", 9),
       maxPriorityFeePerGas: parseUnits("100", 9),
+      ...(gasEstimate && { gas: gasEstimate }),
     });
+
+    // Wait for transaction confirmation before showing success message
+    await publicClient.waitForTransactionReceipt({ hash });
 
     try {
       await submitReferral({
@@ -389,20 +400,14 @@ const handleBuyTickets = async () => {
     setTxHash(null);
 
     try {
-      let dataSuffix;
-      try {
-        dataSuffix = getDataSuffix({
-          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-          providers: [
-            "0x0423189886d7966f0dd7e7d256898daeee625dca",
-            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-          ],
-        });
-      } catch (diviError) {
-        console.error("Divi getDataSuffix error:", diviError);
-        throw new Error("Failed to generate referral data");
-      }
+      const dataSuffix = getDataSuffix({
+        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+        providers: [
+          "0x0423189886d7966f0dd7e7d256898daeee625dca",
+          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+        ],
+      });
 
       const contractData = encodeFunctionData({
         abi: jackpotAbi,
@@ -412,6 +417,19 @@ const handleBuyTickets = async () => {
 
       const finalData = dataSuffix ? contractData + dataSuffix : contractData;
 
+      // Try to estimate gas for better wallet compatibility
+      let gasEstimate;
+      try {
+        gasEstimate = await publicClient.estimateGas({
+          account: address,
+          to: jackpotAddress,
+          data: finalData as `0x${string}`,
+          value: 0n,
+        });
+      } catch (gasError) {
+        console.warn("Gas estimation failed, using defaults:", gasError);
+      }
+
       const hash = await sendTransactionAsync({
         to: jackpotAddress,
         data: finalData as `0x${string}`,
@@ -419,7 +437,11 @@ const handleBuyTickets = async () => {
         chainId: targetChain.id,
         maxFeePerGas: parseUnits("100", 9),
         maxPriorityFeePerGas: parseUnits("100", 9),
+        ...(gasEstimate && { gas: gasEstimate }),
       });
+
+      // Wait for transaction confirmation before showing success message
+      await publicClient.waitForTransactionReceipt({ hash });
 
       try {
         await submitReferral({
