@@ -17,7 +17,7 @@ import {
 import { useSession } from "next-auth/react";
 import { signOut } from "next-auth/react";
 import sdk from "@farcaster/frame-sdk";
-import { encodeFunctionData, formatEther, parseEther, parseUnits, maxUint256 } from "viem";
+import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
 import { useFrame } from "~/components/providers/FrameProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
