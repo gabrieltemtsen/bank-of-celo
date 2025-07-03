@@ -1,11 +1,19 @@
 import { motion } from "framer-motion";
-import { Wallet, LogOut, AlertCircle, ArrowLeftRight } from "lucide-react";
+import {
+  Wallet,
+  LogOut,
+  AlertCircle,
+  ArrowLeftRight,
+  X,
+  Info,
+} from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { cn } from "~/lib/utils";
 import ChainModeToggle from "../chain/ChainModeToggle";
 import { useChainMode } from "~/app/chain-mode/context";
 import { celo, base } from "wagmi/chains";
+import { useEffect, useState } from "react";
 
 interface HeaderProps {
   title: string;
@@ -36,6 +44,20 @@ export default function Header({
 }: HeaderProps) {
   const { mode } = useChainMode();
   const targetChain = mode === "degen" ? base : celo;
+  const [showDevBanner, setShowDevBanner] = useState(true);
+
+  useEffect(() => {
+    const stored =
+      typeof window !== "undefined" ? localStorage.getItem("showDevBanner") : null;
+    if (stored === "false") setShowDevBanner(false);
+  }, []);
+
+  const closeDevBanner = () => {
+    setShowDevBanner(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("showDevBanner", "false");
+    }
+  };
 
   return (
     <motion.div
@@ -114,6 +136,32 @@ export default function Header({
           </div>
         </div>
       </div>
+
+      {/* Development Banner */}
+      {mode === "degen" && showDevBanner && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={cn(
+            "mt-5 border-l-4 p-4 flex items-center justify-between gap-3 rounded-r-lg shadow-lg",
+            "bg-purple-50 dark:bg-purple-900/50 border-purple-500 dark:border-purple-400",
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <Info className="w-5 h-5 text-purple-600 dark:text-purple-300" />
+            <span className="font-medium text-purple-800 dark:text-purple-100">
+              Degen mode is in development
+            </span>
+          </div>
+          <button
+            onClick={closeDevBanner}
+            aria-label="Close banner"
+            className="p-1 rounded-full hover:bg-purple-100 dark:hover:bg-purple-800"
+          >
+            <X className="w-4 h-4 text-purple-600 dark:text-purple-300" />
+          </button>
+        </motion.div>
+      )}
 
       {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
