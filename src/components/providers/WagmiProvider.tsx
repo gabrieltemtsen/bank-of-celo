@@ -60,17 +60,17 @@ function ConfiguredWagmiProvider({ children }: { children: React.ReactNode }) {
       },
       connectors: [
         farcasterFrame(),
-        // coinbaseWallet({
-        //   appName: APP_NAME,
-        //   appLogoUrl: APP_ICON_URL,
-        //   preference: "all",
-        // }),
-        // metaMask({
-        //   dappMetadata: {
-        //     name: APP_NAME,
-        //     url: APP_URL,
-        //   },
-        // }),
+        coinbaseWallet({
+          appName: APP_NAME,
+          appLogoUrl: APP_ICON_URL,
+          preference: "all",
+        }),
+        metaMask({
+          dappMetadata: {
+            name: APP_NAME,
+            url: APP_URL,
+          },
+        }),
         walletConnect({
           projectId: "12ed680dece83c5e9afbcb9ea589bda9",
         }),
@@ -95,7 +95,7 @@ export default function Provider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ConfiguredWagmiProvider>
-        {children}
+        <CoinbaseWalletAutoConnect>{children}</CoinbaseWalletAutoConnect>
       </ConfiguredWagmiProvider>
     </QueryClientProvider>
   );
