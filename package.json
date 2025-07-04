@@ -29,6 +29,8 @@
     "@farcaster/frame-node": "^0.0.18",
     "@farcaster/frame-sdk": "^0.0.61",
     "@farcaster/frame-wagmi-connector": "^0.0.50",
+    "@farcaster/miniapp-sdk": "^0.1.2",
+    "@farcaster/miniapp-wagmi-connector": "^1.0.0",
     "@neynar/nodejs-sdk": "^2.19.0",
     "@neynar/react": "^0.9.7",
     "@radix-ui/react-dialog": "^1.1.13",

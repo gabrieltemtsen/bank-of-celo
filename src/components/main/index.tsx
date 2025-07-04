@@ -58,7 +58,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const chainId = useChainId();
   const targetChain = mode === "degen" ? base : celo;
   const isCorrectChain = chain?.id === targetChain.id;
-  const showSwitchNetworkBanner = isConnected && !isCorrectChain;
+  // Support both Celo and Base networks - only show banner if on neither
+  const isOnSupportedNetwork = chain?.id === celo.id || chain?.id === base.id;
+  const showSwitchNetworkBanner = isConnected && !isOnSupportedNetwork;
 
   // Use our custom hooks
   const {
