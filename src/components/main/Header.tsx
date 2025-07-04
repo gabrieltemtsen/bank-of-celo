@@ -143,8 +143,8 @@ export default function Header({
                 ? "text-amber-800 dark:text-amber-100"
                 : "text-orange-800 dark:text-orange-100"
             )}>
-              <span className="hidden sm:inline">You are on the wrong network</span>
-              <span className="sm:hidden">Wrong network</span>
+              <span className="hidden sm:inline">Please switch to Celo or Base network</span>
+              <span className="sm:hidden">Switch to Celo/Base</span>
             </span>
           </div>
           
