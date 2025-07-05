@@ -44,7 +44,7 @@ export default function Header({
       transition={{ duration: 0.5 }}
       className={cn(
         "sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300",
-        showSwitchNetworkBanner ? "pt-7" : "p-4",
+        showSwitchNetworkBanner ? "pt-7" : "p-3 md:p-4",
         // Celo mode styling
         mode === "celo" 
           ? "bg-emerald-50/95 dark:bg-emerald-950/95 border-emerald-200/50 dark:border-emerald-800/50"
@@ -52,9 +52,9 @@ export default function Header({
       )}
     >
       <div className="flex items-center justify-between mx-0 md:mx-20">
-        {/* Title with proper gradient theming */}
+        {/* Title with responsive sizing */}
         <h1 className={cn(
-          "text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300",
+          "text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 truncate max-w-[40%] md:max-w-none",
           mode === "celo"
             ? "from-emerald-600 to-emerald-800 dark:from-emerald-400 dark:to-emerald-600"
             : "from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600"
@@ -62,67 +62,75 @@ export default function Header({
           {title}
         </h1>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
           {isConnected ? (
             <>
-              {/* Wallet Address Button */}
+              {/* Wallet Address Button - Compact on mobile */}
               <Button
                 onClick={onDisconnect}
                 className={cn(
-                  "text-xs font-medium flex items-center rounded-full px-4 py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
+                  "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
+                  "px-2.5 py-1.5 md:px-4 md:py-2.5",
                   mode === "celo"
                     ? "bg-white/90 dark:bg-emerald-900/90 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-800 hover:shadow-emerald-200/50 dark:hover:shadow-emerald-900/50"
                     : "bg-white/90 dark:bg-purple-900/90 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700 hover:bg-purple-50 dark:hover:bg-purple-800 hover:shadow-purple-200/50 dark:hover:shadow-purple-900/50"
                 )}
                 aria-label="Disconnect wallet"
               >
-                <Wallet className="w-4 h-4 mr-2" />
-                {truncateAddress(address!)}
+                <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
+                <span className="hidden sm:inline">
+                  {truncateAddress(address!)}
+                </span>
+                <span className="sm:hidden">
+                  {truncateAddress(address!, 3, 3)}
+                </span>
               </Button>
               
-              {/* Sign Out Button */}
+              {/* Sign Out Button - Icon only on mobile */}
               {status === "authenticated" && (
                 <Button
                   onClick={onSignOut}
-                  className="text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-full p-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border border-red-400 hover:shadow-red-200/50"
+                  className="text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border border-red-400 hover:shadow-red-200/50 p-1.5 md:p-2.5"
                   aria-label="Sign out from Farcaster"
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </Button>
               )}
             </>
           ) : (
-            /* Connect Wallet Button */
+            /* Connect Wallet Button - Compact on mobile */
             <Button
               onClick={onConnect}
               className={cn(
-                "text-xs font-medium flex items-center rounded-full px-5 py-2.5 shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
+                "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
+                "px-3 py-1.5 md:px-5 md:py-2.5",
                 mode === "celo"
                   ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 border-emerald-400 hover:shadow-emerald-200/50"
                   : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50"
               )}
               aria-label="Connect wallet"
             >
-              <Wallet className="w-4 h-4 mr-2" /> 
-              Connect Wallet
+              <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> 
+              <span className="hidden sm:inline">Connect Wallet</span>
+              <span className="sm:hidden">Connect</span>
             </Button>
           )}
           
-          {/* Chain Mode Toggle */}
-          <div className="ml-2">
+          {/* Chain Mode Toggle - Compact wrapper */}
+          <div className="ml-0.5 md:ml-2">
             <ChainModeToggle />
           </div>
         </div>
       </div>
 
-      {/* Network Warning Banner */}
+      {/* Network Warning Banner - Mobile optimized */}
       {isConnected && !isCorrectChain && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           style={{ zIndex: 10000 }}
           className={cn(
-            "mt-5 border-l-4 p-4 text-center flex flex-col sm:flex-row items-center justify-center gap-3 rounded-r-lg shadow-lg",
+            "mt-3 md:mt-5 border-l-4 p-3 md:p-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 rounded-r-lg shadow-lg",
             mode === "celo"
               ? "bg-amber-50 dark:bg-amber-900/50 border-amber-500 dark:border-amber-400"
               : "bg-orange-50 dark:bg-orange-900/50 border-orange-500 dark:border-orange-400"
@@ -130,18 +138,18 @@ export default function Header({
         >
           <div className="flex items-center gap-2">
             <AlertCircle className={cn(
-              "w-5 h-5",
+              "w-4 h-4 md:w-5 md:h-5",
               mode === "celo"
                 ? "text-amber-600 dark:text-amber-300"
                 : "text-orange-600 dark:text-orange-300"
             )} />
             <span className={cn(
-              "font-medium",
+              "font-medium text-sm md:text-base",
               mode === "celo"
                 ? "text-amber-800 dark:text-amber-100"
                 : "text-orange-800 dark:text-orange-100"
             )}>
-              You are on the wrong network
+              Wrong network
             </span>
           </div>
           
@@ -149,7 +157,7 @@ export default function Header({
             onClick={onSwitchChain}
             disabled={isSwitchChainPending}
             className={cn(
-              "text-sm py-2 px-4 rounded-full flex items-center gap-2 text-white font-medium shadow-md transition-all duration-300 transform hover:scale-105",
+              "text-xs md:text-sm py-1.5 md:py-2 px-3 md:px-4 rounded-full flex items-center gap-2 text-white font-medium shadow-md transition-all duration-300 transform hover:scale-105",
               mode === "celo"
                 ? "bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400"
                 : "bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400"
@@ -159,12 +167,13 @@ export default function Header({
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white border-t-transparent rounded-full"
               />
             ) : (
-              <ArrowLeftRight className="w-4 h-4" />
+              <ArrowLeftRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
             )}
-            Switch to {targetChain.name}
+            <span className="hidden sm:inline">Switch to {targetChain.name}</span>
+            <span className="sm:hidden">Switch</span>
           </Button>
         </motion.div>
       )}
