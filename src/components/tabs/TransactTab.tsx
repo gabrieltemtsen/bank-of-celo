@@ -378,7 +378,7 @@ export default function TransactTab({
     : null;
 
 const handleClaim = async () => {
-  if(qualityScore && qualityScore < 0.39) {
+  if (qualityScore && qualityScore < 0.39) {
     toast.error("You need a positive quality score to claim rewards, keep being active on Farcaster!");
     return;
   }
@@ -449,11 +449,6 @@ const handleClaim = async () => {
       throw new Error("Failed to generate referral data");
     }
 
-    // Check native balance for gas fees (ETH on Base, CELO on Celo)
-    const balance = await publicClient.getBalance({ address });
-    const minBalance = parseEther("0.001"); // Minimum 0.001 ETH/CELO for gas
-    const hasSufficientGas = balance >= minBalance;
-
     const contractData = encodeFunctionData({
       abi: bankAbi,
       functionName: "claim",
@@ -463,12 +458,12 @@ const handleClaim = async () => {
     const finalData = dataSuffix ? contractData + dataSuffix : contractData;
 
     let hash: `0x${string}`;
-    if (hasSufficientGas) {
-      // Direct transaction with gas payment
+    if (mode === "degen") {
+      // In degen mode, always use direct transaction
       hash = await sendTransactionAsync({
         to: bankAddress,
         data: finalData as `0x${string}`,
-        value: 0n, // No native currency value for claim
+        value: 0n,
         chainId: targetChain.id,
       });
 
@@ -485,42 +480,70 @@ const handleClaim = async () => {
       setTxHash(hash);
       toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
     } else {
-      // Gasless claim via API
-      const requestBody = {
-        address,
-        fid: fid.toString(),
-        deadline: deadline.toString(),
-        signature,
-        nonce: nonce.toString(),
-        dataSuffix,
-      };
+      // Celo mode: Check gas balance and use gasless if insufficient
+      const balance = await publicClient.getBalance({ address });
+      const minBalance = parseEther("0.001"); // Minimum 0.001 CELO for gas
+      const hasSufficientGas = balance >= minBalance;
 
-      const response = await fetch("/api/claim", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to process claim");
-      }
-
-      const result = await response.json();
-      hash = result.transactionHash;
-
-      try {
-        await submitReferral({
-          txHash: hash,
+      if (hasSufficientGas) {
+        // Direct transaction with gas payment
+        hash = await sendTransactionAsync({
+          to: bankAddress,
+          data: finalData as `0x${string}`,
+          value: 0n,
           chainId: targetChain.id,
         });
-      } catch (diviError) {
-        console.log("Divi submitReferral error:", diviError);
-        toast.warning("Claim succeeded, but referral tracking failed");
-      }
 
-      setTxHash(hash);
-      toast.success(`Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${hash.slice(0, 6)}...`);
+        try {
+          await submitReferral({
+            txHash: hash,
+            chainId: targetChain.id,
+          });
+        } catch (diviError) {
+          console.log("Divi submitReferral error:", diviError);
+          toast.warning("Claim succeeded, but referral tracking failed");
+        }
+
+        setTxHash(hash);
+        toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
+      } else {
+        // Gasless claim via API for Celo
+        const requestBody = {
+          address,
+          fid: fid.toString(),
+          deadline: deadline.toString(),
+          signature,
+          nonce: nonce.toString(),
+          dataSuffix,
+        };
+
+        const response = await fetch("/api/claim", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to process claim");
+        }
+
+        const result = await response.json();
+        hash = result.transactionHash;
+
+        try {
+          await submitReferral({
+            txHash: hash,
+            chainId: targetChain.id,
+          });
+        } catch (diviError) {
+          console.log("Divi submitReferral error:", diviError);
+          toast.warning("Claim succeeded, but referral tracking failed");
+        }
+
+        setTxHash(hash);
+        toast.success(`Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${hash.slice(0, 6)}...`);
+      }
     }
   } catch (error) {
     console.log("Claim error:", error);

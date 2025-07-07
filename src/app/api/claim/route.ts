@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/api/claim/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import {
@@ -116,8 +117,8 @@ export async function POST(req: NextRequest) {
         to: BANK_OF_CELO_CONTRACT_ADDRESS,
         data: finalData as `0x${string}`,
         value: 0n,
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
+        // maxFeePerGas: parseUnits("100", 9),
+        // maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       // Wait for transaction receipt
