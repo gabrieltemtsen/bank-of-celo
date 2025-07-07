@@ -1,5 +1,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { DEGEN_DEV_MODE } from "~/lib/constants";
 
 type Mode = "celo" | "degen";
 
@@ -24,6 +26,12 @@ export function ChainModeProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("chainMode", mode);
       document.documentElement.classList.toggle("degen-mode", mode === "degen");
       document.documentElement.classList.toggle("celo-mode", mode === "celo");
+    }
+  }, [mode]);
+
+  useEffect(() => {
+    if (DEGEN_DEV_MODE && mode === "degen") {
+      toast.info("Degen mode is in development.");
     }
   }, [mode]);
 
