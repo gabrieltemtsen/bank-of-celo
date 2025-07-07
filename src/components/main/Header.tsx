@@ -105,7 +105,7 @@ export default function Header({
                 "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
                 "px-3 py-1.5 md:px-5 md:py-2.5",
                 mode === "celo"
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 border-emerald-400 hover:shadow-emerald-200/50"
+                  ? "bg-gradient-to-r from-yellow-400 to-emerald-500 hover:from-yellow-500 hover:to-emerald-600 border-yellow-400 hover:shadow-yellow-200/50"
                   : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50"
               )}
               aria-label="Connect wallet"
