@@ -333,9 +333,6 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         data: combinedData,
         value: mode === "degen" ? 0n : CHECK_IN_FEE,
         chainId: targetChain.id,
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
-        ...(gasEstimate && { gas: gasEstimate }),
       });
 
       // Wait for transaction confirmation before showing success message
@@ -406,8 +403,6 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         to: checkInAddress,
         data: combinedData,
         chainId: targetChain.id,
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       setTxHash(hash);

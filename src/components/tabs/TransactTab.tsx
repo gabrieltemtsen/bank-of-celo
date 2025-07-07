@@ -470,8 +470,6 @@ const handleClaim = async () => {
         data: finalData as `0x${string}`,
         value: 0n, // No native currency value for claim
         chainId: targetChain.id,
-        maxFeePerGas: parseUnits("100", 9),
-        maxPriorityFeePerGas: parseUnits("100", 9),
       });
 
       try {
