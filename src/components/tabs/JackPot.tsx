@@ -358,9 +358,6 @@ const handleBuyTickets = async () => {
       data: finalData as `0x${string}`,
       value: mode === "degen" ? 0n : totalCost,
       chainId: targetChain.id,
-      maxFeePerGas: parseUnits("100", 9),
-      maxPriorityFeePerGas: parseUnits("100", 9),
-      ...(gasEstimate && { gas: gasEstimate }),
     });
 
     // Wait for transaction confirmation before showing success message
