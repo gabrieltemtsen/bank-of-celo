@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import type { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import { FrameProvider } from "~/components/providers/FrameProvider";
+import { CashbackProvider } from "~/components/providers/CashbackProvider";
 import { ConvexClientProvider } from "./ConvexClientProvider";
 import { ChainModeProvider } from "./chain-mode/context";
 
@@ -26,7 +27,9 @@ export function Providers({
       <WagmiProvider>
         <ChainModeProvider>
           <FrameProvider>
-            <ConvexClientProvider>{children}</ConvexClientProvider>
+            <CashbackProvider>
+              <ConvexClientProvider>{children}</ConvexClientProvider>
+            </CashbackProvider>
           </FrameProvider>
         </ChainModeProvider>
       </WagmiProvider>

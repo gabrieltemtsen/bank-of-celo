@@ -33,6 +33,7 @@ import BottomNavigation from "./BottomNavigation";
 import { useSearchParams } from "next/navigation";
 import { useChainMode } from "~/app/chain-mode/context";
 import { cn } from "~/lib/utils";
+import { useCashback } from "~/components/providers/CashbackProvider";
 
 export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { address, isConnected, chain } = useAccount();
@@ -44,6 +45,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { writeContract, isPending } = useWriteContract();
   const publicClient = usePublicClient();
   const { isSDKLoaded, context } = useFrame();
+  const { optedIn, addCashback } = useCashback();
   const searchParams = useSearchParams();
 
   const [customSearchParams, setCustomSearchParams] =
@@ -246,6 +248,10 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
         );
         fetchContractData();
+        if (optedIn) {
+          const amt = parseFloat(amount);
+          if (!isNaN(amt)) addCashback(amt * 0.01);
+        }
 
         // 6. Report to Divi in a separate try-catch
         try {
@@ -271,7 +277,20 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         );
       }
     },
-    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
+    [
+      isCorrectChain,
+      sendTransactionAsync,
+      targetChain.id,
+      fetchContractData,
+      publicClient,
+      mode,
+      address,
+      bankAddress,
+      bankAbi,
+      writeContract,
+      optedIn,
+      addCashback,
+    ],
   );
 
   // Show loading spinner if SDK is not loaded

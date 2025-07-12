@@ -3,6 +3,7 @@ import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import Rewards from "~/components/tabs/rewards";
 import ServicesTab from "../tabs/services";
+import CashbackTab from "../tabs/CashbackTab";
 
 interface VaultStatus {
   currentBalance: string;
@@ -77,6 +78,7 @@ export default function TabContent({
           />
         )}
         {activeTab === "rewards" && <Rewards />}
+        {activeTab === "cashback" && <CashbackTab />}
       </motion.div>
     </AnimatePresence>
   );
