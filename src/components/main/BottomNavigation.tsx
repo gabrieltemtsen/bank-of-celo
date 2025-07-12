@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Home, Send, Trophy, Briefcase } from "lucide-react";
+import { Home, Send, Trophy, Briefcase, DollarSign } from "lucide-react";
 import { useChainMode } from "~/app/chain-mode/context";
 
 interface BottomNavigationProps {
@@ -15,6 +15,7 @@ const tabs = [
     icon: <Briefcase className="w-5 h-5" />,
     label: "Services",
   },
+  { id: "cashback", icon: <DollarSign className="w-5 h-5" />, label: "Cashback" },
   { id: "rewards", icon: <Trophy className="w-5 h-5" />, label: "Rewards" },
 ];
 
