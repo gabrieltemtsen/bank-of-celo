@@ -199,12 +199,13 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
               args: [bankAddress, amountParsed],
             });
           }
-          await writeContract({
+          const hash = await writeContract({
             address: bankAddress,
             abi: bankAbi,
             functionName: "donate",
             args: [amountParsed],
           });
+          await publicClient.waitForTransactionReceipt({ hash });
           toast.success("Donation successful!");
           fetchContractData();
           return;
@@ -241,7 +242,9 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           maxPriorityFeePerGas: parseUnits("100", 9),
         });
 
-        // 5. Show success toast and update contract data immediately
+        await publicClient.waitForTransactionReceipt({ hash });
+
+        // 5. Show success toast and update contract data
         toast.success(
           `Donation successful! Transaction hash: ${hash.slice(0, 6)}...`,
         );

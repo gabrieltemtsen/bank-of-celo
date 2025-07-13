@@ -336,6 +336,8 @@ const handleDonate = async (amount: string) => {
     // 8. Send the transaction
     const hash = await sendTransactionAsync(transactionParams);
 
+    await publicClient.waitForTransactionReceipt({ hash });
+
     // 9. Show success toast and update contract data
     toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
     fetchContractData();
