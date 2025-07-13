@@ -41,7 +41,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const { switchChain, isPending: isSwitchChainPending } = useSwitchChain();
   const { data: session, status } = useSession();
   const { sendTransactionAsync } = useSendTransaction();
-  const { writeContract, isPending } = useWriteContract();
+  const { writeContractAsync, isPending } = useWriteContract();
   const publicClient = usePublicClient();
   const { isSDKLoaded, context } = useFrame();
   const searchParams = useSearchParams();
@@ -192,14 +192,14 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
             args: [address, bankAddress],
           })) as bigint;
           if (allowance < amountParsed) {
-            await writeContract({
+            await writeContractAsync({
               address: tokenAddress,
               abi: ERC20_ABI,
               functionName: "approve",
               args: [bankAddress, amountParsed],
             });
           }
-          const hash = await writeContract({
+          const hash = await writeContractAsync({
             address: bankAddress,
             abi: bankAbi,
             functionName: "donate",
@@ -274,7 +274,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         );
       }
     },
-    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContract],
+    [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContractAsync],
   );
 
   // Show loading spinner if SDK is not loaded
