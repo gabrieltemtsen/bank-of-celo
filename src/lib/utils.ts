@@ -9,6 +9,7 @@ import {
   APP_OG_IMAGE_URL,
   APP_SPLASH_BACKGROUND_COLOR,
   APP_URL,
+  TAGS
 } from "./constants";
 import { APP_SPLASH_URL } from "./constants";
 
@@ -28,6 +29,7 @@ interface FrameMetadata {
     splashImageUrl: string;
     splashBackgroundColor: string;
     webhookUrl: string;
+    tags: string[];
   };
 }
 
@@ -92,6 +94,7 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
       splashImageUrl: APP_SPLASH_URL,
       splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
       webhookUrl,
+      tags: TAGS ?? ["defi", "p2p", "celo", "finance", "vault", "yield"],
     },
   };
 }
