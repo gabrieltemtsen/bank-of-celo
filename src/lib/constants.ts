@@ -7,6 +7,7 @@ export const APP_OG_IMAGE_URL = `${APP_URL}/opengraph-image`;
 export const APP_SPLASH_URL = `${APP_URL}/splash.png`;
 export const APP_SPLASH_BACKGROUND_COLOR = "#f7f7f7";
 export const APP_BUTTON_TEXT = process.env.NEXT_PUBLIC_FRAME_BUTTON_TEXT;
+export const TAGS = ["defi","p2p","celo", "finance", "vault", "yeild"];
 
 export const DEGEN_DEV_MODE =
   process.env.NEXT_PUBLIC_DEGEN_DEV_MODE === "true";
