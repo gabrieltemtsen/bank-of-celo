@@ -360,7 +360,6 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           isCorrectChain={isCorrectChain}
           isPending={isPending}
           onNavigate={setActiveTab}
-          onDonate={handleDonate}
         />
       </div>
 

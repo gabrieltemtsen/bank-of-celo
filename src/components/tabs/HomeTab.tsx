@@ -217,7 +217,7 @@ export default function HomeTab({
           whileTap={{ scale: 0.98 }}
         >
           <Button
-            onClick={() => onNavigate?.("transact")}
+            onClick={() => onNavigate?.("donate")}
             className={`flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br ${
               isDegen
                 ? "from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-800/50 border-purple-100 dark:border-purple-800/50 shadow-md shadow-purple-100/20 dark:shadow-purple-900/20"
@@ -253,7 +253,7 @@ export default function HomeTab({
           whileTap={{ scale: 0.98 }}
         >
           <Button
-            onClick={() => onNavigate?.("transact")}
+            onClick={() => onNavigate?.("rewards")}
             disabled={!canClaim() || !isCorrectChain}
             className={`flex flex-col items-center justify-center p-5 h-full w-full bg-gradient-to-br ${
               canClaim()
@@ -309,9 +309,61 @@ export default function HomeTab({
         </motion.div>
       </div>
 
-      {/* About Card */}
+      {/* Jackpots Quick Action */}
       <motion.div
         custom={3}
+        variants={cardVariants}
+        initial="hidden"
+        animate="visible"
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="w-full"
+      >
+        <Button
+          onClick={() => onNavigate?.("jackpots")}
+          className={`flex items-center justify-center p-4 h-full w-full bg-gradient-to-br ${
+            isDegen
+              ? "from-violet-50 to-fuchsia-50 dark:from-violet-900/30 dark:to-fuchsia-800/50 border-violet-100 dark:border-violet-800/50 shadow-md shadow-violet-100/20 dark:shadow-violet-900/20"
+              : "from-teal-50 to-cyan-50 dark:from-teal-900/30 dark:to-cyan-800/50 border-teal-100 dark:border-teal-800/50 shadow-md shadow-teal-100/20 dark:shadow-teal-900/20"
+          } rounded-2xl border`}
+          disabled={!isCorrectChain}
+          aria-label="Try jackpots"
+        >
+          <motion.div
+            whileHover={{
+              scale: [1, 1.2, 1],
+              rotate: [0, 10, -10, 0],
+              transition: { duration: 0.6 },
+            }}
+            className="mr-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-md"
+          >
+            <motion.div
+              animate={{
+                rotate: [0, 360],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+            >
+              ⚡
+            </motion.div>
+          </motion.div>
+          <div className="flex flex-col items-start">
+            <span className={`font-semibold text-${isDegen ? 'violet' : 'teal'}-800 dark:text-${isDegen ? 'violet' : 'teal'}-200`}>
+              🎰 Try Your Luck!
+            </span>
+            <span className={`text-xs text-${isDegen ? 'violet' : 'teal'}-600/70 dark:text-${isDegen ? 'violet' : 'teal'}-400/70`}>
+              Jackpots & Prizes Available
+            </span>
+          </div>
+        </Button>
+      </motion.div>
+
+      {/* About Card */}
+      <motion.div
+        custom={4}
         variants={cardVariants}
         initial="hidden"
         animate="visible"
