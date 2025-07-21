@@ -28,7 +28,7 @@ import {
 } from "wagmi";
 import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
 import JackPot from "./JackPot";
-import JackPotV2 from "./JackPotV2";
+// import JackPotV2 from "./JackPotV2";
 import { useChainMode } from "~/app/chain-mode/context";
 import { getDataSuffix, submitReferral } from "@divvi/referral-sdk";
 import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
@@ -74,7 +74,7 @@ export default function TransactTab({
   const [fidLoading, setFidLoading] = useState(false);
   const [fidError, setFidError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
-    "donate" | "claim" | "lottery" | "lottery2"
+    "donate" | "claim" | "lottery" // | "lottery2"
   >("donate");
   const [claimPending, setClaimPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -584,7 +584,7 @@ const handleClaim = async () => {
             { id: "donate", icon: <Gift className="w-4 h-4" />, label: "Donate" },
             { id: "claim", icon: <HandCoins className="w-4 h-4" />, label: "Claim" },
             { id: "lottery", icon: <Ticket className="w-4 h-4" />, label: "Jackpot" },
-            { id: "lottery2", icon: <Ticket className="w-4 h-4" />, label: "JackpotV2" },
+            // { id: "lottery2", icon: <Ticket className="w-4 h-4" />, label: "JackpotV2" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -783,8 +783,8 @@ const handleClaim = async () => {
         </motion.div>
       ) : activeTab === "lottery" ? (
         <JackPot isCorrectChain={isCorrectChain} />
-      ) : activeTab === "lottery2" ? (
-        <JackPotV2 isCorrectChain={isCorrectChain} />
+      // ) : activeTab === "lottery2" ? (
+        // <JackPotV2 isCorrectChain={isCorrectChain} />
       ) : null}
     </motion.div>
   );

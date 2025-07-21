@@ -31,11 +31,13 @@ import {
   ChevronRight,
   Clock,
   AlertCircle,
+  Briefcase,
 } from "lucide-react";
 import { Button } from "~/components/ui/Button";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import SwapBridgeTab from "~/components/tabs/SwapBridgeTab";
+import JackPot from "~/components/tabs/JackPot";
 import { truncateAddress } from "~/lib/truncateAddress";
 import { ERC20_ABI, useBankContract } from "~/hooks/contracts";
 import { useChainMode } from "~/app/chain-mode/context";
@@ -493,6 +495,9 @@ const handleDonate = async (amount: string) => {
                 isPending={isPending}
               />
             )}
+            {activeTab === "jackpot" && (
+              <JackPot isCorrectChain={isCorrectChain} />
+            )}
             {/* {activeTab === "swap" && <SwapBridgeTab isCorrectChain={isCorrectChain} />} */}
             {activeTab === "rewards" && <Rewards />}
           </motion.div>
@@ -513,7 +518,13 @@ const handleDonate = async (amount: string) => {
             icon: <Send className="w-5 h-5" />,
             label: "Transact",
           },
+          {
+            id: "jackpot",
+            icon: <Trophy className="w-5 h-5" />,
+            label: "Jackpot",
+          },
           // { id: "swap", icon: <ArrowLeftRight className="w-5 h-5" />, label: "Swap" },
+          // { id: "services", icon: <Briefcase className="w-5 h-5" />, label: "Services" },
           {
             id: "rewards",
             icon: <Trophy className="w-5 h-5" />,

@@ -238,9 +238,6 @@ export default function HomeTab({
             <span className={`font-medium text-${primaryColor}-800 dark:text-${primaryColor}-200`}>
               Donate
             </span>
-            <span className={`text-xs text-${primaryColor}-600/70 dark:text-${primaryColor}-400/70 mt-1`}>
-              Support Ecosystem
-            </span>
           </Button>
         </motion.div>
 
