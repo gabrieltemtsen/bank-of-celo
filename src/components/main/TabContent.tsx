@@ -1,8 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import HomeTab from "~/components/tabs/HomeTab";
-import DonateTab from "~/components/tabs/DonateTab";
-import JackpotsTab from "~/components/tabs/JackpotsTab";
+import TransactTab from "~/components/tabs/TransactTab";
 import Rewards from "~/components/tabs/rewards";
+import ServicesTab from "../tabs/services";
 
 interface VaultStatus {
   currentBalance: string;
@@ -21,6 +21,7 @@ interface TabContentProps {
   isCorrectChain: boolean;
   isPending: boolean;
   onNavigate: (tab: string) => void;
+  onDonate: (amount: string) => Promise<void>;
 }
 
 export default function TabContent({
@@ -34,6 +35,7 @@ export default function TabContent({
   isCorrectChain,
   isPending,
   onNavigate,
+  onDonate,
 }: TabContentProps) {
   return (
     <AnimatePresence mode="wait">
@@ -56,14 +58,21 @@ export default function TabContent({
             isCorrectChain={isCorrectChain}
           />
         )}
-        {activeTab === "donate" && (
-          <DonateTab
+        {activeTab === "transact" && (
+          <TransactTab
+            vaultBalance={vaultBalance}
+            onDonate={onDonate}
+            maxClaim={maxClaim}
+            availableForClaim={vaultStatus.availableForClaims}
+            claimCooldown={claimCooldown}
+            lastClaimAt={lastClaimAt}
             isCorrectChain={isCorrectChain}
             isPending={isPending}
           />
         )}
-        {activeTab === "jackpots" && (
-          <JackpotsTab
+        {activeTab === "services" && (
+          <ServicesTab
+            vaultBalance={vaultBalance}
             isCorrectChain={isCorrectChain}
           />
         )}
