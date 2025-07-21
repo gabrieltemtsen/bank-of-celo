@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { motion } from "framer-motion";
 import { Home, Send, Trophy, Briefcase } from "lucide-react";
 import { useChainMode } from "~/app/chain-mode/context";
