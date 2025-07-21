@@ -30,6 +30,7 @@ interface FrameMetadata {
     splashBackgroundColor: string;
     webhookUrl: string;
     tags: string[];
+    primaryCategory: string;
   };
 }
 
@@ -94,7 +95,8 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
       splashImageUrl: APP_SPLASH_URL,
       splashBackgroundColor: APP_SPLASH_BACKGROUND_COLOR,
       webhookUrl,
-      tags: TAGS ?? ["defi", "p2p", "celo", "finance", "vault", "yield"],
+      tags: TAGS,
+      primaryCategory: "finance"
     },
   };
 }

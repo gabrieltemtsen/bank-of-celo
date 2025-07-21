@@ -10,11 +10,12 @@ interface BottomNavigationProps {
 const tabs = [
   { id: "home", icon: <Home className="w-5 h-5" />, label: "Home" },
   { id: "transact", icon: <Send className="w-5 h-5" />, label: "Transact" },
-  {
-    id: "services",
-    icon: <Briefcase className="w-5 h-5" />,
-    label: "Services",
-  },
+  { id: "jackpot", icon: <Trophy className="w-5 h-5" />, label: "Jackpot" },
+  // {
+  //   id: "services",
+  //   icon: <Briefcase className="w-5 h-5" />,
+  //   label: "Services",
+  // },
   { id: "rewards", icon: <Trophy className="w-5 h-5" />, label: "Rewards" },
 ];
 
