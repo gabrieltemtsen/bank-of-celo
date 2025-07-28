@@ -4,8 +4,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, ArrowRight, Coins, TrendingUp, Info, Zap, RefreshCw } from "lucide-react";
-import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSendCalls } from "wagmi";
-import { parseUnits, formatUnits, encodeFunctionData } from "viem";
+import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
+import { parseUnits, formatUnits } from "viem";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/Button";
 import { useChainMode } from "~/app/chain-mode/context";
@@ -125,13 +125,8 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     isPending: withdrawPending 
   } = useWriteContract();
 
-  // Batch transaction hook for approve + deposit
-  const { 
-    sendCalls,
-    data: batchTxId,
-    error: batchError,
-    isPending: batchPending 
-  } = useSendCalls();
+  // State for tracking the deposit flow
+  const [depositStep, setDepositStep] = useState<'idle' | 'approving' | 'depositing' | 'completed'>('idle');
 
   // Wait for transactions
   const { isLoading: isApproveLoading } = useWaitForTransactionReceipt({
@@ -273,44 +268,69 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     }
   };
 
-  const handleBatchApproveAndDeposit = async () => {
-    if (!depositAmount) return;
+  const handleApproveAndDeposit = async () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) return;
     
     try {
-      setIsDepositing(true);
       const amount = parseUnits(depositAmount, tokenDecimals);
       
-      // Prepare batch transaction calls
-      const calls = [
-        // First call: Approve tokens
-        {
-          to: depositTokenAddress as `0x${string}`,
-          data: encodeFunctionData({
-            abi: ERC20_ABI,
-            functionName: "approve",
-            args: [vaultAddress, amount],
-          }),
-        },
-        // Second call: Deposit tokens
-        {
-          to: vaultAddress as `0x${string}`,
-          data: encodeFunctionData({
-            abi: vaultABI,
-            functionName: "deposit",
-            args: [amount],
-          }),
-        },
-      ];
-
-      await sendCalls({ calls });
+      // Check if approval is needed
+      const currentAllowance = allowance ? BigInt(allowance.toString()) : 0n;
+      const needsApproval = currentAllowance < amount;
       
-      toast.success("Batch transaction submitted! Tokens will be approved and deposited.");
-      setDepositAmount("");
+      if (needsApproval) {
+        // Step 1: Approve tokens
+        setDepositStep('approving');
+        setIsDepositing(true);
+        
+        toast.info("Step 1/2: Approving tokens...");
+        
+        await approveToken({
+          address: depositTokenAddress as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [vaultAddress, amount],
+        });
+        
+        // The approval success will be handled by the useEffect below
+      } else {
+        // Skip approval and go straight to deposit
+        setDepositStep('depositing');
+        setIsDepositing(true);
+        
+        toast.info("Depositing tokens...");
+        
+        depositToVault({
+          address: vaultAddress as `0x${string}`,
+          abi: vaultABI,
+          functionName: "deposit",
+          args: [amount],
+        });
+        
+        // The deposit success will be handled by the useEffect below
+      }
+      
     } catch (error) {
-      console.error("Batch transaction error:", error);
-      toast.error("Failed to execute batch transaction");
-    } finally {
+      console.error("Approve and deposit error:", error);
+      
+      const errorMessage = (error as Error)?.message || String(error) || '';
+      
+      if (errorMessage.includes("User rejected") || 
+          errorMessage.includes("user rejected") || 
+          errorMessage.includes("User denied") ||
+          errorMessage.includes("rejected")) {
+        toast.info("Transaction cancelled by user");
+      } else if (errorMessage.includes("insufficient funds") || errorMessage.includes("Insufficient")) {
+        toast.error("Insufficient funds for transaction");
+      } else if (errorMessage.includes("gas")) {
+        toast.error("Gas estimation failed. Please try again with higher gas limit.");
+      } else {
+        const action = depositStep === 'approving' ? 'approve tokens' : 'deposit';
+        toast.error(`Failed to ${action}. Please try again.`);
+      }
+      
       setIsDepositing(false);
+      setDepositStep('idle');
     }
   };
 
@@ -410,22 +430,70 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
 
   // Effects for transaction success with immediate data refresh
   useEffect(() => {
-    if (approveHash && !isApproveLoading) {
-      setTimeout(async () => {
-        await refetchAllowance();
-        toast.success("Tokens approved successfully!");
-      }, 1000); // Wait 1 second for blockchain confirmation
+    if (approveHash && !isApproveLoading && depositStep === 'approving') {
+      const handleApprovalSuccess = async () => {
+        try {
+          // Wait for blockchain confirmation
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          await refetchAllowance();
+          
+          toast.success("Step 1/2: Tokens approved successfully!");
+          
+          // Automatically proceed to deposit
+          setDepositStep('depositing');
+          toast.info("Step 2/2: Depositing tokens...");
+          
+          const amount = parseUnits(depositAmount, tokenDecimals);
+          depositToVault({
+            address: vaultAddress as `0x${string}`,
+            abi: vaultABI,
+            functionName: "deposit",
+            args: [amount],
+          });
+          
+        } catch (error) {
+          console.error("Error proceeding to deposit:", error);
+          toast.error("Approval succeeded but deposit failed. Please try again.");
+          setIsDepositing(false);
+          setDepositStep('idle');
+        }
+      };
+      
+      handleApprovalSuccess();
     }
-  }, [approveHash, isApproveLoading, refetchAllowance]);
+  }, [approveHash, isApproveLoading, depositStep, depositAmount, tokenDecimals, vaultAddress, vaultABI, depositToVault, refetchAllowance]);
 
   useEffect(() => {
-    if (depositHash && !isDepositLoading) {
-      setTimeout(async () => {
-        await refreshAllData();
-        toast.success("Deposit successful! Balances updated.");
-      }, 2000); // Wait 2 seconds for blockchain confirmation
+    if (depositHash && !isDepositLoading && depositStep === 'depositing') {
+      const handleDepositSuccess = async () => {
+        try {
+          // Wait for blockchain confirmation
+          await new Promise(resolve => setTimeout(resolve, 3000));
+          
+          // Refresh all data
+          await refreshAllData();
+          
+          // Reset form and state
+          setDepositAmount("");
+          setIsDepositing(false);
+          setDepositStep('completed');
+          
+          toast.success("Deposit completed successfully! Balances updated.");
+          
+          // Reset to idle after a short delay
+          setTimeout(() => setDepositStep('idle'), 1000);
+          
+        } catch (error) {
+          console.error("Error handling deposit success:", error);
+          setIsDepositing(false);
+          setDepositStep('idle');
+          toast.error("Deposit may have succeeded but failed to refresh data. Please refresh manually.");
+        }
+      };
+      
+      handleDepositSuccess();
     }
-  }, [depositHash, isDepositLoading, refreshAllData]);
+  }, [depositHash, isDepositLoading, depositStep, refreshAllData]);
 
   useEffect(() => {
     if (withdrawHash && !isWithdrawLoading) {
@@ -436,15 +504,6 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     }
   }, [withdrawHash, isWithdrawLoading, refreshAllData]);
 
-  // Handle batch transaction completion
-  useEffect(() => {
-    if (batchTxId && !batchPending) {
-      setTimeout(async () => {
-        await refreshAllData();
-        toast.success("Batch transaction completed! Tokens approved and deposited successfully.");
-      }, 3000); // Wait 3 seconds for both transactions to complete
-    }
-  }, [batchTxId, batchPending, refreshAllData]);
 
   // Simplified color scheme with standard colors that work on all backgrounds
   const colorScheme = isDegen ? {
@@ -750,16 +809,18 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {/* Batch Approve & Deposit Button */}
+                {/* Approve & Deposit Button */}
                 <Button
-                  onClick={handleBatchApproveAndDeposit}
-                  disabled={!depositAmount || isDepositing || batchPending}
+                  onClick={handleApproveAndDeposit}
+                  disabled={!depositAmount || parseFloat(depositAmount) <= 0 || isDepositing}
                   className={`w-full py-4 bg-gradient-to-r ${colorScheme.gradient} text-white font-semibold rounded-xl hover:opacity-90 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  {isDepositing || batchPending ? (
+                  {isDepositing ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                      Processing Batch Transaction...
+                      {depositStep === 'approving' ? "Step 1/2: Approving..." : 
+                       depositStep === 'depositing' ? "Step 2/2: Depositing..." : 
+                       "Processing..."}
                     </div>
                   ) : (
                     <div className="flex items-center justify-center">
@@ -769,49 +830,11 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
                   )}
                 </Button>
 
-                {/* Info about batch transactions */}
+                {/* Info about smart transactions */}
                 <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
                   <p className="text-xs text-blue-800 dark:text-blue-200">
-                    💡 One-click approval and deposit using batch transactions for a seamless experience
+                    ⚡ Smart deposit flow - automatically handles approval and deposit in sequence for a seamless experience
                   </p>
-                </div>
-
-                {/* Fallback: Individual buttons for wallets that don't support batch transactions */}
-                <div className="space-y-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                    Or use individual steps:
-                  </p>
-                  <div className="flex gap-2">
-                  <Button
-                    onClick={handleApprove}
-                    disabled={!depositAmount || isApproving || approvePending || isApproveLoading || !needsApproval()}
-                    className={`flex-1 py-3 border-2 ${colorScheme.border} ${colorScheme.text} bg-transparent hover:${colorScheme.bg} transition-all duration-200 rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {isApproving || approvePending || isApproveLoading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                        Approving...
-                      </div>
-                    ) : (
-                      `Approve ${tokenSymbol}`
-                    )}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleDeposit}
-                    disabled={!depositAmount || isDepositing || depositPending || isDepositLoading || needsApproval()}
-                    className={`flex-1 py-3 border-2 ${colorScheme.border} ${colorScheme.text} bg-transparent hover:${colorScheme.bg} transition-all duration-200 rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
-                    {isDepositing || depositPending || isDepositLoading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
-                        Depositing...
-                      </div>
-                    ) : (
-                      `Deposit ${tokenSymbol}`
-                    )}
-                  </Button>
-                  </div>
                 </div>
                 
                 {/* Quick Swap Option */}
