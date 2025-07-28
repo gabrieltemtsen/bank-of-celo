@@ -436,7 +436,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
           Fx Savings
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-100 ">
           Save {tokenSymbol} and earn {rewardSymbol} rewards
         </p>
       </motion.div>
@@ -611,10 +611,10 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
           {/* Modern Form Header */}
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h3 className="text-xl font-bold text-gray-100">
                 Deposit {tokenSymbol}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-100">
                 Start earning {rewardSymbol} rewards on your deposit
               </p>
             </div>
@@ -622,7 +622,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
               onClick={refreshAllData}
               className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
             >
-              <RefreshCw className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+              <RefreshCw className="w-4 h-4 text-gray-600 " />
             </Button>
           </div>
 
@@ -735,16 +735,16 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+              <h3 className="text-xl font-bold text-gray-100">
                 Withdraw Funds
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-100 mt-1">
                 Withdraw your deposit and claim all pending rewards
               </p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total to withdraw</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-sm text-gray-100">Total to withdraw</p>
+              <p className="text-lg font-bold text-gray-100">
                 {formatBalance(getDepositAmount(userDeposit), tokenDecimals)} {tokenSymbol}
               </p>
               {getPendingReward(pendingReward) > 0n && (
@@ -779,7 +779,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
               <Button
                 onClick={handleWithdraw}
                 disabled={withdrawPending || isWithdrawLoading}
-                className={`w-full py-4 border-2 ${colorScheme.border} ${colorScheme.text} bg-white dark:bg-gray-800 hover:${colorScheme.bg} font-semibold rounded-xl transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full py-4 border-2 ${colorScheme.border} ${colorScheme.text} bg-gray-800 hover:${colorScheme.bg} font-semibold rounded-xl transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 {withdrawPending || isWithdrawLoading ? (
                   <div className="flex items-center justify-center">
