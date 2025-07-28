@@ -4,8 +4,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowUpDown, ArrowRight, Coins, TrendingUp, Info, Zap, RefreshCw } from "lucide-react";
-import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { parseUnits, formatUnits } from "viem";
+import { useAccount, useBalance, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSendCalls } from "wagmi";
+import { parseUnits, formatUnits, encodeFunctionData } from "viem";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/Button";
 import { useChainMode } from "~/app/chain-mode/context";
@@ -124,6 +124,14 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     error: withdrawError,
     isPending: withdrawPending 
   } = useWriteContract();
+
+  // Batch transaction hook for approve + deposit
+  const { 
+    sendCalls,
+    data: batchTxId,
+    error: batchError,
+    isPending: batchPending 
+  } = useSendCalls();
 
   // Wait for transactions
   const { isLoading: isApproveLoading } = useWaitForTransactionReceipt({
@@ -265,6 +273,47 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     }
   };
 
+  const handleBatchApproveAndDeposit = async () => {
+    if (!depositAmount) return;
+    
+    try {
+      setIsDepositing(true);
+      const amount = parseUnits(depositAmount, tokenDecimals);
+      
+      // Prepare batch transaction calls
+      const calls = [
+        // First call: Approve tokens
+        {
+          to: depositTokenAddress as `0x${string}`,
+          data: encodeFunctionData({
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [vaultAddress, amount],
+          }),
+        },
+        // Second call: Deposit tokens
+        {
+          to: vaultAddress as `0x${string}`,
+          data: encodeFunctionData({
+            abi: vaultABI,
+            functionName: "deposit",
+            args: [amount],
+          }),
+        },
+      ];
+
+      await sendCalls({ calls });
+      
+      toast.success("Batch transaction submitted! Tokens will be approved and deposited.");
+      setDepositAmount("");
+    } catch (error) {
+      console.error("Batch transaction error:", error);
+      toast.error("Failed to execute batch transaction");
+    } finally {
+      setIsDepositing(false);
+    }
+  };
+
   const handleWithdraw = async () => {
     const depositAmount = getDepositAmount(userDeposit);
     if (depositAmount === 0n) return;
@@ -387,6 +436,16 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
     }
   }, [withdrawHash, isWithdrawLoading, refreshAllData]);
 
+  // Handle batch transaction completion
+  useEffect(() => {
+    if (batchTxId && !batchPending) {
+      setTimeout(async () => {
+        await refreshAllData();
+        toast.success("Batch transaction completed! Tokens approved and deposited successfully.");
+      }, 3000); // Wait 3 seconds for both transactions to complete
+    }
+  }, [batchTxId, batchPending, refreshAllData]);
+
   // Simplified color scheme with standard colors that work on all backgrounds
   const colorScheme = isDegen ? {
     primary: "purple",
@@ -424,10 +483,28 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
 
   return (
     <div className="p-6 space-y-6">
+      {/* Development Disclaimer */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 shadow-sm"
+      >
+        <div className="flex items-start space-x-3">
+          <Info className="w-5 h-5 text-orange-600 dark:text-orange-400 mt-0.5" />
+          <div className="text-sm text-orange-800 dark:text-orange-200">
+            <p className="font-medium mb-1">🚧 Under Development</p>
+            <p>
+              This feature is currently under development and testing. Please use with caution and only deposit small amounts for testing purposes.
+            </p>
+          </div>
+        </div>
+      </motion.div>
+
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className="text-center"
       >
         <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${colorScheme.bg} mb-4`}>
@@ -445,7 +522,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        transition={{ delay: 0.2 }}
         className={`p-4 rounded-xl ${colorScheme.cardBg} ${colorScheme.border} border shadow-sm`}
       >
         <div className="flex items-center justify-between">
@@ -465,7 +542,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.3 }}
         className="grid grid-cols-2 gap-4"
       >
         <div className={`p-4 rounded-xl ${colorScheme.cardBg} backdrop-blur-sm ${colorScheme.border} border shadow-sm`}>
@@ -503,7 +580,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className={`p-4 rounded-xl ${colorScheme.cardBg} ${colorScheme.border} border shadow-sm`}
         >
           <div className="flex items-center justify-between">
@@ -525,7 +602,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.5 }}
           className={`p-4 rounded-xl ${colorScheme.cardBg} ${colorScheme.border} border shadow-sm`}
         >
           <div className="space-y-2">
@@ -564,7 +641,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
           className={`p-6 rounded-2xl ${colorScheme.cardBg} ${colorScheme.border} border shadow-sm text-center`}
         >
           <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full ${colorScheme.bg} mb-4`}>
@@ -605,7 +682,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.6 }}
           className="space-y-6"
         >
           {/* Modern Form Header */}
@@ -673,43 +750,69 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                {needsApproval() ? (
+                {/* Batch Approve & Deposit Button */}
+                <Button
+                  onClick={handleBatchApproveAndDeposit}
+                  disabled={!depositAmount || isDepositing || batchPending}
+                  className={`w-full py-4 bg-gradient-to-r ${colorScheme.gradient} text-white font-semibold rounded-xl hover:opacity-90 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isDepositing || batchPending ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                      Processing Batch Transaction...
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <Zap className="w-5 h-5 mr-2" />
+                      Approve & Deposit {tokenSymbol}
+                    </div>
+                  )}
+                </Button>
+
+                {/* Info about batch transactions */}
+                <div className="px-3 py-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+                  <p className="text-xs text-blue-800 dark:text-blue-200">
+                    💡 One-click approval and deposit using batch transactions for a seamless experience
+                  </p>
+                </div>
+
+                {/* Fallback: Individual buttons for wallets that don't support batch transactions */}
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
+                    Or use individual steps:
+                  </p>
+                  <div className="flex gap-2">
                   <Button
                     onClick={handleApprove}
-                    disabled={!depositAmount || isApproving || approvePending || isApproveLoading}
-                    className={`w-full py-4 bg-gradient-to-r ${colorScheme.gradient} text-white font-semibold rounded-xl hover:opacity-90 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={!depositAmount || isApproving || approvePending || isApproveLoading || !needsApproval()}
+                    className={`flex-1 py-3 border-2 ${colorScheme.border} ${colorScheme.text} bg-transparent hover:${colorScheme.bg} transition-all duration-200 rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isApproving || approvePending || isApproveLoading ? (
                       <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                        Approving {tokenSymbol}...
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                        Approving...
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        <Zap className="w-5 h-5 mr-2" />
-                        Approve {tokenSymbol}
-                      </div>
+                      `Approve ${tokenSymbol}`
                     )}
                   </Button>
-                ) : (
+                  
                   <Button
                     onClick={handleDeposit}
                     disabled={!depositAmount || isDepositing || depositPending || isDepositLoading || needsApproval()}
-                    className={`w-full py-4 bg-gradient-to-r ${colorScheme.gradient} text-white font-semibold rounded-xl hover:opacity-90 transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed`}
+                    className={`flex-1 py-3 border-2 ${colorScheme.border} ${colorScheme.text} bg-transparent hover:${colorScheme.bg} transition-all duration-200 rounded-xl font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {isDepositing || depositPending || isDepositLoading ? (
                       <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
                         Depositing...
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center">
-                        <ArrowRight className="w-5 h-5 mr-2" />
-                        Deposit {tokenSymbol}
-                      </div>
+                      `Deposit ${tokenSymbol}`
                     )}
                   </Button>
-                )}
+                  </div>
+                </div>
                 
                 {/* Quick Swap Option */}
                 <Button
@@ -730,7 +833,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
+          transition={{ delay: 0.7 }}
           className="space-y-4"
         >
           <div className="flex items-center justify-between">
@@ -802,7 +905,7 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
+        transition={{ delay: 0.8 }}
         className="p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 shadow-sm"
       >
         <div className="flex items-start space-x-3">
