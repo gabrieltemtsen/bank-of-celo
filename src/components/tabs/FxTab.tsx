@@ -840,7 +840,10 @@ export default function FxTab({ isCorrectChain }: FxTabProps) {
                 {/* Quick Swap Option */}
                 <Button
                   onClick={handleNativeSwap}
-                  className={`w-full py-3 border-2 ${colorScheme.border} ${colorScheme.text} bg-transparent hover:${colorScheme.bg} transition-all duration-200 rounded-xl font-medium`}
+                  className={`w-full py-3 border-2 ${isDegen 
+                    ? 'border-purple-500 text-purple-600 bg-purple-400 hover:bg-purple-500' 
+                    : 'border-yellow-500 text-yellow-600 bg-white hover:bg-yellow-200 hover:text-white'
+                  } transition-all duration-200 rounded-xl font-medium`}
                 >
                   <ArrowUpDown className="w-4 h-4 mr-2" />
                   Need more {tokenSymbol}? Swap {isDegen ? "ETH" : "CELO"}
