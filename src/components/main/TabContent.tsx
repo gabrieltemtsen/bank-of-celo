@@ -22,6 +22,7 @@ interface TabContentProps {
   lastClaimAt: number;
   isCorrectChain: boolean;
   isPending: boolean;
+  isDonating: boolean;
   onNavigate: (tab: string) => void;
   onDonate: (amount: string) => Promise<void>;
 }
@@ -36,6 +37,7 @@ export default function TabContent({
   lastClaimAt,
   isCorrectChain,
   isPending,
+  isDonating,
   onNavigate,
   onDonate,
 }: TabContentProps) {
@@ -70,6 +72,7 @@ export default function TabContent({
             lastClaimAt={lastClaimAt}
             isCorrectChain={isCorrectChain}
             isPending={isPending}
+            isDonating={isDonating}
           />
         )}
         {activeTab === "fx" && (

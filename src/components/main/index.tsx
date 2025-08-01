@@ -51,6 +51,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
   const effectiveSearchParams = searchParams || customSearchParams;
 
   const [activeTab, setActiveTab] = useState("home");
+  const [isDonating, setIsDonating] = useState(false);
 
   const { mode } = useChainMode();
   const dynamicTitle = mode === "degen" ? "Bank of Celo" : title;
@@ -168,6 +169,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         return;
       }
 
+      setIsDonating(true);
       try {
         if (!publicClient) {
           toast.error("Public client not available");
@@ -272,6 +274,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
         toast.error(
           `Donation failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
+      } finally {
+        setIsDonating(false);
       }
     },
     [isCorrectChain, sendTransactionAsync, targetChain.id, fetchContractData, publicClient, mode, address, bankAddress, bankAbi, writeContractAsync],
@@ -359,6 +363,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
           lastClaimAt={lastClaimAt}
           isCorrectChain={isCorrectChain}
           isPending={isPending}
+          isDonating={isDonating}
           onNavigate={setActiveTab}
           onDonate={handleDonate}
         />
