@@ -43,6 +43,7 @@ interface TransactTabProps {
   availableForClaim: string;
   isCorrectChain: boolean;
   isPending: boolean;
+  isDonating: boolean;
 }
 
 interface NeynarResponse {
@@ -58,6 +59,7 @@ export default function TransactTab({
   lastClaimAt = 0,
   isCorrectChain,
   isPending,
+  isDonating,
   availableForClaim,
   vaultBalance,
 }: TransactTabProps) {
@@ -637,11 +639,11 @@ const handleClaim = async () => {
             </div>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || !amount}
+              disabled={isPending || isDonating || !amount}
               className={getDonateButtonClasses()}
               aria-label={`Donate ${currency}`}
             >
-              {isPending ? (
+              {isPending || isDonating ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <div className="flex items-center justify-center gap-2">
