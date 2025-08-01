@@ -69,6 +69,7 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
     return true;
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isDonating, setIsDonating] = useState(false);
   const [claimCooldown, setClaimCooldown] = useState<number>(0);
   const [lastClaimAt, setLastClaimAt] = useState<number>(0);
   const [maxClaim, setMaxClaim] = useState<string>("0");
@@ -225,6 +226,7 @@ const handleDonate = async (amount: string) => {
     return;
   }
 
+  setIsDonating(true);
   try {
     let donateData: `0x${string}`;
     let transactionParams: Parameters<typeof sendTransactionAsync>[0];
@@ -368,6 +370,8 @@ const handleDonate = async (amount: string) => {
     );
     // Log detailed error for debugging
     if (error.cause) console.error("Detailed error cause:", error.cause);
+  } finally {
+    setIsDonating(false);
   }
 };
   const handleConnect = () => {
@@ -493,6 +497,7 @@ const handleDonate = async (amount: string) => {
                 lastClaimAt={lastClaimAt}
                 isCorrectChain={isCorrectChain}
                 isPending={isPending}
+                isDonating={isDonating}
               />
             )}
             {activeTab === "jackpot" && (
