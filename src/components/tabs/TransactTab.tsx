@@ -35,7 +35,7 @@ import { encodeFunctionData, formatEther, parseEther, parseUnits } from "viem";
 import { base, celo } from "wagmi/chains";
 
 interface TransactTabProps {
-  onDonate: (amount: string) => void;
+  onDonate: (amount: string) => Promise<void>;
   maxClaim?: string;
   claimCooldown?: number;
   lastClaimAt?: number;
@@ -81,6 +81,7 @@ export default function TransactTab({
   const [hasClaimed, setHasClaimed] = useState(false);
   const [username, setUsername] = useState<string | null>(null);
   const [isUnderMaintenance, setIsUnderMaintenance] = useState(false);
+  const [donationLoading, setDonationLoading] = useState(false);
   const { mode } = useChainMode();
   const currency = mode === "degen" ? "DEGEN" : "CELO";
   const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
@@ -553,7 +554,7 @@ const handleClaim = async () => {
   }
 };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isCorrectChain) {
       toast.error(`Please switch to ${mode === "degen" ? "Base" : "Celo"} Network`);
       return;
@@ -564,8 +565,16 @@ const handleClaim = async () => {
         toast.error("Please enter a valid amount");
         return;
       }
-      onDonate(amount);
-      setAmount("");
+      
+      setDonationLoading(true);
+      try {
+        await onDonate(amount);
+        setAmount("");
+      } catch (error) {
+        console.error("Donation failed:", error);
+      } finally {
+        setDonationLoading(false);
+      }
     } else if (activeTab === "claim") {
       handleClaim();
     }
@@ -637,12 +646,14 @@ const handleClaim = async () => {
             </div>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || !amount}
+              disabled={isPending || donationLoading || !amount}
               className={getDonateButtonClasses()}
               aria-label={`Donate ${currency}`}
             >
-              {isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+              {(isPending || donationLoading) ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <Send className="w-5 h-5" />
