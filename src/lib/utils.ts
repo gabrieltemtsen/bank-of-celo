@@ -102,7 +102,7 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
       primaryCategory: "finance"
     },
     baseBuilder : {
-      allowedAddresses: ["0x06329049fB0aa569Be8D1b781Cf1753f371Bb76C","0xC5337CeE97fF5B190F26C4A12341dd210f26e17c"]
+      allowedAddresses: ["0x06329049fB0aa569Be8D1b781Cf1753f371Bb76C"]
     }
   };
 }
