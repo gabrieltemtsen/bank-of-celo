@@ -32,6 +32,9 @@ interface FrameMetadata {
     tags: string[];
     primaryCategory: string;
   };
+  baseBuilder?: {
+    allowedAddresses: string[];
+  };
 }
 
 export function cn(...inputs: ClassValue[]) {
@@ -98,5 +101,8 @@ export async function getFarcasterMetadata(): Promise<FrameMetadata> {
       tags: TAGS,
       primaryCategory: "finance"
     },
+    baseBuilder : {
+      allowedAddresses: ["0x06329049fB0aa569Be8D1b781Cf1753f371Bb76C","0xC5337CeE97fF5B190F26C4A12341dd210f26e17c"]
+    }
   };
 }
