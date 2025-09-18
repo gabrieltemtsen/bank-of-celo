@@ -135,6 +135,28 @@ html.celo-mode .min-h-screen {
   animation: none !important;
 }
 
+/* Neutralize Tailwind gradient utilities in Celo mode */
+html.celo-mode .bg-gradient-to-r,
+html.celo-mode .bg-gradient-to-l,
+html.celo-mode .bg-gradient-to-b,
+html.celo-mode .bg-gradient-to-t,
+html.celo-mode .bg-gradient-to-br,
+html.celo-mode .bg-gradient-to-bl,
+html.celo-mode .bg-gradient-to-tr,
+html.celo-mode .bg-gradient-to-tl {
+  background-image: none !important;
+}
+
+/* Remove soft shadows in Celo mode */
+html.celo-mode .shadow,
+html.celo-mode .shadow-sm,
+html.celo-mode .shadow-md,
+html.celo-mode .shadow-lg,
+html.celo-mode .shadow-xl,
+html.celo-mode .shadow-2xl {
+  box-shadow: none !important;
+}
+
 /* Typography hierarchy */
 html.celo-mode h1,
 html.celo-mode h2,

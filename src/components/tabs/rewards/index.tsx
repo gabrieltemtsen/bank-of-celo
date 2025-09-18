@@ -25,6 +25,8 @@ import LeaderboardSheet from "./bottom-sheets/leader-board";
 import { ClaimsSheet } from "./bottom-sheets/claims";
 import {DailyCheckinSheet} from "./bottom-sheets/daily-check-ins";
 import { toast } from "sonner";
+import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 
 interface MiniCard {
   id: "scored" | "rewards" | "earn" | "leaderboard" | "og-earning";
@@ -48,6 +50,8 @@ type ActiveSheet =
 export default function Rewards(): JSX.Element {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
   const [isReady, setIsReady] = useState<boolean>(false);
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
 
   const [rewardItems, setRewardItems] = useState<RewardItemProps[]>([
     {
@@ -164,11 +168,18 @@ export default function Rewards(): JSX.Element {
   };
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 rounded-md relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
-      <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-emerald-500/10 to-transparent" />
-      <div className="relative z-1 p-6 pb-32">
+    <div className={cn(
+      "min-h-screen text-gray-900 relative overflow-hidden",
+      isDegen ? "bg-white rounded-md" : "panel border-2"
+    )}>
+      {/* Background gradient (Degen only) */}
+      {isDegen && (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-gray-50" />
+          <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-purple-500/10 to-transparent" />
+        </>
+      )}
+      <div className={cn("relative z-1 pb-28", isDegen ? "p-6" : "p-4 sm:p-6") }>
         {/* Score Card */}
         <ScoreCard />
 
@@ -177,20 +188,30 @@ export default function Rewards(): JSX.Element {
           <button
             disabled={!isReady}
             onClick={() => openSheet("claims")}
-            className="flex-1 bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            className={cn(
+              "flex-1 p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all",
+              isDegen
+                ? "bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
+                : "boc-btn"
+            )}
           >
-            <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
-            <span className="font-semibold text-sm sm:text-base text-emerald-700">
+            <Gift className={cn("w-4 h-4 sm:w-5 sm:h-5", isDegen ? "text-purple-600" : "text-black")} />
+            <span className={cn("font-semibold text-sm sm:text-base", isDegen ? "text-purple-700" : "text-black") }>
               Claim
             </span>
           </button>
 
           <button
             onClick={() => openSheet("daily-checkin")}
-            className="flex-1 bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+            className={cn(
+              "flex-1 p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 transition-all",
+              isDegen
+                ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
+                : "boc-btn secondary"
+            )}
           >
-            <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-            <span className="font-semibold text-sm sm:text-base text-blue-700">
+            <CheckCircle2 className={cn("w-4 h-4 sm:w-5 sm:h-5", isDegen ? "text-blue-600" : "text-white")} />
+            <span className={cn("font-semibold text-sm sm:text-base", isDegen ? "text-blue-700" : "text-white") }>
               Check In
             </span>
           </button>
