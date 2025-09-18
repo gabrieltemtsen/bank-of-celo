@@ -98,7 +98,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const isDegen = mode === "degen";
   const progressBarClasses = isDegen
     ? "bg-gradient-to-r from-purple-500 to-purple-600 h-2.5 rounded-full"
-    : "bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full";
+    : "bg-[color:var(--celo-forest)] h-2.5";
 
   const checkedInBorderClasses = isDegen
     ? "bg-purple-500/20 border border-purple-500/30"
@@ -110,35 +110,39 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
   const primaryButtonClasses = isDegen
     ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
-    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2";
+    : "boc-btn w-full py-3";
 
   const rewardButtonClasses = isDegen
     ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
-    : "w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse";
+    : "boc-btn w-full py-3";
 
   const switchNetworkButtonClasses = isDegen
     ? "w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
-    : "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg font-medium";
+    : "boc-btn w-full py-3";
 
   const successBgClasses = isDegen
     ? "p-3 bg-purple-500/10 rounded-lg flex items-center gap-2 text-purple-500"
-    : "p-3 bg-emerald-500/10 rounded-lg flex items-center gap-2 text-emerald-500";
+    : "panel p-3 flex items-center gap-2 text-black";
 
   const successStatusClasses = isDegen
     ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400 flex items-center justify-center gap-2"
-    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400 flex items-center justify-center gap-2";
+    : "panel p-3 text-center flex items-center justify-center gap-2";
 
   const claimTimeBgClasses = isDegen
     ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400"
-    : "p-3 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center text-emerald-400";
+    : "celo-block-yellow p-3 text-center";
 
   const roundNumberClasses = isDegen
     ? "text-sm text-purple-400"
-    : "text-sm text-emerald-400";
+    : "text-sm text-black";
 
   const chevronIconClasses = isDegen
     ? "w-4 h-4 mt-0.5 text-purple-400 flex-shrink-0"
-    : "w-4 h-4 mt-0.5 text-emerald-400 flex-shrink-0";
+    : "w-4 h-4 mt-0.5 text-black flex-shrink-0";
+
+  const panelClasses = isDegen
+    ? "bg-gray-900/50 rounded-xl p-4 border border-gray-800"
+    : "panel p-4";
 
   function mapDashboardData(data: any[]): DashboardData {
     return {
@@ -457,13 +461,13 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </div>
         )}
 
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
+        <div className={panelClasses}>
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium text-gray-300">Round Progress</h3>
             <span className="text-sm text-gray-400">Day {currentDay} of 7</span>
           </div>
 
-          <div className="w-full bg-gray-800 rounded-full h-2.5 mb-2">
+          <div className={isDegen ? "w-full bg-gray-800 rounded-full h-2.5 mb-2" : "w-full border-2 border-black h-2.5 mb-2"}>
             <div
               className={progressBarClasses}
               style={{ width: `${progressPercentage}%` }}
@@ -484,12 +488,12 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
             Switch to {mode === "degen" ? "Base" : "Celo"} Network
           </Button>
         ) : isLoading ? (
-          <Button disabled className="w-full py-3 rounded-lg">
+          <Button disabled className={isDegen ? "w-full py-3 rounded-lg" : "boc-btn w-full py-3"}>
             <Loader2 className="w-5 h-5 animate-spin mr-2" />
             Processing...
           </Button>
         ) : !dashboardData?.roundActive ? (
-          <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400">
+          <div className={isDegen ? "p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400" : "celo-block-yellow p-3 text-center"}>
             Round is inactive. Check back soon!
           </div>
         ) : !hasCheckedInToday ? (
@@ -518,7 +522,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         )}
 
         {currentDay === 7 && userCheckIns < 7 && (
-          <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400">
+          <div className={isDegen ? "p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400" : "celo-block-yellow p-3 text-center"}>
             You missed some check-ins so this round has ended for you.
           </div>
         )}
@@ -528,7 +532,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </div>
         )}
 
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
+        <div className={panelClasses}>
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-medium text-gray-300">Current Round</h3>
             <span className={roundNumberClasses}>#{currentRoundNumber}</span>
@@ -547,7 +551,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
           </div>
         </div>
 
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
+        <div className={panelClasses}>
           <h3 className="font-medium text-gray-300 mb-2">How It Works</h3>
           <ul className="space-y-2 text-sm text-gray-400">
             <li className="flex items-start gap-2">

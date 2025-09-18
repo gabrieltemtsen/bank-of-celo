@@ -111,19 +111,19 @@ export default function TransactTab({
   const getDonateButtonClasses = () => {
     return isDegen
       ? "w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
-      : "w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white";
+      : "boc-btn w-full py-3";
   };
 
   const getClaimButtonClasses = () => {
     return isDegen
       ? "w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white"
-      : "w-full py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white";
+      : "boc-btn w-full py-3";
   };
 
   const getFidLoadingClasses = () => {
     return isDegen
       ? "p-4 text-center bg-purple-50 dark:bg-purple-900/30 rounded-lg"
-      : "p-4 text-center bg-emerald-50 dark:bg-emerald-900/30 rounded-lg";
+      : "panel p-4 text-center";
   };
 
   const getFidErrorClasses = () => {
@@ -135,19 +135,19 @@ export default function TransactTab({
   const getTxSuccessClasses = () => {
     return isDegen
       ? "p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm text-purple-800 dark:text-purple-200 flex items-center"
-      : "p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-200 flex items-center";
+      : "panel p-3 text-sm text-black flex items-center";
   };
 
   const getClaimCooldownClasses = () => {
     return isDegen
       ? "p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg text-sm text-purple-800 dark:text-purple-200 flex items-center"
-      : "p-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg text-sm text-emerald-800 dark:text-emerald-200 flex items-center";
+      : "panel p-3 text-sm text-black flex items-center";
   };
 
   const getMaintenanceClasses = () => {
     return isDegen
       ? "p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200"
-      : "p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-800 dark:text-yellow-200"; // Keeping yellow for maintenance
+      : "celo-block-yellow p-4";
   };
 
   const getUsername = async (userAddress: string): Promise<string | null> => {
