@@ -26,22 +26,26 @@ export default function BottomNavigation({
   // Dynamic color classes based on mode
   const activeButtonClasses = isDegen
     ? "text-white bg-gradient-to-r from-purple-500 to-purple-600 shadow-md"
-    : "text-white bg-gradient-to-r from-emerald-500 to-emerald-600 shadow-md";
+    : "celo-block-yellow border-2 border-black text-black font-[750] uppercase";
 
   const inactiveButtonClasses = isDegen
     ? "text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-    : "text-gray-600 dark:text-gray-300 hover:text-emerald-600 dark:hover:text-emerald-400";
+    : "text-black hover:bg-black hover:text-[color:var(--celo-yellow)] border-2 border-transparent";
 
   const indicatorClasses = isDegen
     ? "bg-purple-300"
-    : "bg-emerald-300";
+    : "bg-black";
 
   return (
     <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
+      className={
+        mode === "celo"
+          ? "fixed bottom-0 left-0 right-0 z-50 bg-[color:var(--celo-lt-tan)] border-t-2 border-[#CCCCCC] flex justify-around py-2 px-4"
+          : "fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
+      }
     >
       {tabs.map((tab) => (
         <button
@@ -55,11 +59,11 @@ export default function BottomNavigation({
           aria-label={tab.label}
         >
           {tab.icon}
-          <span className="text-xs mt-1">{tab.label}</span>
+          <span className="text-xs mt-1 font-[750] uppercase tracking-tight">{tab.label}</span>
           {activeTab === tab.id && (
             <motion.div
               layoutId="activeTabIndicator"
-              className={`absolute bottom-0 w-1/2 h-1 ${indicatorClasses} rounded-full`}
+              className={`absolute bottom-0 w-1/2 h-1 ${indicatorClasses}`}
             />
           )}
         </button>

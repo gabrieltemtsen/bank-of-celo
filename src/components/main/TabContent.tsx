@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 import HomeTab from "~/components/tabs/HomeTab";
 import TransactTab from "~/components/tabs/TransactTab";
 import FxTab from "~/components/tabs/FxTab";
@@ -39,6 +41,7 @@ export default function TabContent({
   onNavigate,
   onDonate,
 }: TabContentProps) {
+  const { mode } = useChainMode();
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -48,43 +51,45 @@ export default function TabContent({
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.2 }}
       >
-        {activeTab === "home" && (
-          <HomeTab
-            vaultBalance={vaultBalance}
-            vaultStatus={vaultStatus}
-            isLoading={isLoading}
-            onNavigate={onNavigate}
-            maxClaim={maxClaim}
-            claimCooldown={claimCooldown}
-            lastClaimAt={lastClaimAt}
-            isCorrectChain={isCorrectChain}
-          />
-        )}
-        {activeTab === "transact" && (
-          <TransactTab
-            vaultBalance={vaultBalance}
-            onDonate={onDonate}
-            maxClaim={maxClaim}
-            availableForClaim={vaultStatus.availableForClaims}
-            claimCooldown={claimCooldown}
-            lastClaimAt={lastClaimAt}
-            isCorrectChain={isCorrectChain}
-            isPending={isPending}
-          />
-        )}
-        {activeTab === "fx" && (
-          <FxTab isCorrectChain={isCorrectChain} />
-        )}
-        {activeTab === "jackpot" && (
-          <JackPot isCorrectChain={isCorrectChain} />
-        )}
+        <div className={cn(mode === "celo" ? "panel p-4 md:p-6 border-2 my-2" : "")}>
+          {activeTab === "home" && (
+            <HomeTab
+              vaultBalance={vaultBalance}
+              vaultStatus={vaultStatus}
+              isLoading={isLoading}
+              onNavigate={onNavigate}
+              maxClaim={maxClaim}
+              claimCooldown={claimCooldown}
+              lastClaimAt={lastClaimAt}
+              isCorrectChain={isCorrectChain}
+            />
+          )}
+          {activeTab === "transact" && (
+            <TransactTab
+              vaultBalance={vaultBalance}
+              onDonate={onDonate}
+              maxClaim={maxClaim}
+              availableForClaim={vaultStatus.availableForClaims}
+              claimCooldown={claimCooldown}
+              lastClaimAt={lastClaimAt}
+              isCorrectChain={isCorrectChain}
+              isPending={isPending}
+            />
+          )}
+          {activeTab === "fx" && (
+            <FxTab isCorrectChain={isCorrectChain} />
+          )}
+          {activeTab === "jackpot" && (
+            <JackPot isCorrectChain={isCorrectChain} />
+          )}
+          {activeTab === "rewards" && <Rewards />}
+        </div>
         {/* {activeTab === "services" && (
           <ServicesTab
             vaultBalance={vaultBalance}
             isCorrectChain={isCorrectChain}
           />
         )} */}
-        {activeTab === "rewards" && <Rewards />}
       </motion.div>
     </AnimatePresence>
   );

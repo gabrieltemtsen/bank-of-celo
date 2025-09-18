@@ -43,24 +43,29 @@ export default function Header({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "sticky top-0 z-50 backdrop-blur-xl border-b transition-all duration-300",
+        "sticky top-0 z-50 border-b transition-all duration-300",
         showSwitchNetworkBanner ? "pt-7" : "p-3 md:p-4",
-        // Celo mode styling
-        mode === "celo" 
-          ? "bg-emerald-50/95 dark:bg-emerald-950/95 border-emerald-200/50 dark:border-emerald-800/50"
-          : "bg-purple-50/95 dark:bg-purple-950/95 border-purple-200/50 dark:border-purple-800/50"
+        mode === "celo"
+          ? "bg-[color:var(--celo-lt-tan)] border-[#CCCCCC]"
+          : "backdrop-blur-xl bg-purple-50/95 dark:bg-purple-950/95 border-purple-200/50 dark:border-purple-800/50"
       )}
     >
       <div className="flex items-center justify-between mx-0 md:mx-20">
         {/* Title with responsive sizing */}
-        <h1 className={cn(
-          "text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 truncate max-w-[40%] md:max-w-none",
-          mode === "celo"
-            ? "from-emerald-600 to-emerald-800 dark:from-emerald-400 dark:to-emerald-600"
-            : "from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600"
-        )}>
-          {title}
-        </h1>
+        {mode === "celo" ? (
+          <div className="truncate max-w-[70%] md:max-w-none">
+            <h3 className="inline-block celo-block-yellow border-2 border-black px-2 py-1 leading-none tracking-tight">
+              <span className="font-[250]">{title}</span>
+            </h3>
+          </div>
+        ) : (
+          <h1 className={cn(
+            "text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 truncate max-w-[40%] md:max-w-none",
+            "from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600"
+          )}>
+            {title}
+          </h1>
+        )}
         
         <div className="flex items-center gap-1.5 md:gap-3">
           {isConnected ? (
@@ -69,11 +74,9 @@ export default function Header({
               <Button
                 onClick={onDisconnect}
                 className={cn(
-                  "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
+                  "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
                   "px-2.5 py-1.5 md:px-4 md:py-2.5",
-                  mode === "celo"
-                    ? "bg-gradient-to-r from-yellow-400 to-emerald-500 hover:from-yellow-500 hover:to-emerald-600 border-yellow-400 hover:shadow-yellow-200/50"
-                    : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50"
+                  mode === "celo" ? "" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50 text-white"
                 )}
                 aria-label="Disconnect wallet"
               >
@@ -90,7 +93,10 @@ export default function Header({
               {status === "authenticated" && (
                 <Button
                   onClick={onSignOut}
-                  className="text-xs font-medium bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border border-red-400 hover:shadow-red-200/50 p-1.5 md:p-2.5"
+                  className={cn(
+                    "text-xs font-medium rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border p-1.5 md:p-2.5",
+                    mode === "celo" ? "" : "bg-red-500 hover:bg-red-600 text-white border-red-400 hover:shadow-red-200/50"
+                  )}
                   aria-label="Sign out from Farcaster"
                 >
                   <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -102,11 +108,9 @@ export default function Header({
             <Button
               onClick={onConnect}
               className={cn(
-                "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border text-white",
+                "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
                 "px-3 py-1.5 md:px-5 md:py-2.5",
-                mode === "celo"
-                  ? "bg-gradient-to-r from-yellow-400 to-emerald-500 hover:from-yellow-500 hover:to-emerald-600 border-yellow-400 hover:shadow-yellow-200/50"
-                  : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50"
+                mode === "celo" ? "" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50 text-white"
               )}
               aria-label="Connect wallet"
             >

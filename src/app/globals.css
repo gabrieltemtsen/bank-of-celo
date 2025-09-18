@@ -11,6 +11,38 @@
   --gradient-to: #fbcc5c;
 }
 
+/* Font faces: provide local files if available */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.var.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter-Italic.var.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "GT Alpina";
+  src: url("/fonts/GT-Alpina-Standard-Light.woff2") format("woff2"),
+       url("/fonts/GT-Alpina-Standard-Light.woff") format("woff");
+  font-weight: 200 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "GT Alpina";
+  src: url("/fonts/GT-Alpina-Standard-Light-Italic.woff2") format("woff2"),
+       url("/fonts/GT-Alpina-Standard-Light-Italic.woff") format("woff");
+  font-weight: 200 300;
+  font-style: italic;
+  font-display: swap;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -31,17 +63,41 @@ html.degen-mode {
 }
 
 html.celo-mode {
-  --primary: #fbcc5c;
-  --primary-hover: #e0ae32;
-  --gradient-from: #35d07f;
-  --gradient-to: #fbcc5c;
-  transition: color 0.5s ease-in-out, background-color 0.5s ease-in-out;
+  /* Celo Brand Palette */
+  --celo-yellow: #FCFF52; /* Hero, CTAs */
+  --celo-forest: #4E632A; /* Dark surfaces */
+  --celo-purple: #1A0329; /* Deep contrast */
+  --celo-lt-tan: #FBF6F1; /* Canvas */
+  --celo-dk-tan: #E6E3D5; /* Secondary blocks */
+  --celo-brown: #635949; /* Accents, subheads */
+  --celo-black: #000000; /* Core text */
+  --celo-white: #FFFFFF; /* Inverse */
+  --celo-inactive: #9B9B9B; /* Disabled */
+  --celo-body: #666666; /* Paragraph text */
+  --celo-success: #329F3B;
+  --celo-error: #E70532;
+  --celo-accent-blue: #8AC0F9;
+  --celo-accent-orange: #F29E5F;
+  --celo-accent-pink: #F2A9E7;
+  --celo-accent-lime: #B2EBA1;
+
+  /* Theme bindings for existing tokens */
+  --background: var(--celo-lt-tan);
+  --foreground: var(--celo-black);
+  --primary: var(--celo-yellow);
+  /* Hover becomes inversion target; keep legacy var for compatibility */
+  --primary-hover: var(--celo-black);
+
+  /* Disable soft gradients/animations in Celo mode */
+  --gradient-from: var(--celo-lt-tan);
+  --gradient-to: var(--celo-lt-tan);
+  transition: color 0.15s linear, background-color 0.15s linear;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: "Inter", Helvetica, Arial, sans-serif;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
   background-size: 200% 200%;
   animation: gradient-animation 10s ease infinite;
 }
@@ -68,6 +124,166 @@ html.degen-mode body {
   );
 }
 
+/* ------------------------------ */
+/* Celo Mode: Hard-edged Aesthetic */
+/* ------------------------------ */
+
+/* Remove decorative imagery and gradients; assert raw canvas */
+html.celo-mode body,
+html.celo-mode .min-h-screen {
+  background-image: none !important;
+  animation: none !important;
+}
+
+/* Typography hierarchy */
+html.celo-mode h1,
+html.celo-mode h2,
+html.celo-mode h3,
+html.celo-mode h4 {
+  /* GT Alpina desired; fallbacks provided */
+  font-family: "GT Alpina", "Times New Roman", Times, serif;
+  font-weight: 250;
+  letter-spacing: -0.01em;
+  color: var(--celo-black);
+}
+html.celo-mode h1 { font-size: 72px; line-height: 84px; }
+html.celo-mode h2 { font-size: 54px; line-height: 72px; }
+html.celo-mode h3 { font-size: 48px; line-height: 48px; }
+html.celo-mode h4 { font-size: 40px; line-height: 40px; }
+
+/* Emphasis inside headlines */
+html.celo-mode h1 em,
+html.celo-mode h2 em,
+html.celo-mode h3 em,
+html.celo-mode h4 em {
+  font-style: italic;
+}
+
+/* Body as industrial signage */
+html.celo-mode body,
+html.celo-mode p,
+html.celo-mode li {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  color: var(--celo-body);
+}
+html.celo-mode .text-body,
+html.celo-mode p { font-size: 16px; line-height: 26px; letter-spacing: -0.01em; }
+html.celo-mode .text-body-lg { font-size: 20px; line-height: 26px; letter-spacing: -0.01em; }
+html.celo-mode .text-body-sm { font-size: 14px; line-height: 18px; letter-spacing: -0.01em; }
+
+/* Links / tags: heavy, compact */
+html.celo-mode a,
+html.celo-mode .tag,
+html.celo-mode .eyebrow {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 750;
+  font-size: 12px;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--celo-black);
+  border-bottom: 2px solid var(--celo-black);
+}
+html.celo-mode a:hover {
+  background: var(--celo-black);
+  color: var(--celo-yellow);
+}
+
+/* Hard edges everywhere in Celo mode */
+html.celo-mode *,
+html.celo-mode *::before,
+html.celo-mode *::after {
+  border-radius: 0 !important;
+}
+
+/* Buttons */
+html.celo-mode .boc-btn,
+html.celo-mode button:not([role="switch"]) {
+  background: var(--celo-yellow) !important;
+  color: var(--celo-black) !important;
+  border: 2px solid var(--celo-black) !important;
+  box-shadow: none !important;
+  text-transform: uppercase;
+  font-weight: 750;
+}
+html.celo-mode .boc-btn:hover,
+html.celo-mode button:not([role="switch"]):hover {
+  background: var(--celo-black) !important;
+  color: var(--celo-yellow) !important;
+}
+
+/* Secondary buttons (add .secondary or data-variant="secondary" to opt-in) */
+html.celo-mode .boc-btn.secondary,
+html.celo-mode button[data-variant="secondary"] {
+  background: var(--celo-purple) !important;
+  color: var(--celo-white) !important;
+  border-color: var(--celo-white) !important;
+}
+html.celo-mode .boc-btn.secondary:hover,
+html.celo-mode button[data-variant="secondary"]:hover {
+  background: var(--celo-white) !important;
+  color: var(--celo-purple) !important;
+}
+
+/* Inputs */
+html.celo-mode input,
+html.celo-mode .boc-input,
+html.celo-mode textarea,
+html.celo-mode select {
+  background: var(--celo-white) !important;
+  color: var(--celo-black) !important;
+  border: 2px solid var(--celo-black) !important;
+  box-shadow: none !important;
+}
+html.celo-mode input::placeholder { color: var(--celo-inactive) !important; }
+html.celo-mode label { font-family: "Inter", sans-serif; font-weight: 750; font-size: 12px; text-transform: uppercase; color: var(--celo-brown); }
+
+/* Cards and panels: visible structure */
+html.celo-mode .card,
+html.celo-mode .panel,
+html.celo-mode .block {
+  background: var(--celo-dk-tan) !important;
+  border: 2px solid #CCCCCC !important;
+}
+
+/* Color block helpers */
+html.celo-mode .celo-block-yellow { background: var(--celo-yellow) !important; color: var(--celo-black) !important; }
+html.celo-mode .celo-block-forest { background: var(--celo-forest) !important; color: var(--celo-white) !important; }
+html.celo-mode .celo-block-purple { background: var(--celo-purple) !important; color: var(--celo-white) !important; }
+html.celo-mode .celo-block-tan { background: var(--celo-lt-tan) !important; color: var(--celo-black) !important; }
+
+/* Feedback colors */
+html.celo-mode .text-success { color: var(--celo-success) !important; }
+html.celo-mode .text-error { color: var(--celo-error) !important; }
+
+/* Accents: use sparingly */
+html.celo-mode .accent-blue { color: var(--celo-accent-blue) !important; }
+html.celo-mode .accent-orange { color: var(--celo-accent-orange) !important; }
+html.celo-mode .accent-pink { color: var(--celo-accent-pink) !important; }
+html.celo-mode .accent-lime { color: var(--celo-accent-lime) !important; }
+
+/* Focus outlines */
+html.celo-mode :focus-visible {
+  outline: 3px solid #483554 !important; /* hard outline */
+  outline-offset: 2px;
+}
+
+/* Switch/toggle becomes geometric in Celo mode */
+html.celo-mode [role="switch"] {
+  border-radius: 0 !important;
+  background: var(--celo-dk-tan) !important;
+  border-color: var(--celo-black) !important;
+}
+html.celo-mode [role="switch"] > div {
+  border-radius: 0 !important;
+  background: var(--celo-purple) !important;
+  box-shadow: none !important;
+}
+
+/* Hide decorative overlays in Celo mode */
+html.celo-mode [data-celo-hide="overlay"] { display: none !important; }
+
 * {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -80,5 +296,12 @@ html.degen-mode body {
 @layer base {
   :root {
     --radius: 0.5rem;
+  }
+}
+
+/* In Celo mode, force square corners via design token too */
+@layer base {
+  html.celo-mode :root {
+    --radius: 0rem;
   }
 }

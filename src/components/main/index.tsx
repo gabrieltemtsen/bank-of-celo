@@ -305,7 +305,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       }}
     >
       {/* Enhanced Themed Overlay */}
-      <div 
+      <div
+        data-celo-hide="overlay"
         className={cn(
           "min-h-[100vh] fixed inset-0 transition-all duration-500",
           mode === "celo"
@@ -315,7 +316,8 @@ export default function Main({ title = "Bank of Celo" }: { title?: string }) {
       />
 
       {/* Subtle Pattern Overlay */}
-      <div 
+      <div
+        data-celo-hide="overlay"
         className="min-h-[100vh] fixed inset-0 opacity-10"
         style={{
           backgroundImage: `radial-gradient(circle at 1px 1px, ${mode === "celo" ? "rgb(34, 197, 94)" : "rgb(147, 51, 234)"} 1px, transparent 0)`,
