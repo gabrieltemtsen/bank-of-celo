@@ -44,7 +44,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
         <div className="w-12 h-1.5 bg-gray-400 rounded-full mx-auto mt-4 mb-6" />
         <div className="px-6 pb-8 h-full overflow-y-auto">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">{title}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">{title}</h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-700/50 rounded-full transition-colors"

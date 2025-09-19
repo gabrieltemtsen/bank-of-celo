@@ -19,8 +19,8 @@ export const TierItem: React.FC<TierItemProps> = ({
 
   // Dynamic color classes based on mode
   const containerClasses = isDegen
-    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800"
-    : "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800";
+    ? "bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 rounded-lg"
+    : "panel border-2";
 
   const tierTextClasses = isDegen
     ? "text-purple-800 dark:text-purple-200"
@@ -35,20 +35,20 @@ export const TierItem: React.FC<TierItemProps> = ({
     : "text-emerald-700 dark:text-emerald-300";
 
   return (
-    <div className={`p-4 border rounded-lg ${containerClasses} ${!isLast ? 'mb-3' : ''}`}>
+    <div className={`p-3 sm:p-4 ${containerClasses} ${!isLast ? 'mb-3' : ''}`}>
       <div className="flex justify-between items-center">
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className={`font-semibold text-lg ${tierTextClasses}`}>
+            <span className={`font-semibold text-sm sm:text-base ${isDegen ? tierTextClasses : 'uppercase font-[750] text-black'}`}>
               {tier} ~ {prize} ${currency}
             </span>
           </div>
-          <div className={`text-sm mt-1 ${winnersTextClasses}`}>
+          <div className={`text-xs sm:text-sm mt-1 ${isDegen ? winnersTextClasses : 'text-black'}`}>
             {winners}
           </div>
         </div>
         <div className="text-right">
-          <div className={`font-bold text-xl ${prizeTextClasses}`}>
+          <div className={`font-bold text-base sm:text-xl ${isDegen ? prizeTextClasses : 'text-black'}`}>
             {prize} ${currency.toLowerCase()}
           </div>
         </div>

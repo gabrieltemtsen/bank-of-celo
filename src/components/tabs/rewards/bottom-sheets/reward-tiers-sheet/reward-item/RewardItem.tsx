@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useChainMode } from "~/app/chain-mode/context";
 import { Star, Gift, CheckCircle, Loader, Crown, Sparkles } from "lucide-react";
 
 export interface RewardItemProps {
@@ -23,6 +24,8 @@ export const RewardItem: React.FC<
   onRedeem,
 }) => {
   const [isRedeeming, setIsRedeeming] = useState(false);
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
 
   const handleRedeem = async () => {
     if (status !== "available") return;
@@ -71,7 +74,11 @@ export const RewardItem: React.FC<
 
   return (
     <div
-      className={`relative bg-gradient-to-br ${colors.bg} backdrop-blur-sm rounded-2xl p-6 mb-4 border ${colors.border} ${status === "available" ? `shadow-xl ${colors.glow}` : ""} transition-all duration-300 ${status === "available" ? "hover:scale-[1.02] hover:shadow-2xl" : ""}`}
+      className={
+        isDegen
+          ? `relative bg-gradient-to-br ${colors.bg} backdrop-blur-sm rounded-2xl p-6 mb-4 border ${colors.border} ${status === "available" ? `shadow-xl ${colors.glow}` : ""} transition-all duration-300 ${status === "available" ? "hover:scale-[1.02] hover:shadow-2xl" : ""}`
+          : `panel p-4 mb-3`
+      }
     >
       {/* Rarity indicator */}
       {rarity !== "common" && (
@@ -89,22 +96,18 @@ export const RewardItem: React.FC<
 
       <div className="flex items-start justify-between">
         <div className="flex items-start space-x-4 flex-1">
-          <div
-            className={`${colors.bg} p-3 rounded-xl ${colors.border} border backdrop-blur-sm`}
-          >
-            {icon}
-          </div>
+          <div className={isDegen ? `${colors.bg} p-3 rounded-xl ${colors.border} border backdrop-blur-sm` : `p-2 text-black`}>{icon}</div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-white font-semibold text-lg">{title}</h3>
+              <h3 className={isDegen ? "text-white font-semibold text-lg" : "text-black font-[750] uppercase text-sm sm:text-base"}>{title}</h3>
               {status === "claimed" && (
                 <CheckCircle className="w-5 h-5 text-emerald-400" />
               )}
             </div>
-            <div className={`${colors.text} font-bold text-xl mb-2`}>
+            <div className={`${isDegen ? colors.text : 'text-black'} font-bold text-base sm:text-xl mb-2`}>
               {amount}
             </div>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">
+            <p className={isDegen ? "text-gray-300 text-sm leading-relaxed mb-4" : "text-black text-xs sm:text-sm leading-relaxed mb-3"}>
               {description}
             </p>
 
@@ -112,18 +115,18 @@ export const RewardItem: React.FC<
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {status === "available" && (
-                  <div className="bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                  <div className={isDegen ? "bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1" : "celo-block-yellow px-2 py-1 text-xs font-[750] uppercase"}>
                     <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                     Ready to claim
                   </div>
                 )}
                 {status === "claimed" && (
-                  <div className="bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-xs font-medium">
+                  <div className={isDegen ? "bg-gray-500/20 text-gray-400 px-3 py-1 rounded-full text-xs font-medium" : "panel px-2 py-1 text-xs font-[750] uppercase"}>
                     Claimed
                   </div>
                 )}
                 {status === "locked" && (
-                  <div className="bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-medium">
+                  <div className={isDegen ? "bg-orange-500/20 text-orange-400 px-3 py-1 rounded-full text-xs font-medium" : "panel px-2 py-1 text-xs font-[750] uppercase"}>
                     Requirements not met
                   </div>
                 )}
@@ -133,7 +136,7 @@ export const RewardItem: React.FC<
                 <button
                   onClick={handleRedeem}
                   disabled={isRedeeming}
-                  className={`${colors.bg} ${colors.border} border text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
+                  className={isDegen ? `${colors.bg} ${colors.border} border text-white font-semibold px-6 py-2 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2` : `boc-btn px-4 py-2`}
                 >
                   {isRedeeming ? (
                     <>

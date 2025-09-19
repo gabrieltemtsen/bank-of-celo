@@ -1,4 +1,6 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 
 interface MiniCard {
   id: "scored" | "rewards" | "earn" | "leaderboard" | "og-earning";
@@ -20,45 +22,112 @@ const MiniCards: React.FC<MiniCardsProps> = ({
   openSheet,
   scrollRef,
 }) => {
+  const { mode } = useChainMode();
+  const isDegen = mode === "degen";
+  const [showHint, setShowHint] = useState(true);
+  const [active, setActive] = useState(0);
+  const itemWidthRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // Measure card width + gap once
+    if (el.firstElementChild && itemWidthRef.current === null) {
+      const first = el.firstElementChild as HTMLElement;
+      const styles = window.getComputedStyle(first);
+      const marginRight = parseFloat(styles.marginRight || "0");
+      itemWidthRef.current = first.offsetWidth + marginRight;
+    }
+    const onScroll = () => {
+      if (el.scrollLeft > 8) setShowHint(false);
+      if (itemWidthRef.current) {
+        const idx = Math.round(el.scrollLeft / itemWidthRef.current);
+        setActive(Math.max(0, Math.min(miniCards.length - 1, idx)));
+      }
+    };
+    const onPointer = () => setShowHint(false);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("pointerdown", onPointer, { passive: true });
+    const t = setTimeout(() => setShowHint(false), 3500);
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("pointerdown", onPointer);
+      clearTimeout(t);
+    };
+  }, [scrollRef]);
+
   return (
-    <div
-      ref={scrollRef}
-      className="flex space-x-3 z-0 overflow-x-auto pb-4 scrollbar-hide"
-      style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-    >
-      {miniCards.map((card) => (
-        <button
-          key={card.id}
-          onClick={() => openSheet(card.id)}
-          className={`${card.bgColor} backdrop-blur-sm rounded-xl p-4 min-w-32 flex-shrink-0 border border-gray-200/50 hover:border-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95 shadow-sm`}
-        >
-          <div className="flex flex-col items-start">
-            <div
-              className={`p-2 rounded-lg mb-2 ${
-                card.iconColor === "purple"
-                  ? "bg-purple-100"
-                  : card.iconColor === "emerald"
-                    ? "bg-emerald-100"
-                    : card.iconColor === "blue"
-                      ? "bg-blue-100"
-                      : card.iconColor === "gold"
-                        ? "bg-yellow-100"
-                        : "bg-gray-200"
-              }`}
-            >
-              {card.icon}
-            </div>
-            <h3 className="text-gray-900 font-medium text-xs text-left mb-1 leading-tight">
-              {card.title}
-            </h3>
-            {card.value && (
-              <p className="text-lg font-bold text-gray-900 text-left">
+    <div className="relative">
+      <div
+        ref={scrollRef}
+        role="region"
+        aria-label="Swipe horizontally to view more cards"
+        className="flex space-x-3 z-0 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {miniCards.map((card) => (
+          <button
+            key={card.id}
+            onClick={() => openSheet(card.id)}
+            className={cn(
+            `${isDegen ? 'p-2' : 'p-1.5'} sm:p-3 ${isDegen ? 'min-w-[5.5rem]' : 'min-w-[4.8rem]'} sm:min-w-[7.5rem] flex-shrink-0 transition-all duration-200 snap-start`,
+            isDegen
+              ? `${card.bgColor} backdrop-blur-sm rounded-xl border border-gray-200/50 hover:border-purple-500/50 hover:scale-105 active:scale-95 shadow-sm`
+              : "panel"
+          )}
+          >
+            <div className="flex flex-col items-start">
+              <div className={cn("mb-1.5 sm:mb-2", isDegen ? "" : "text-black")}>{card.icon}</div>
+            <h3 className={cn(`${isDegen ? 'text-[10px]' : 'text-[9px]'} sm:text-xs font-medium text-left leading-tight`, isDegen ? "text-gray-900" : "text-black uppercase font-[750]") }>
+                {card.title}
+              </h3>
+              {card.value && (
+              <p className={cn(`${isDegen ? 'text-sm' : 'text-xs'} sm:text-lg font-bold text-left`, isDegen ? "text-gray-900" : "text-black") }>
                 {card.value}
               </p>
-            )}
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      {showHint && (
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 flex items-center justify-center">
+          <div className={cn(
+            "h-10 px-2 flex items-center gap-1",
+            isDegen ? "bg-white/60 rounded-lg text-gray-700" : "celo-block-yellow border-2 border-black"
+          )}>
+            <span className="text-[10px] font-[750] uppercase">Swipe</span>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-80">
+              <path d="M8 4l8 8-8 8"></path>
+            </svg>
           </div>
-        </button>
-      ))}
+        </div>
+      )}
+
+      {/* Pagination dots */}
+      <div className="mt-1 flex justify-center gap-1.5">
+        {miniCards.map((_, i) => (
+          <button
+            key={i}
+            aria-label={`Go to card ${i + 1}`}
+            className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              i === active
+                ? (isDegen ? "bg-gray-600" : "bg-black")
+                : (isDegen ? "bg-gray-300" : "bg-[#CCCCCC]")
+            )}
+            onClick={() => {
+              const el = scrollRef.current;
+              if (!el) return;
+              const w = itemWidthRef.current || 100;
+              el.scrollTo({ left: i * w, behavior: "smooth" });
+              setActive(i);
+              setShowHint(false);
+            }}
+          />
+        ))}
+      </div>
     </div>
   );
 };

@@ -173,16 +173,16 @@ export default function DonorsLeaderBoard({
       >
         <div className="p-5 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-3">
-              <div className={`bg-${primaryColor}-100 dark:bg-${primaryColor}-900 p-2 rounded-lg`}>
-                <Trophy className={`w-5 h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-3">
+              <div className={`bg-${primaryColor}-100 dark:bg-${primaryColor}-900 p-1.5 sm:p-2 rounded-lg`}>
+                <Trophy className={`w-4 h-4 sm:w-5 sm:h-5 text-${primaryColor}-600 dark:text-${primaryColor}-300`} />
               </div>
               <span className="text-gray-900 dark:text-white">Top Donors</span>
             </h2>
             <button
               onClick={fetchLeaderboard}
               disabled={isLoading || !isCorrectChain}
-              className="text-xs text-center flex items-center justify-center w-10 h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full py-1.5 transition-all duration-200"
+              className="text-[11px] text-center flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 font-medium bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700 dark:bg-gray-700 dark:hover:bg-gray-600 text-white rounded-full py-1.5 transition-all duration-200"
             >
               {isLoading ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -255,14 +255,14 @@ export default function DonorsLeaderBoard({
                           </span>
                         </div>
                         <div className="text-left flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {donor.username || truncateAddress(donor.donor)}
-                            {donor.donor === address && (
-                              <span className={`ml-2 text-xs bg-${primaryColor}-100 dark:bg-${primaryColor}-900 text-${primaryColor}-600 dark:text-${primaryColor}-300 px-2 py-0.5 rounded-full`}>
-                                You
-                              </span>
-                            )}
-                          </p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {donor.username || truncateAddress(donor.donor)}
+                          {donor.donor === address && (
+                            <span className={`ml-2 text-xs bg-${primaryColor}-100 dark:bg-${primaryColor}-900 text-${primaryColor}-600 dark:text-${primaryColor}-300 px-2 py-0.5 rounded-full`}>
+                              You
+                            </span>
+                          )}
+                        </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {parseFloat(donor.amount).toFixed(2)} {currency}
                           </p>

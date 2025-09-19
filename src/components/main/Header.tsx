@@ -44,7 +44,7 @@ export default function Header({
       transition={{ duration: 0.5 }}
       className={cn(
         "sticky top-0 z-50 border-b transition-all duration-300",
-        showSwitchNetworkBanner ? "pt-7" : "p-3 md:p-4",
+        showSwitchNetworkBanner ? "pt-6" : "py-2 px-3 md:px-4",
         mode === "celo"
           ? "bg-[color:var(--celo-lt-tan)] border-[#CCCCCC]"
           : "backdrop-blur-xl bg-purple-50/95 dark:bg-purple-950/95 border-purple-200/50 dark:border-purple-800/50"
@@ -53,10 +53,10 @@ export default function Header({
       <div className="flex items-center justify-between mx-0 md:mx-20">
         {/* Title with responsive sizing */}
         {mode === "celo" ? (
-          <div className="truncate max-w-[70%] md:max-w-none">
-            <h3 className="inline-block celo-block-yellow border-2 border-black px-2 py-1 leading-none tracking-tight">
-              <span className="font-[250]">{title}</span>
-            </h3>
+          <div className="truncate max-w-[60%] md:max-w-none">
+            <span className="celo-title text-xl sm:text-2xl leading-none">
+              Bank of <em>Celo</em>
+            </span>
           </div>
         ) : (
           <h1 className={cn(
@@ -74,9 +74,9 @@ export default function Header({
               <Button
                 onClick={onDisconnect}
                 className={cn(
-                  "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
+                  "text-[11px] font-medium flex items-center rounded-md transition-all duration-200 border",
                   "px-2.5 py-1.5 md:px-4 md:py-2.5",
-                  mode === "celo" ? "" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50 text-white"
+                  mode === "celo" ? "address-chip" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 text-white"
                 )}
                 aria-label="Disconnect wallet"
               >
@@ -94,8 +94,8 @@ export default function Header({
                 <Button
                   onClick={onSignOut}
                   className={cn(
-                    "text-xs font-medium rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border p-1.5 md:p-2.5",
-                    mode === "celo" ? "" : "bg-red-500 hover:bg-red-600 text-white border-red-400 hover:shadow-red-200/50"
+                    "text-[11px] font-medium rounded-md transition-all duration-200 border p-1.5 md:p-2.5",
+                    mode === "celo" ? "address-chip" : "bg-red-500 hover:bg-red-600 text-white border-red-400"
                   )}
                   aria-label="Sign out from Farcaster"
                 >
@@ -108,9 +108,9 @@ export default function Header({
             <Button
               onClick={onConnect}
               className={cn(
-                "text-xs font-medium flex items-center rounded-full shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 border",
+                "text-[11px] font-medium flex items-center rounded-md transition-all duration-200 border",
                 "px-3 py-1.5 md:px-5 md:py-2.5",
-                mode === "celo" ? "" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 hover:shadow-purple-200/50 text-white"
+                mode === "celo" ? "address-chip" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 text-white"
               )}
               aria-label="Connect wallet"
             >

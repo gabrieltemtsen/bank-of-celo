@@ -306,6 +306,28 @@ html.celo-mode [role="switch"] > div {
 /* Hide decorative overlays in Celo mode */
 html.celo-mode [data-celo-hide="overlay"] { display: none !important; }
 
+/* Header refinements for Celo mode */
+html.celo-mode .celo-title {
+  font-family: "GT Alpina", "Times New Roman", Times, serif;
+  font-weight: 250;
+  letter-spacing: -0.01em;
+  color: var(--celo-black);
+}
+html.celo-mode .address-chip {
+  background: var(--celo-lt-tan);
+  color: var(--celo-black);
+  border: 2px solid var(--celo-black);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-weight: 750;
+  font-size: 12px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+html.celo-mode .address-chip:hover {
+  background: var(--celo-black);
+  color: var(--celo-yellow);
+}
+
 * {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
@@ -326,4 +348,29 @@ html.celo-mode [data-celo-hide="overlay"] { display: none !important; }
   html.celo-mode :root {
     --radius: 0rem;
   }
+}
+
+/* Mobile safety + responsiveness helpers */
+html, body { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+
+html.celo-mode body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* prevent accidental horizontal scrolls */
+}
+
+html.celo-mode img,
+html.celo-mode video,
+html.celo-mode canvas,
+html.celo-mode svg {
+  max-width: 100%;
+  height: auto;
+}
+
+html.celo-mode .panel,
+html.celo-mode .card,
+html.celo-mode .block {
+  width: 100%;
+  overflow-wrap: anywhere; /* break long strings */
 }
