@@ -14,9 +14,7 @@ const HowToEarnSheet: React.FC<HowToEarnSheetProps> = ({ isOpen, onClose }) => {
   const isDegen = mode === "degen";
 
   // Dynamic color classes based on mode
-  const containerClasses = isDegen
-    ? "bg-purple-50 dark:bg-purple-900/20"
-    : "bg-emerald-50 dark:bg-emerald-900/20";
+  const containerClasses = isDegen ? "bg-purple-50 dark:bg-purple-900/20" : "";
 
   const iconClasses = isDegen
     ? "text-purple-600 dark:text-purple-400"
@@ -27,7 +25,7 @@ const HowToEarnSheet: React.FC<HowToEarnSheetProps> = ({ isOpen, onClose }) => {
      isOpen={isOpen} onClose={onClose}
       title="How to Earn"
     >
-      <div className={`p-6 space-y-4 ${containerClasses}`}>
+      <div className={`p-4 sm:p-6 space-y-3 sm:space-y-4 ${containerClasses}`}>
         <EarnItem
           icon={<Edit3 className={`w-6 h-6 ${iconClasses}`} />}
           title="Cast and Engage"

@@ -21,7 +21,7 @@ const OGearningSheet: React.FC<OGearningSheetProps> = ({
   // Dynamic color classes based on mode
   const gradientClasses = isDegen
     ? "from-gray-900 via-gray-900 to-purple-900"
-    : "from-gray-900 via-gray-900 to-emerald-900";
+    : "";
 
   const iconGradientClasses = isDegen
     ? "from-purple-400 to-purple-600"
@@ -46,27 +46,27 @@ const OGearningSheet: React.FC<OGearningSheetProps> = ({
       title="O.G Earning"
       className="max-h-screen"
     >
-      <div className={`bg-gradient-to-br ${gradientClasses} p-6 rounded-t-3xl`}>
+      <div className={`${isDegen ? `bg-gradient-to-br ${gradientClasses} rounded-t-3xl` : 'panel'} p-4 sm:p-6`}>
         <div className="text-center max-w-md mx-auto">
           <div className="mb-6">
-            <div className={`w-16 h-16 bg-gradient-to-br ${iconGradientClasses} rounded-full mx-auto mb-4 flex items-center justify-center`}>
-              <Star className="w-8 h-8 text-white" />
+            <div className={isDegen ? `w-16 h-16 bg-gradient-to-br ${iconGradientClasses} rounded-full mx-auto mb-4 flex items-center justify-center` : `w-12 h-12 mx-auto mb-3 flex items-center justify-center text-black`}>
+              <Star className={isDegen ? "w-8 h-8 text-white" : "w-6 h-6"} />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">
+            <h3 className={isDegen ? "text-xl font-bold text-white mb-2" : "text-base sm:text-lg font-[750] uppercase text-black mb-2"}>
               Unlock Exceptional Earning
             </h3>
-            <p className="text-gray-300 text-sm leading-relaxed">
+            <p className={isDegen ? "text-gray-300 text-sm leading-relaxed" : "text-black text-xs sm:text-sm leading-relaxed"}>
               Verified O.G users receive up to 2x multiplier on their weekly
               scores and exclusive access to premium reward tiers.
             </p>
           </div>
         </div>
 
-        <div className={`${benefitsBgClasses} rounded-xl p-4 ${benefitsBorderClasses} border mb-6`}>
-          <h4 className={`${accentTextClasses} font-medium text-sm mb-3`}>
+        <div className={isDegen ? `${benefitsBgClasses} rounded-xl p-4 ${benefitsBorderClasses} border mb-6` : `panel p-3 mb-4`}>
+          <h4 className={isDegen ? `${accentTextClasses} font-medium text-sm mb-3` : `text-black font-[750] uppercase text-xs mb-2`}>
             O.G Benefits:
           </h4>
-          <ul className="text-gray-300 text-xs space-y-2">
+          <ul className={isDegen ? "text-gray-300 text-xs space-y-2" : "text-black text-xs space-y-2"}>
             <li>• 2x score multiplier</li>
             <li>• Exclusive premium tiers</li>
             <li>• Priority reward distribution</li>

@@ -51,7 +51,7 @@ export default function BottomNavigation({
         <button
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
-          className={`relative flex flex-col items-center p-2 rounded-xl transition-all ${
+          className={`relative flex-1 min-w-0 flex flex-col items-center p-2 rounded-xl transition-all ${
             activeTab === tab.id
               ? activeButtonClasses
               : inactiveButtonClasses

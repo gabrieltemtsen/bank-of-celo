@@ -108,7 +108,7 @@ export default function Rewards(): JSX.Element {
       id: "leaderboard",
       title: "Leaderboard",
       value: "",
-      icon: <Users className="w-4 h-4 text-blue-600" />,
+      icon: <Users className={cn(isDegen ? "w-4 h-4" : "w-3 h-3", "text-blue-600")} />,
       bgColor: "bg-gray-100/80",
       iconColor: "blue",
     },
@@ -116,7 +116,7 @@ export default function Rewards(): JSX.Element {
       id: "og-earning",
       title: "O.G Earning",
       value: "",
-      icon: <Shield className="w-4 h-4 text-yellow-600" />,
+      icon: <Shield className={cn(isDegen ? "w-4 h-4" : "w-3 h-3", "text-yellow-600")} />,
       bgColor: "bg-gray-100/80",
       iconColor: "gold",
     },
@@ -124,7 +124,7 @@ export default function Rewards(): JSX.Element {
       id: "rewards",
       title: "Reward Tiers",
       value: "",
-      icon: <Trophy className="w-4 h-4 text-purple-600" />,
+      icon: <Trophy className={cn(isDegen ? "w-4 h-4" : "w-3 h-3", "text-purple-600")} />,
       bgColor: "bg-gray-100/80",
       iconColor: "purple",
     },
@@ -132,7 +132,7 @@ export default function Rewards(): JSX.Element {
       id: "earn",
       title: "How to Earn",
       value: "",
-      icon: <Target className="w-4 h-4 text-emerald-600" />,
+      icon: <Target className={cn(isDegen ? "w-4 h-4" : "w-3 h-3", "text-emerald-600")} />,
       bgColor: "bg-gray-100/80",
       iconColor: "emerald",
     },
@@ -140,7 +140,7 @@ export default function Rewards(): JSX.Element {
       id: "scored",
       title: "Scored last week",
       value: "500",
-      icon: <Calendar className="w-4 h-4" />,
+      icon: <Calendar className={cn(isDegen ? "w-4 h-4" : "w-3 h-3")} />,
       bgColor: "bg-gray-100/80",
     },
   ];
@@ -179,7 +179,7 @@ export default function Rewards(): JSX.Element {
           <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-purple-500/10 to-transparent" />
         </>
       )}
-      <div className={cn("relative z-1 pb-28", isDegen ? "p-6" : "p-4 sm:p-6") }>
+      <div className={cn("relative z-1 pb-20 sm:pb-24", isDegen ? "p-6" : "p-3 sm:p-5") }>
         {/* Score Card */}
         <ScoreCard />
 
@@ -189,7 +189,7 @@ export default function Rewards(): JSX.Element {
             disabled={!isReady}
             onClick={() => openSheet("claims")}
             className={cn(
-              "flex-1 p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all",
+              "flex-1 px-2 py-2 sm:p-3 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-[11px] sm:text-sm",
               isDegen
                 ? "bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
                 : "boc-btn"
@@ -204,7 +204,7 @@ export default function Rewards(): JSX.Element {
           <button
             onClick={() => openSheet("daily-checkin")}
             className={cn(
-              "flex-1 p-3 sm:p-4 flex items-center justify-center gap-2 sm:gap-3 transition-all",
+              "flex-1 px-2 py-2 sm:p-3 flex items-center justify-center gap-2 sm:gap-3 transition-all text-[11px] sm:text-sm",
               isDegen
                 ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
                 : "boc-btn secondary"
