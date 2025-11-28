@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { Home, Send, Trophy, Briefcase, TrendingUp } from "lucide-react";
 import { useChainMode } from "~/app/chain-mode/context";
+import { cn } from "~/lib/utils";
 
 interface BottomNavigationProps {
   activeTab: string;
@@ -23,51 +24,61 @@ export default function BottomNavigation({
   const { mode } = useChainMode();
   const isDegen = mode === "degen";
 
-  // Dynamic color classes based on mode
-  const activeButtonClasses = isDegen
-    ? "text-white bg-gradient-to-r from-purple-500 to-purple-600 shadow-md"
-    : "celo-block-yellow border-2 border-black text-black font-[750] uppercase";
-
-  const inactiveButtonClasses = isDegen
-    ? "text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-    : "text-black hover:bg-black hover:text-[color:var(--celo-yellow)] border-2 border-transparent";
-
-  const indicatorClasses = isDegen
-    ? "bg-purple-300"
-    : "bg-black";
-
   return (
     <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.5 }}
-      className={
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 flex justify-around py-3 px-4 pb-safe transition-all duration-300",
         mode === "celo"
-          ? "fixed bottom-0 left-0 right-0 z-50 bg-[color:var(--celo-lt-tan)] border-t-2 border-[#CCCCCC] flex justify-around py-2 px-4"
-          : "fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg shadow-t-lg border-t border-gray-200 dark:border-gray-700 flex justify-around py-2 px-4"
-      }
+          ? "bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+          : "bg-[#0B0B15]/90 backdrop-blur-lg border-t border-white/10"
+      )}
     >
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => onTabChange(tab.id)}
-          className={`relative flex-1 min-w-0 flex flex-col items-center p-2 rounded-xl transition-all ${
-            activeTab === tab.id
-              ? activeButtonClasses
-              : inactiveButtonClasses
-          }`}
-          aria-label={tab.label}
-        >
-          {tab.icon}
-          <span className="text-xs mt-1 font-[750] uppercase tracking-tight">{tab.label}</span>
-          {activeTab === tab.id && (
-            <motion.div
-              layoutId="activeTabIndicator"
-              className={`absolute bottom-0 w-1/2 h-1 ${indicatorClasses}`}
-            />
-          )}
-        </button>
-      ))}
+      {tabs.map((tab) => {
+        const isActive = activeTab === tab.id;
+
+        return (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={cn(
+              "relative flex-1 min-w-0 flex flex-col items-center p-2 rounded-xl transition-all duration-200",
+              isActive && mode === "celo" && "text-gray-900",
+              !isActive && mode === "celo" && "text-gray-500 hover:text-gray-900 hover:bg-gray-50",
+              isActive && isDegen && "text-white",
+              !isActive && isDegen && "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+            )}
+            aria-label={tab.label}
+          >
+            <div className={cn(
+              "relative p-2 rounded-xl transition-all duration-300",
+              isActive && mode === "celo" && "bg-[#FCFF52] text-black transform -translate-y-2 shadow-sm border border-gray-200",
+              isActive && isDegen && "bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)] transform -translate-y-2"
+            )}>
+              {tab.icon}
+            </div>
+
+            <span className={cn(
+              "text-[10px] mt-1 font-semibold transition-all duration-200 uppercase tracking-wide",
+              isActive ? "opacity-100" : "opacity-0 h-0 overflow-hidden"
+            )}>
+              {tab.label}
+            </span>
+
+            {isActive && (
+              <motion.div
+                layoutId="activeTabIndicator"
+                className={cn(
+                  "absolute bottom-1 w-1 h-1 rounded-full",
+                  mode === "celo" ? "bg-black" : "bg-fuchsia-400"
+                )}
+              />
+            )}
+          </button>
+        );
+      })}
     </motion.nav>
   );
 }

@@ -8,7 +8,6 @@ import { base, celo } from "viem/chains";
 
 export default function ChainModeToggle() {
   const { mode, toggleMode } = useChainMode();
-
   const { switchChain } = useSwitchChain();
   const chainId = useChainId();
 
@@ -26,70 +25,62 @@ export default function ChainModeToggle() {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Toggle Switch */}
+    <div className="flex items-center gap-3">
       <button
         onClick={handleToggle}
         className={cn(
-          "relative inline-flex items-center rounded-full transition-all duration-300 ease-in-out shadow-lg border-2",
-          mode === "celo" ? "h-7 w-14" : "h-8 w-16",
+          "relative inline-flex h-9 w-20 items-center rounded-full transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
           mode === "celo"
-            ? "bg-emerald-100 dark:bg-emerald-900 border-emerald-300 dark:border-emerald-700"
-            : "bg-purple-100 dark:bg-purple-900 border-purple-300 dark:border-purple-700"
+            ? "bg-gray-200 hover:bg-gray-300 border border-gray-300"
+            : "bg-purple-900/50 border border-purple-500/50 shadow-[0_0_15px_rgba(168,85,247,0.3)]"
         )}
         role="switch"
         aria-checked={mode === "degen"}
         aria-label={`Switch to ${mode === "celo" ? "Degen" : "Celo"} mode`}
       >
-        {/* Animated Toggle Ball */}
+        <span className="sr-only">Toggle Chain Mode</span>
+
+        {/* Track Labels */}
+        <div className="absolute inset-0 flex items-center justify-between px-3 pointer-events-none">
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-wider transition-all duration-300",
+            mode === "celo" ? "opacity-100 text-gray-500" : "opacity-40 text-purple-300"
+          )}>
+            Celo
+          </span>
+          <span className={cn(
+            "text-[10px] font-bold uppercase tracking-wider transition-all duration-300",
+            mode === "degen" ? "opacity-100 text-white" : "opacity-40 text-gray-500"
+          )}>
+            Degen
+          </span>
+        </div>
+
+        {/* Thumb */}
         <motion.div
           className={cn(
-            "inline-block transform rounded-full shadow-lg ring-2 ring-white transition-all duration-300 ease-in-out",
-            mode === "celo" ? "h-5 w-5" : "h-6 w-6",
+            "h-7 w-7 rounded-full shadow-sm pointer-events-none z-10 flex items-center justify-center",
             mode === "celo"
-              ? "bg-gradient-to-r from-emerald-500 to-emerald-600"
-              : "bg-gradient-to-r from-purple-500 to-purple-600"
+              ? "bg-white border border-gray-200"
+              : "bg-gradient-to-r from-purple-500 to-fuchsia-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"
           )}
           animate={{
-            x: mode === "celo" ? 2 : 34, // Move right for degen, left for celo (approx)
+            x: mode === "celo" ? 4 : 48,
           }}
           transition={{
             type: "spring",
-            stiffness: 500,
-            damping: 30,
+            stiffness: 400,
+            damping: 25,
           }}
-        />
-        
-        {/* Background Icons/Labels */}
-        <div className="absolute inset-0 flex items-center justify-between px-2 pointer-events-none">
-          <span className={cn(
-            "text-[10px] sm:text-xs font-bold transition-all duration-300",
-            mode === "celo" 
-              ? "text-white dark:text-white-40 opacity-100" 
-              : "text-emerald-400 dark:text-emerald-600 opacity-40"
-          )}>
-            C
-          </span>
-          <span className={cn(
-            "text-[10px] sm:text-xs font-bold transition-all duration-300",
-            mode === "degen" 
-              ? "text-white dark:text-white-40 opacity-100" 
-              : "text-purple-400 dark:text-purple-600 opacity-40"
-          )}>
-            D
-          </span>
-        </div>
+        >
+          {/* Optional Icon inside thumb */}
+          <div className={cn(
+            "w-2 h-2 rounded-full",
+            mode === "celo" ? "bg-yellow-400" : "bg-white"
+          )} />
+        </motion.div>
       </button>
 
-      {/* Mode Label */}
-      <span className={cn(
-        "text-xs sm:text-sm font-semibold transition-all duration-300 capitalize",
-        mode === "celo"
-          ? "text-emerald-700 dark:text-emerald-300"
-          : "text-purple-700 dark:text-purple-300"
-      )}>
-        {mode}
-      </span>
     </div>
   );
 }

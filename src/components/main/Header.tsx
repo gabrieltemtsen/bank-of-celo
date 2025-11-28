@@ -36,51 +36,53 @@ export default function Header({
 }: HeaderProps) {
   const { mode } = useChainMode();
   const targetChain = mode === "degen" ? base : celo;
-  
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className={cn(
-        "sticky top-0 z-50 border-b transition-all duration-300",
-        showSwitchNetworkBanner ? "pt-6" : "py-2 px-3 md:px-4",
+        "sticky top-0 z-50 transition-all duration-300",
+        showSwitchNetworkBanner ? "pt-6" : "py-4 px-6",
         mode === "celo"
-          ? "bg-[color:var(--celo-lt-tan)] border-[#CCCCCC]"
-          : "backdrop-blur-xl bg-purple-50/95 dark:bg-purple-950/95 border-purple-200/50 dark:border-purple-800/50"
+          ? "bg-white border-b border-gray-200 shadow-sm"
+          : "backdrop-blur-xl bg-[#0B0B15]/80 border-b border-white/5"
       )}
     >
-      <div className="flex items-center justify-between mx-0 md:mx-20">
-        {/* Title with responsive sizing */}
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
+        {/* Title */}
         {mode === "celo" ? (
-          <div className="truncate max-w-[60%] md:max-w-none">
-            <span className="celo-title text-xl sm:text-2xl leading-none">
-              Bank of <em>Celo</em>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[#FCFF52] flex items-center justify-center border border-gray-200">
+              <span className="font-bold text-lg text-black">B</span>
+            </div>
+            <span className="text-xl font-semibold tracking-tight text-gray-900">
+              Bank of Celo
             </span>
           </div>
         ) : (
-          <h1 className={cn(
-            "text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r transition-all duration-300 truncate max-w-[40%] md:max-w-none",
-            "from-purple-600 to-purple-800 dark:from-purple-400 dark:to-purple-600"
-          )}>
+          <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-fuchsia-400 truncate">
             {title}
           </h1>
         )}
-        
-        <div className="flex items-center gap-1.5 md:gap-3">
+
+        <div className="flex items-center gap-4">
           {isConnected ? (
             <>
-              {/* Wallet Address Button - Compact on mobile */}
+              {/* Wallet Address Button */}
               <Button
                 onClick={onDisconnect}
                 className={cn(
-                  "text-[11px] font-medium flex items-center rounded-md transition-all duration-200 border",
-                  "px-2.5 py-1.5 md:px-4 md:py-2.5",
-                  mode === "celo" ? "address-chip" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 text-white"
+                  "text-sm font-medium flex items-center transition-all duration-200",
+                  "px-4 py-2 rounded-lg",
+                  mode === "celo"
+                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200"
+                    : "bg-purple-900/30 border border-purple-500/30 text-purple-100 hover:bg-purple-800/50"
                 )}
                 aria-label="Disconnect wallet"
               >
-                <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" />
+                <Wallet className="w-4 h-4 mr-2 opacity-70" />
                 <span className="hidden sm:inline">
                   {truncateAddress(address!)}
                 </span>
@@ -88,96 +90,85 @@ export default function Header({
                   {truncateAddress(address!, 3, 3)}
                 </span>
               </Button>
-              
-              {/* Sign Out Button - Icon only on mobile */}
+
+              {/* Sign Out Button */}
               {status === "authenticated" && (
                 <Button
                   onClick={onSignOut}
                   className={cn(
-                    "text-[11px] font-medium rounded-md transition-all duration-200 border p-1.5 md:p-2.5",
-                    mode === "celo" ? "address-chip" : "bg-red-500 hover:bg-red-600 text-white border-red-400"
+                    "text-sm font-medium rounded-lg transition-all duration-200 p-2",
+                    mode === "celo"
+                      ? "bg-white border border-gray-200 text-red-600 hover:bg-red-50"
+                      : "bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30"
                   )}
                   aria-label="Sign out from Farcaster"
                 >
-                  <LogOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <LogOut className="w-4 h-4" />
                 </Button>
               )}
             </>
           ) : (
-            /* Connect Wallet Button - Compact on mobile */
+            /* Connect Wallet Button */
             <Button
               onClick={onConnect}
               className={cn(
-                "text-[11px] font-medium flex items-center rounded-md transition-all duration-200 border",
-                "px-3 py-1.5 md:px-5 md:py-2.5",
-                mode === "celo" ? "address-chip" : "bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 border-purple-400 text-white"
+                "text-sm font-semibold flex items-center transition-all duration-200",
+                "px-5 py-2.5 rounded-lg shadow-sm",
+                mode === "celo"
+                  ? "bg-[#FCFF52] text-black border border-gray-200 hover:bg-[#F0F340] hover:shadow-md"
+                  : "bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white hover:shadow-[0_0_15px_rgba(168,85,247,0.5)]"
               )}
               aria-label="Connect wallet"
             >
-              <Wallet className="w-3.5 h-3.5 md:w-4 md:h-4 mr-1.5 md:mr-2" /> 
-              <span className="hidden sm:inline">Connect Wallet</span>
-              <span className="sm:hidden">Connect</span>
+              <Wallet className="w-4 h-4 mr-2" />
+              <span>Connect Wallet</span>
             </Button>
           )}
-          
-          {/* Chain Mode Toggle - Compact wrapper */}
-          <div className="ml-0.5 md:ml-2">
+
+          {/* Chain Mode Toggle */}
+          <div className="pl-4 border-l border-gray-200 dark:border-white/10 ml-2">
             <ChainModeToggle />
           </div>
         </div>
       </div>
 
-      {/* Network Warning Banner - Mobile optimized */}
+      {/* Network Warning Banner */}
       {isConnected && !isCorrectChain && (
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          style={{ zIndex: 10000 }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
           className={cn(
-            "mt-3 md:mt-5 border-l-4 p-3 md:p-4 text-center flex flex-col sm:flex-row items-center justify-center gap-2 md:gap-3 rounded-r-lg shadow-lg",
+            "mt-4 p-3 text-center flex flex-col sm:flex-row items-center justify-center gap-3 rounded-lg text-sm font-medium",
             mode === "celo"
-              ? "bg-amber-50 dark:bg-amber-900/50 border-amber-500 dark:border-amber-400"
-              : "bg-orange-50 dark:bg-orange-900/50 border-orange-500 dark:border-orange-400"
+              ? "bg-red-50 text-red-700 border border-red-200"
+              : "bg-red-900/20 text-red-200 border border-red-500/30"
           )}
         >
           <div className="flex items-center gap-2">
-            <AlertCircle className={cn(
-              "w-4 h-4 md:w-5 md:h-5",
-              mode === "celo"
-                ? "text-amber-600 dark:text-amber-300"
-                : "text-orange-600 dark:text-orange-300"
-            )} />
-            <span className={cn(
-              "font-medium text-sm md:text-base",
-              mode === "celo"
-                ? "text-amber-800 dark:text-amber-100"
-                : "text-orange-800 dark:text-orange-100"
-            )}>
-              Wrong network
-            </span>
+            <AlertCircle className="w-4 h-4" />
+            <span>Wrong network. Please switch to {targetChain.name}.</span>
           </div>
-          
+
           <Button
             onClick={onSwitchChain}
             disabled={isSwitchChainPending}
             className={cn(
-              "text-xs md:text-sm py-1.5 md:py-2 px-3 md:px-4 rounded-full flex items-center gap-2 text-white font-medium shadow-md transition-all duration-300 transform hover:scale-105",
+              "text-xs py-1.5 px-3 rounded-md flex items-center gap-2 font-semibold transition-all",
               mode === "celo"
-                ? "bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400"
-                : "bg-orange-600 hover:bg-orange-700 disabled:bg-orange-400"
+                ? "bg-white text-red-700 border border-red-200 hover:bg-red-50"
+                : "bg-red-500/20 text-red-100 hover:bg-red-500/30"
             )}
           >
             {isSwitchChainPending ? (
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                className="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white border-t-transparent rounded-full"
+                className="w-3 h-3 border-2 border-current border-t-transparent rounded-full"
               />
             ) : (
-              <ArrowLeftRight className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <ArrowLeftRight className="w-3 h-3" />
             )}
-            <span className="hidden sm:inline">Switch to {targetChain.name}</span>
-            <span className="sm:hidden">Switch</span>
+            <span>Switch Network</span>
           </Button>
         </motion.div>
       )}
