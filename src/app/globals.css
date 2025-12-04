@@ -3,11 +3,6 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
-  /* Gray 900 */
-  --primary: #fbcc5c;
-  --primary-hover: #e0ae32;
   --radius: 0.5rem;
 }
 
@@ -50,29 +45,41 @@
 /* Degen Mode: Pro Crypto         */
 /* ------------------------------ */
 html.degen-mode {
-  --background: #0B0B15;
+  /* Semantic Tokens */
+  --bg-primary: #0B0B15;
   /* Deep Midnight */
-  --foreground: #FFFFFF;
+  --bg-secondary: #181825;
+  /* Card Background */
+  --bg-tertiary: rgba(255, 255, 255, 0.05);
+  /* Inputs/Hover */
 
-  --primary: #D946EF;
-  /* Fuchsia 500 */
-  --primary-hover: #C026D3;
-  /* Fuchsia 600 */
-
-  --degen-bg-card: #181825;
-  /* Slightly lighter midnight */
-  --degen-border: #2E2E3A;
-  /* Subtle border */
-  --degen-text-secondary: #A1A1AA;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A1A1AA;
   /* Zinc 400 */
+  --text-tertiary: #52525B;
+  /* Zinc 600 */
+
+  --border-primary: #2E2E3A;
+  --border-secondary: rgba(255, 255, 255, 0.1);
+
+  --accent-primary: #D946EF;
+  /* Fuchsia 500 */
+  --accent-hover: #C026D3;
+  --accent-text: #FFFFFF;
 
   --radius: 0.75rem;
+
+  /* Legacy/Tailwind mappings */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-hover: var(--accent-hover);
 
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html.degen-mode body {
-  background-color: var(--background);
+  background-color: var(--bg-primary);
   background-image:
     radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15), transparent 40%),
     radial-gradient(circle at 80% 20%, rgba(217, 70, 239, 0.1), transparent 30%);
@@ -83,39 +90,46 @@ html.degen-mode body {
 /* Celo Mode: Neo-Bank Professional */
 /* ------------------------------ */
 html.celo-mode {
-  --background: #FFFFFF;
-  /* Pure White */
-  --foreground: #111827;
-  /* Gray 900 - High Contrast */
+  /* Semantic Tokens */
+  --bg-primary: #F9FAFB;
+  /* Gray 50 - Page BG */
+  --bg-secondary: #FFFFFF;
+  /* Card Background */
+  --bg-tertiary: #F3F4F6;
+  /* Gray 100 - Inputs/Hover */
 
-  --celo-bg-secondary: #F9FAFB;
-  /* Gray 50 */
-  --celo-border: #E5E7EB;
-  /* Gray 200 */
-
-  --celo-primary: #FCFF52;
-  /* Celo Yellow */
-  --celo-primary-hover: #F0F340;
-
-  --celo-text-secondary: #4B5563;
+  --text-primary: #111827;
+  /* Gray 900 */
+  --text-secondary: #4B5563;
   /* Gray 600 */
-  --celo-text-tertiary: #9CA3AF;
+  --text-tertiary: #9CA3AF;
   /* Gray 400 */
 
-  --primary: var(--celo-primary);
-  --primary-hover: var(--celo-primary-hover);
+  --border-primary: #E5E7EB;
+  /* Gray 200 */
+  --border-secondary: #D1D5DB;
+  /* Gray 300 */
+
+  --accent-primary: #FCFF52;
+  /* Celo Yellow */
+  --accent-hover: #F0F340;
+  --accent-text: #000000;
 
   --radius: 0.5rem;
-  /* Standard professional radius */
+
+  /* Legacy/Tailwind mappings */
+  --background: var(--bg-primary);
+  --foreground: var(--text-primary);
+  --primary: var(--accent-primary);
+  --primary-hover: var(--accent-hover);
 
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 html.celo-mode body {
-  background-color: var(--celo-bg-secondary);
-  /* Slight contrast for page bg */
-  color: var(--foreground);
+  background-color: var(--bg-primary);
   background-image: none;
+  color: var(--text-primary);
 }
 
 /* Typography */
@@ -128,7 +142,7 @@ html.celo-mode h1,
 html.celo-mode h2,
 html.celo-mode h3 {
   font-family: "GT Alpina", serif;
-  color: var(--foreground);
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
@@ -140,25 +154,28 @@ html.celo-mode h3 {
 .boc-btn {
   font-weight: 600;
   transition: all 0.2s ease;
+  border-radius: var(--radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 html.celo-mode .boc-btn {
-  background-color: var(--celo-primary);
-  color: #000000;
-  /* Force black text on yellow for max contrast */
-  border: 1px solid #E5E7EB;
+  background-color: var(--accent-primary);
+  color: var(--accent-text);
+  border: 1px solid var(--border-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 html.celo-mode .boc-btn:hover {
-  background-color: var(--celo-primary-hover);
+  background-color: var(--accent-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 html.degen-mode .boc-btn {
   background: linear-gradient(135deg, #D946EF 0%, #8B5CF6 100%);
-  color: #FFFFFF;
+  color: var(--accent-text);
   border: none;
   box-shadow: 0 0 15px rgba(217, 70, 239, 0.3);
 }
@@ -168,23 +185,36 @@ html.degen-mode .boc-btn:hover {
   transform: scale(1.02);
 }
 
+/* Secondary Button Variant */
+.boc-btn.secondary {
+  background: transparent;
+}
+
+html.celo-mode .boc-btn.secondary {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+html.celo-mode .boc-btn.secondary:hover {
+  background-color: var(--bg-tertiary);
+}
+
 /* Cards / Panels */
 .card,
 .panel {
   border-radius: var(--radius);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
 }
 
 html.celo-mode .card,
 html.celo-mode .panel {
-  background-color: #FFFFFF;
-  border: 1px solid var(--celo-border);
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
 }
 
 html.degen-mode .card,
 html.degen-mode .panel {
-  background-color: var(--degen-bg-card);
-  border: 1px solid var(--degen-border);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -194,38 +224,25 @@ textarea,
 select {
   outline: none;
   transition: all 0.2s;
-}
-
-html.celo-mode input,
-html.celo-mode textarea,
-html.celo-mode select {
-  background-color: #FFFFFF;
-  border: 1px solid var(--celo-border);
-  color: var(--foreground);
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
   border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
 }
 
 html.celo-mode input:focus {
-  border-color: #000000;
-  ring: 2px solid rgba(0, 0, 0, 0.05);
-}
-
-html.celo-mode input::placeholder {
-  color: var(--celo-text-tertiary);
-}
-
-html.degen-mode input,
-html.degen-mode textarea,
-html.degen-mode select {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--degen-border);
-  color: #FFFFFF;
-  border-radius: var(--radius);
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
 }
 
 html.degen-mode input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px var(--accent-primary);
+}
+
+input::placeholder {
+  color: var(--text-tertiary);
 }
 
 /* Global Reset */

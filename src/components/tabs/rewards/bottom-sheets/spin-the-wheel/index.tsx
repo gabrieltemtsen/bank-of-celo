@@ -73,31 +73,10 @@ export default function SpinTheWheelSheet({ isOpen, onClose }: SpinTheWheelSheet
         }
 
         // Calculate rotation
-        // 5 segments = 72 degrees each
-        // We want to land on the selected segment
-        // The wheel starts with segment 0 at the top (if we rotate it correctly)
-        // Let's assume standard position: 0 degrees is right (3 o'clock).
-        // We'll rotate the wheel container.
-
         const segmentAngle = 360 / SEGMENTS.length;
         const segmentIndex = SEGMENTS.indexOf(selectedSegment);
-
-        // Add extra rotations for effect (e.g., 5 full spins)
         const extraSpins = 5 * 360;
-
-        // Calculate target angle to land the segment at the top (270 degrees or -90)
-        // If segment is at index i, its center is at i * segmentAngle
-        // We want (currentRotation + targetRotation) % 360 to align the segment to the pointer
-        // Let's simplify: just rotate to a specific value.
-
-        // Randomize slightly within the segment
         const randomOffset = Math.random() * (segmentAngle - 10) - (segmentAngle / 2 - 5);
-
-        // The pointer is usually at the top (270deg).
-        // If we rotate the wheel CLOCKWISE, the segments move past the pointer.
-        // Target rotation = extraSpins + (360 - (segmentIndex * segmentAngle)) + offset
-        // We add a random offset to make it look natural.
-
         const targetRotation = extraSpins + (360 - (segmentIndex * segmentAngle)) + randomOffset;
 
         await controls.start({
@@ -145,43 +124,22 @@ export default function SpinTheWheelSheet({ isOpen, onClose }: SpinTheWheelSheet
                     {/* Pointer */}
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
                         <div className={cn(
-                            "w-8 h-8 rotate-45 transform border-4",
-                            isDegen ? "bg-fuchsia-500 border-purple-900" : "bg-yellow-400 border-white shadow-md"
+                            "w-8 h-8 rotate-45 transform border-4 border-white shadow-md",
+                            "bg-[var(--accent-primary)]"
                         )} />
                     </div>
 
                     {/* Wheel Container */}
                     <motion.div
-                        className="relative rounded-full overflow-hidden shadow-xl border-4 border-gray-200"
+                        className="relative rounded-full overflow-hidden shadow-xl border-4"
                         style={{
                             width: WHEEL_SIZE,
                             height: WHEEL_SIZE,
-                            borderColor: isDegen ? "#4c1d95" : "#e5e7eb"
+                            borderColor: "var(--border-primary)"
                         }}
                         animate={controls}
                     >
-                        {SEGMENTS.map((segment, index) => {
-                            const rotation = index * (360 / SEGMENTS.length);
-                            return (
-                                <div
-                                    key={segment.id}
-                                    className="absolute top-0 left-1/2 w-full h-full origin-bottom-left"
-                                    style={{
-                                        transform: `rotate(${rotation}deg) skewY(-${90 - 360 / SEGMENTS.length}deg)`,
-                                        transformOrigin: "50% 50%",
-                                        clipPath: "polygon(50% 50%, 50% 0%, 100% 0%)", // Approximate slice
-                                        // Using a simpler approach: Conic gradient is easier for the background, 
-                                        // but for labels we need rotation.
-                                        // Let's try a different CSS approach for slices or just use a conic gradient background and rotate labels.
-                                    }}
-                                >
-                                    {/* This CSS slice method is tricky. Let's use a conic gradient for the wheel background 
-                      and just place labels absolutely. */}
-                                </div>
-                            );
-                        })}
-
-                        {/* Alternative: Conic Gradient Background */}
+                        {/* Conic Gradient Background */}
                         <div
                             className="absolute inset-0 w-full h-full rounded-full"
                             style={{
@@ -211,7 +169,7 @@ export default function SpinTheWheelSheet({ isOpen, onClose }: SpinTheWheelSheet
 
                         {/* Center Cap */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg z-10 flex items-center justify-center">
-                            <div className={cn("w-8 h-8 rounded-full", isDegen ? "bg-purple-600" : "bg-yellow-400")} />
+                            <div className="w-8 h-8 rounded-full bg-[var(--accent-primary)]" />
                         </div>
                     </motion.div>
                 </div>
@@ -224,13 +182,13 @@ export default function SpinTheWheelSheet({ isOpen, onClose }: SpinTheWheelSheet
                             animate={{ scale: 1, opacity: 1 }}
                             className="flex flex-col items-center gap-2"
                         >
-                            <Trophy className={cn("w-8 h-8", isDegen ? "text-fuchsia-400" : "text-yellow-500")} />
-                            <h3 className="text-xl font-bold">
+                            <Trophy className="w-8 h-8 text-[var(--accent-primary)]" />
+                            <h3 className="text-xl font-bold text-[var(--text-primary)]">
                                 {reward.value > 0 ? `You won ${reward.label}!` : "Try Again Tomorrow!"}
                             </h3>
                         </motion.div>
                     ) : (
-                        <p className="text-gray-500">
+                        <p className="text-[var(--text-secondary)]">
                             {canSpin ? "Spin to win daily rewards!" : `Next spin in: ${timeUntilNextSpin()}`}
                         </p>
                     )}
@@ -241,11 +199,8 @@ export default function SpinTheWheelSheet({ isOpen, onClose }: SpinTheWheelSheet
                     onClick={spinWheel}
                     disabled={!canSpin || isSpinning}
                     className={cn(
-                        "w-full py-4 text-lg font-bold rounded-xl transition-all transform active:scale-95",
-                        isDegen
-                            ? "bg-gradient-to-r from-fuchsia-600 to-purple-600 hover:from-fuchsia-500 hover:to-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.5)]"
-                            : "bg-yellow-400 hover:bg-yellow-300 text-black shadow-md border-b-4 border-yellow-600 active:border-b-0 active:translate-y-1",
-                        (!canSpin || isSpinning) && "opacity-50 cursor-not-allowed shadow-none border-none"
+                        "boc-btn w-full py-4 text-lg font-bold rounded-xl",
+                        (!canSpin || isSpinning) && "opacity-50 cursor-not-allowed shadow-none"
                     )}
                 >
                     {isSpinning ? (

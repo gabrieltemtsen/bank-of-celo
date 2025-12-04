@@ -13,31 +13,24 @@ const HowToEarnSheet: React.FC<HowToEarnSheetProps> = ({ isOpen, onClose }) => {
   const { mode } = useChainMode();
   const isDegen = mode === "degen";
 
-  // Dynamic color classes based on mode
-  const containerClasses = isDegen ? "bg-purple-50 dark:bg-purple-900/20" : "";
-
-  const iconClasses = isDegen
-    ? "text-purple-600 dark:text-purple-400"
-    : "text-emerald-600 dark:text-emerald-400";
-
   return (
     <BottomSheet
-     isOpen={isOpen} onClose={onClose}
+      isOpen={isOpen} onClose={onClose}
       title="How to Earn"
     >
-      <div className={`p-4 sm:p-6 space-y-3 sm:space-y-4 ${containerClasses}`}>
+      <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
         <EarnItem
-          icon={<Edit3 className={`w-6 h-6 ${iconClasses}`} />}
+          icon={<Edit3 className="w-6 h-6" />}
           title="Cast and Engage"
           description="Your score is based on the engagement your casts receive, adjusted by the number of followers."
         />
         <EarnItem
-          icon={<Trophy className={`w-6 h-6 ${iconClasses}`} />}
+          icon={<Trophy className="w-6 h-6" />}
           title="Get Ranked → Top 2530"
           description="Each week, the top 2530 accounts with the highest scores receive USDC rewards."
         />
         <EarnItem
-          icon={<DollarSign className={`w-6 h-6 ${iconClasses}`} />}
+          icon={<DollarSign className="w-6 h-6" />}
           title="Receive USDC"
           description="Rewards are sent to your connected Ethereum address on Base."
         />
