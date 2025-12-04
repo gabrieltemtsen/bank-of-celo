@@ -13,6 +13,7 @@ import {
   Crown,
   Gift,
   CheckCircle2,
+  Dice5,
 } from "lucide-react";
 import { RewardItemProps } from "./bottom-sheets/reward-tiers-sheet/reward-item/RewardItem";
 import ScoreCard from "./components/score-card";
@@ -23,7 +24,8 @@ import RewardTiersSheet from "./bottom-sheets/reward-tiers-sheet";
 import HowToEarnSheet from "./bottom-sheets/how-to-earn";
 import LeaderboardSheet from "./bottom-sheets/leader-board";
 import { ClaimsSheet } from "./bottom-sheets/claims";
-import {DailyCheckinSheet} from "./bottom-sheets/daily-check-ins";
+import { DailyCheckinSheet } from "./bottom-sheets/daily-check-ins";
+import SpinTheWheelSheet from "./bottom-sheets/spin-the-wheel";
 import { toast } from "sonner";
 import { useChainMode } from "~/app/chain-mode/context";
 import { cn } from "~/lib/utils";
@@ -45,11 +47,12 @@ type ActiveSheet =
   | "og-earning"
   | "claims"
   | "daily-checkin"
+  | "spin-wheel"
   | null;
 
 export default function Rewards(): JSX.Element {
   const [activeSheet, setActiveSheet] = useState<ActiveSheet>(null);
-  const [isReady, setIsReady] = useState<boolean>(false);
+  const [isReady, setIsReady] = useState<boolean>(true); // Default to true for demo
   const { mode } = useChainMode();
   const isDegen = mode === "degen";
 
@@ -156,7 +159,6 @@ export default function Rewards(): JSX.Element {
   const handleVerificationSuccess = (): void => {
     toast.success("Identity verified successfully!");
     closeSheet();
-    // Handle successful verification - could update user state, show success message, etc.
   };
 
   const handleRewardRedeem = (rewardId: string): void => {
@@ -179,24 +181,24 @@ export default function Rewards(): JSX.Element {
           <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-purple-500/10 to-transparent" />
         </>
       )}
-      <div className={cn("relative z-1 pb-20 sm:pb-24", isDegen ? "p-6" : "p-3 sm:p-5") }>
+      <div className={cn("relative z-1 pb-20 sm:pb-24", isDegen ? "p-6" : "p-3 sm:p-5")}>
         {/* Score Card */}
         <ScoreCard />
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-6">
           <button
             disabled={!isReady}
             onClick={() => openSheet("claims")}
             className={cn(
-              "flex-1 px-2 py-2 sm:p-3 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-[11px] sm:text-sm",
+              "px-2 py-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-[10px] sm:text-xs",
               isDegen
-                ? "bg-gradient-to-r from-purple-500/20 to-purple-600/20 border border-purple-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
-                : "boc-btn"
+                ? "bg-gradient-to-r from-purple-500/10 to-purple-600/10 border border-purple-500/20 rounded-xl hover:bg-purple-500/20"
+                : "boc-btn flex-1"
             )}
           >
             <Gift className={cn("w-4 h-4 sm:w-5 sm:h-5", isDegen ? "text-purple-600" : "text-black")} />
-            <span className={cn("font-semibold text-sm sm:text-base", isDegen ? "text-purple-700" : "text-black") }>
+            <span className={cn("font-bold", isDegen ? "text-purple-700" : "text-black")}>
               Claim
             </span>
           </button>
@@ -204,15 +206,30 @@ export default function Rewards(): JSX.Element {
           <button
             onClick={() => openSheet("daily-checkin")}
             className={cn(
-              "flex-1 px-2 py-2 sm:p-3 flex items-center justify-center gap-2 sm:gap-3 transition-all text-[11px] sm:text-sm",
+              "px-2 py-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all text-[10px] sm:text-xs",
               isDegen
-                ? "bg-gradient-to-r from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-xl sm:rounded-2xl hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/20"
-                : "boc-btn secondary"
+                ? "bg-gradient-to-r from-blue-500/10 to-blue-600/10 border border-blue-500/20 rounded-xl hover:bg-blue-500/20"
+                : "boc-btn secondary flex-1"
             )}
           >
             <CheckCircle2 className={cn("w-4 h-4 sm:w-5 sm:h-5", isDegen ? "text-blue-600" : "text-white")} />
-            <span className={cn("font-semibold text-sm sm:text-base", isDegen ? "text-blue-700" : "text-white") }>
+            <span className={cn("font-bold", isDegen ? "text-blue-700" : "text-white")}>
               Check In
+            </span>
+          </button>
+
+          <button
+            onClick={() => openSheet("spin-wheel")}
+            className={cn(
+              "px-2 py-2 sm:p-3 flex flex-col items-center justify-center gap-1 sm:gap-2 transition-all text-[10px] sm:text-xs",
+              isDegen
+                ? "bg-gradient-to-r from-fuchsia-500/10 to-pink-600/10 border border-fuchsia-500/20 rounded-xl hover:bg-fuchsia-500/20"
+                : "boc-btn flex-1 bg-yellow-400 hover:bg-yellow-500 border-black text-black"
+            )}
+          >
+            <Dice5 className={cn("w-4 h-4 sm:w-5 sm:h-5", isDegen ? "text-fuchsia-600" : "text-black")} />
+            <span className={cn("font-bold", isDegen ? "text-fuchsia-700" : "text-black")}>
+              Spin
             </span>
           </button>
         </div>
@@ -225,46 +242,38 @@ export default function Rewards(): JSX.Element {
         />
       </div>
 
-      {/* Scored Last Week Sheet */}
+      {/* Sheets */}
       <ScoredLastWeek
         isOpen={activeSheet === "scored"}
         onClose={closeSheet}
         title="Your weekly score"
       />
-
-      {/* O.G Earning Sheet */}
       <OGearningSheet
         isOpen={activeSheet === "og-earning"}
         onClose={closeSheet}
         onSuccess={handleVerificationSuccess}
       />
-
-      {/* Reward Tiers Sheet */}
       <RewardTiersSheet
         isOpen={activeSheet === "rewards"}
         onClose={closeSheet}
       />
-
-      {/* How to Earn Sheet */}
       <HowToEarnSheet isOpen={activeSheet === "earn"} onClose={closeSheet} />
-
-      {/* Leaderboard Sheet */}
       <LeaderboardSheet
         isOpen={activeSheet === "leaderboard"}
         onClose={closeSheet}
       />
-
-      {/* Claims Sheet */}
       <ClaimsSheet
         isOpen={activeSheet === "claims"}
         onClose={closeSheet}
         rewardItems={rewardItems}
         onRedeem={handleRewardRedeem}
       />
-
-      {/* Daily Check-in Sheet */}
       <DailyCheckinSheet
         isOpen={activeSheet === "daily-checkin"}
+        onClose={closeSheet}
+      />
+      <SpinTheWheelSheet
+        isOpen={activeSheet === "spin-wheel"}
         onClose={closeSheet}
       />
 

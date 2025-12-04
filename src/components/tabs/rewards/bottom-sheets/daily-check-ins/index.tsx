@@ -98,51 +98,19 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
   const isDegen = mode === "degen";
   const progressBarClasses = isDegen
     ? "bg-gradient-to-r from-purple-500 to-purple-600 h-2.5 rounded-full"
-    : "bg-[color:var(--celo-forest)] h-2.5";
+    : "bg-[var(--accent-primary)] h-2.5 rounded-full";
 
-  const checkedInBorderClasses = isDegen
-    ? "bg-purple-500/20 border border-purple-500/30"
-    : "bg-emerald-500/20 border border-emerald-500/30";
+  const successBgClasses = "p-3 rounded-lg flex items-center gap-2 bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border-primary)]";
 
-  const checkedInIconClasses = isDegen
-    ? "text-purple-400"
-    : "text-emerald-400";
+  const successStatusClasses = "p-3 rounded-lg border border-[var(--border-primary)] text-center text-[var(--accent-primary)] flex items-center justify-center gap-2 bg-[var(--bg-tertiary)]";
 
-  const primaryButtonClasses = isDegen
-    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2"
-    : "boc-btn w-full py-3";
+  const claimTimeBgClasses = "p-3 rounded-lg border border-[var(--border-primary)] text-center bg-[var(--accent-primary)] text-[var(--accent-text)]";
 
-  const rewardButtonClasses = isDegen
-    ? "w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white py-3 rounded-lg font-medium flex items-center justify-center gap-2 animate-pulse"
-    : "boc-btn w-full py-3";
+  const roundNumberClasses = "text-sm text-[var(--text-primary)]";
 
-  const switchNetworkButtonClasses = isDegen
-    ? "w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-lg font-medium"
-    : "boc-btn w-full py-3";
+  const chevronIconClasses = "w-4 h-4 mt-0.5 text-[var(--text-secondary)] flex-shrink-0";
 
-  const successBgClasses = isDegen
-    ? "p-3 bg-purple-500/10 rounded-lg flex items-center gap-2 text-purple-500"
-    : "panel p-3 flex items-center gap-2 text-black";
-
-  const successStatusClasses = isDegen
-    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400 flex items-center justify-center gap-2"
-    : "panel p-3 text-center flex items-center justify-center gap-2";
-
-  const claimTimeBgClasses = isDegen
-    ? "p-3 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center text-purple-400"
-    : "celo-block-yellow p-3 text-center";
-
-  const roundNumberClasses = isDegen
-    ? "text-sm text-purple-400"
-    : "text-sm text-black";
-
-  const chevronIconClasses = isDegen
-    ? "w-4 h-4 mt-0.5 text-purple-400 flex-shrink-0"
-    : "w-4 h-4 mt-0.5 text-black flex-shrink-0";
-
-  const panelClasses = isDegen
-    ? "bg-gray-900/50 rounded-xl p-4 border border-gray-800"
-    : "panel p-4";
+  const panelClasses = "rounded-xl p-4 border border-[var(--border-primary)] bg-[var(--bg-secondary)]";
 
   function mapDashboardData(data: any[]): DashboardData {
     return {
@@ -318,7 +286,7 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
       const processedSuffix = dataSuffix?.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix || "";
       const combinedData = (checkInData + processedSuffix) as `0x${string}`;
-      
+
       // Try to estimate gas for better wallet compatibility
       let gasEstimate;
       try {
@@ -463,18 +431,18 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
         <div className={panelClasses}>
           <div className="flex justify-between items-center mb-3">
-            <h3 className="font-medium text-gray-300">Round Progress</h3>
-            <span className="text-sm text-gray-400">Day {currentDay} of 7</span>
+            <h3 className="font-medium text-[var(--text-secondary)]">Round Progress</h3>
+            <span className="text-sm text-[var(--text-tertiary)]">Day {currentDay} of 7</span>
           </div>
 
-          <div className={isDegen ? "w-full bg-gray-800 rounded-full h-2.5 mb-2" : "w-full border-2 border-black h-2.5 mb-2"}>
+          <div className="w-full bg-[var(--bg-tertiary)] rounded-full h-2.5 mb-2">
             <div
               className={progressBarClasses}
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
 
-          <div className="flex justify-between text-sm text-gray-400">
+          <div className="flex justify-between text-sm text-[var(--text-tertiary)]">
             <span>{userCheckIns}/7 days checked in</span>
             <span>{currentReward} {currency} reward</span>
           </div>
@@ -483,25 +451,25 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         {!isCorrectChain ? (
           <Button
             onClick={() => switchChainAsync({ chainId: targetChain.id })}
-            className={switchNetworkButtonClasses}
+            className="boc-btn w-full py-3"
           >
             Switch to {mode === "degen" ? "Base" : "Celo"} Network
           </Button>
         ) : isLoading ? (
-          <Button disabled className={isDegen ? "w-full py-3 rounded-lg" : "boc-btn w-full py-3"}>
+          <Button disabled className="boc-btn w-full py-3 opacity-70">
             <Loader2 className="w-5 h-5 animate-spin mr-2" />
             Processing...
           </Button>
         ) : !dashboardData?.roundActive ? (
-          <div className={isDegen ? "p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400" : "celo-block-yellow p-3 text-center"}>
+          <div className={claimTimeBgClasses}>
             Round is inactive. Check back soon!
           </div>
         ) : !hasCheckedInToday ? (
           <Button
             onClick={handleCheckin}
-            className={primaryButtonClasses}
+            className="boc-btn w-full py-3"
           >
-            <CheckCircle2 className="w-5 h-5" />
+            <CheckCircle2 className="w-5 h-5 mr-2" />
             Check In for Day {currentDay}
           </Button>
         ) : (
@@ -514,15 +482,15 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
         {canClaimReward && (
           <Button
             onClick={handleClaimReward}
-            className={rewardButtonClasses}
+            className="boc-btn w-full py-3 animate-pulse"
           >
-            <Gift className="w-5 h-5" />
+            <Gift className="w-5 h-5 mr-2" />
             Claim {currentReward} {currency} Reward
           </Button>
         )}
 
         {currentDay === 7 && userCheckIns < 7 && (
-          <div className={isDegen ? "p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center text-yellow-400" : "celo-block-yellow p-3 text-center"}>
+          <div className={claimTimeBgClasses}>
             You missed some check-ins so this round has ended for you.
           </div>
         )}
@@ -534,26 +502,26 @@ export const DailyCheckinSheet: React.FC<DailyCheckinSheetProps> = ({
 
         <div className={panelClasses}>
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-gray-300">Current Round</h3>
+            <h3 className="font-medium text-[var(--text-secondary)]">Current Round</h3>
             <span className={roundNumberClasses}>#{currentRoundNumber}</span>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-gray-400 mb-1">
+          <div className="flex items-center justify-between text-sm text-[var(--text-tertiary)] mb-1">
             <span>Status</span>
-            <span className={isRoundActive ? "text-green-400" : "text-red-400"}>
+            <span className={isRoundActive ? "text-green-500" : "text-red-500"}>
               {isRoundActive ? "Active" : "Ended"}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-sm text-gray-400">
+          <div className="flex items-center justify-between text-sm text-[var(--text-tertiary)]">
             <span>Fee</span>
             <span>{formatEther(CHECK_IN_FEE)} {currency}/day</span>
           </div>
         </div>
 
         <div className={panelClasses}>
-          <h3 className="font-medium text-gray-300 mb-2">How It Works</h3>
-          <ul className="space-y-2 text-sm text-gray-400">
+          <h3 className="font-medium text-[var(--text-secondary)] mb-2">How It Works</h3>
+          <ul className="space-y-2 text-sm text-[var(--text-tertiary)]">
             <li className="flex items-start gap-2">
               <ChevronRight className={chevronIconClasses} />
               <span>Check in daily ({formatEther(CHECK_IN_FEE)} {currency} fee per check-in)</span>
