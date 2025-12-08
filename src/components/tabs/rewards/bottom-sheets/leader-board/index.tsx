@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { BottomSheet } from "../../components/bottomSheet";
 import DonorsLeaderBoard from "../../leader-board/DonorsLeaderBoard";
 import RewardsLeaderBoard from "../../leader-board/RewardsLeaderBoard";
-import { useChainMode } from "~/app/chain-mode/context";
+
 import { cn } from "~/lib/utils";
 
 interface LeaderboardSheetProps {
@@ -18,8 +18,8 @@ const LeaderboardSheet: React.FC<LeaderboardSheetProps> = ({
     "donors" | "rewards"
   >("donors");
 
-  const { mode } = useChainMode();
-  const isDegen = mode === "degen";
+
+
 
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Leaderboard">

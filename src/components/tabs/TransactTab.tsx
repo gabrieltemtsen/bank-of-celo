@@ -66,7 +66,7 @@ export default function TransactTab({
   const { signTypedDataAsync } = useSignTypedData();
   const { sendTransactionAsync } = useSendTransaction();
   const { writeContractAsync } = useWriteContract();
-  
+
   const { address: bankAddress, abi: bankAbi } = useBankContract();
   const [amount, setAmount] = useState("");
   const [fid, setFid] = useState<number | null>(null);
@@ -86,13 +86,13 @@ export default function TransactTab({
   const currency = mode === "degen" ? "DEGEN" : "CELO";
   const maxClaim = mode === "degen" ? "100" : initialMaxClaim;
   const { data: tokenBalance } = useBalance({
-  address,
-  token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined, // DEGEN on Base
-  chainId: mode === "degen" ? base.id : undefined,
-});
+    address,
+    token: mode === "degen" ? "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" : undefined, // DEGEN on Base
+    chainId: mode === "degen" ? base.id : undefined,
+  });
 
-    const chainId = useChainId()
-    const targetChain = mode === "degen" ? base : celo;
+  const chainId = useChainId()
+  const targetChain = mode === "degen" ? base : celo;
 
   // Dynamic color classes based on mode, matching BottomNavigation
   const isDegen = mode === "degen";
@@ -202,38 +202,38 @@ export default function TransactTab({
     } finally {
       setFidLoading(false);
     }
-  }, [address, publicClient, bankAbi, bankAddress]);
+  }, [address, publicClient]);
 
   const handleDonate = async (amount: string) => {
     if (!isCorrectChain) {
       toast.error(`Please switch to ${targetChain.name} Network`);
       return;
     }
-  
+
     if (!address) {
       toast.error("Please connect your wallet");
       return;
     }
-  
+
     if (!publicClient) {
       toast.error("Public client is not available. Please try again.");
       return;
     }
-  
+
     if (Number(amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
-  
+
     try {
       let donateData: `0x${string}`;
       let transactionParams: Parameters<typeof sendTransactionAsync>[0];
-  
+
       if (mode === "degen") {
         const degenAmount = parseUnits(amount, 18);
         const degenTokenAddress = "0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed";
         const bankContractAddress = bankAddress as `0x${string}`;
-  
+
         const balance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
@@ -244,7 +244,7 @@ export default function TransactTab({
           toast.error(`Insufficient DEGEN balance. Available: ${formatEther(balance)} DEGEN`);
           return;
         }
-  
+
         const allowance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
@@ -263,7 +263,7 @@ export default function TransactTab({
           await publicClient.waitForTransactionReceipt({ hash: approveHash });
           toast.success("DEGEN token approval successful!");
         }
-  
+
         const updatedAllowance = await publicClient.readContract({
           address: degenTokenAddress as `0x${string}`,
           abi: ERC20_ABI,
@@ -273,13 +273,13 @@ export default function TransactTab({
         if (updatedAllowance < degenAmount) {
           throw new Error("Approval amount insufficient after update");
         }
-  
+
         donateData = encodeFunctionData({
           abi: bankAbi,
           functionName: "donate",
           args: [degenAmount],
         });
-  
+
         transactionParams = {
           to: bankContractAddress,
           data: donateData,
@@ -303,7 +303,7 @@ export default function TransactTab({
           maxPriorityFeePerGas: parseUnits("100", 9),
         };
       }
-  
+
       const dataSuffix = getDataSuffix({
         consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
         providers: [
@@ -312,20 +312,20 @@ export default function TransactTab({
           "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
         ],
       });
-  
+
       const combinedData = dataSuffix
         ? donateData + (dataSuffix.startsWith("0x") ? dataSuffix.slice(2) : dataSuffix)
         : donateData;
-  
+
       transactionParams.data = combinedData as `0x${string}`;
-  
+
       const hash = await sendTransactionAsync(transactionParams);
-  
+
       // Wait for transaction confirmation before showing success message
       await publicClient.waitForTransactionReceipt({ hash });
 
       toast.success(`Donation successful! Transaction hash: ${hash.slice(0, 6)}...`);
-  
+
       try {
         await submitReferral({
           txHash: hash,
@@ -378,116 +378,89 @@ export default function TransactTab({
     ? new Date((lastClaimAt + claimCooldown) * 1000)
     : null;
 
-const handleClaim = async () => {
-  if (qualityScore && qualityScore < 0.39) {
-    toast.error("You need a positive quality score to claim rewards, keep being active on Farcaster!");
-    return;
-  }
-  if (!fid || !address || !publicClient) {
-    toast.error("Farcaster ID or address missing");
-    return;
-  }
-  if (availableForClaim < maxClaim) {
-    toast.error("Insufficient vault balance to claim");
-    return;
-  }
-
-  setClaimPending(true);
-  setTxHash(null);
-
-  try {
-    const deadline = Math.floor(Date.now() / 1000) + 3600;
-
-    const nonce = (await publicClient.readContract({
-      address: bankAddress,
-      abi: bankAbi,
-      functionName: "nonces",
-      args: [address],
-    })) as bigint;
-
-    const domain = {
-      name: mode === "degen" ? "BankOfDegen" : "BankOfCelo",
-      version: "1",
-      chainId: targetChain.id,
-      verifyingContract: bankAddress,
-    };
-
-    const types = {
-      Claim: [
-        { name: "claimer", type: "address" },
-        { name: "fid", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-        { name: "nonce", type: "uint256" },
-      ],
-    };
-
-    const message = {
-      claimer: address,
-      fid: BigInt(fid),
-      deadline: BigInt(deadline),
-      nonce,
-    };
-
-    const signature = await signTypedDataAsync({
-      domain,
-      types,
-      primaryType: "Claim",
-      message,
-    });
-
-    let dataSuffix;
-    try {
-      dataSuffix = getDataSuffix({
-        consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
-        providers: [
-          "0x0423189886d7966f0dd7e7d256898daeee625dca",
-          "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
-          "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
-        ],
-      });
-    } catch (diviError) {
-      console.log("Divi getDataSuffix error:", diviError);
-      throw new Error("Failed to generate referral data");
+  const handleClaim = async () => {
+    if (qualityScore && qualityScore < 0.39) {
+      toast.error("You need a positive quality score to claim rewards, keep being active on Farcaster!");
+      return;
+    }
+    if (!fid || !address || !publicClient) {
+      toast.error("Farcaster ID or address missing");
+      return;
+    }
+    if (availableForClaim < maxClaim) {
+      toast.error("Insufficient vault balance to claim");
+      return;
     }
 
-    const contractData = encodeFunctionData({
-      abi: bankAbi,
-      functionName: "claim",
-      args: [BigInt(fid), BigInt(deadline), signature],
-    });
+    setClaimPending(true);
+    setTxHash(null);
 
-    const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+    try {
+      const deadline = Math.floor(Date.now() / 1000) + 3600;
 
-    let hash: `0x${string}`;
-    if (mode === "degen") {
-      // In degen mode, always use direct transaction
-      hash = await sendTransactionAsync({
-        to: bankAddress,
-        data: finalData as `0x${string}`,
-        value: 0n,
+      const nonce = (await publicClient.readContract({
+        address: bankAddress,
+        abi: bankAbi,
+        functionName: "nonces",
+        args: [address],
+      })) as bigint;
+
+      const domain = {
+        name: mode === "degen" ? "BankOfDegen" : "BankOfCelo",
+        version: "1",
         chainId: targetChain.id,
+        verifyingContract: bankAddress,
+      };
+
+      const types = {
+        Claim: [
+          { name: "claimer", type: "address" },
+          { name: "fid", type: "uint256" },
+          { name: "deadline", type: "uint256" },
+          { name: "nonce", type: "uint256" },
+        ],
+      };
+
+      const message = {
+        claimer: address,
+        fid: BigInt(fid),
+        deadline: BigInt(deadline),
+        nonce,
+      };
+
+      const signature = await signTypedDataAsync({
+        domain,
+        types,
+        primaryType: "Claim",
+        message,
       });
 
+      let dataSuffix;
       try {
-        await submitReferral({
-          txHash: hash,
-          chainId: targetChain.id,
+        dataSuffix = getDataSuffix({
+          consumer: "0xC5337CeE97fF5B190F26C4A12341dd210f26e17c",
+          providers: [
+            "0x0423189886d7966f0dd7e7d256898daeee625dca",
+            "0xc95876688026be9d6fa7a7c33328bd013effa2bb",
+            "0x5f0a55fad9424ac99429f635dfb9bf20c3360ab8",
+          ],
         });
       } catch (diviError) {
-        console.log("Divi submitReferral error:", diviError);
-        toast.warning("Claim succeeded, but referral tracking failed");
+        console.log("Divi getDataSuffix error:", diviError);
+        throw new Error("Failed to generate referral data");
       }
 
-      setTxHash(hash);
-      toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
-    } else {
-      // Celo mode: Check gas balance and use gasless if insufficient
-      const balance = await publicClient.getBalance({ address });
-      const minBalance = parseEther("0.001"); // Minimum 0.001 CELO for gas
-      const hasSufficientGas = balance >= minBalance;
+      const contractData = encodeFunctionData({
+        abi: bankAbi,
+        functionName: "claim",
+        args: [BigInt(fid), BigInt(deadline), signature],
+      });
 
-      if (hasSufficientGas) {
-        // Direct transaction with gas payment
+      const finalData = dataSuffix ? contractData + dataSuffix : contractData;
+
+      let hash: `0x${string}`;
+      if (mode === "degen") {
+        // In degen mode, always use direct transaction
         hash = await sendTransactionAsync({
           to: bankAddress,
           data: finalData as `0x${string}`,
@@ -508,51 +481,78 @@ const handleClaim = async () => {
         setTxHash(hash);
         toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
       } else {
-        // Gasless claim via API for Celo
-        const requestBody = {
-          address,
-          fid: fid.toString(),
-          deadline: deadline.toString(),
-          signature,
-          nonce: nonce.toString(),
-          dataSuffix,
-        };
+        // Celo mode: Check gas balance and use gasless if insufficient
+        const balance = await publicClient.getBalance({ address });
+        const minBalance = parseEther("0.001"); // Minimum 0.001 CELO for gas
+        const hasSufficientGas = balance >= minBalance;
 
-        const response = await fetch("/api/claim", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Failed to process claim");
-        }
-
-        const result = await response.json();
-        hash = result.transactionHash;
-
-        try {
-          await submitReferral({
-            txHash: hash,
+        if (hasSufficientGas) {
+          // Direct transaction with gas payment
+          hash = await sendTransactionAsync({
+            to: bankAddress,
+            data: finalData as `0x${string}`,
+            value: 0n,
             chainId: targetChain.id,
           });
-        } catch (diviError) {
-          console.log("Divi submitReferral error:", diviError);
-          toast.warning("Claim succeeded, but referral tracking failed");
-        }
 
-        setTxHash(hash);
-        toast.success(`Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${hash.slice(0, 6)}...`);
+          try {
+            await submitReferral({
+              txHash: hash,
+              chainId: targetChain.id,
+            });
+          } catch (diviError) {
+            console.log("Divi submitReferral error:", diviError);
+            toast.warning("Claim succeeded, but referral tracking failed");
+          }
+
+          setTxHash(hash);
+          toast.success(`Claimed ${maxClaim} ${currency}! Transaction hash: ${hash.slice(0, 6)}...`);
+        } else {
+          // Gasless claim via API for Celo
+          const requestBody = {
+            address,
+            fid: fid.toString(),
+            deadline: deadline.toString(),
+            signature,
+            nonce: nonce.toString(),
+            dataSuffix,
+          };
+
+          const response = await fetch("/api/claim", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(requestBody),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to process claim");
+          }
+
+          const result = await response.json();
+          hash = result.transactionHash;
+
+          try {
+            await submitReferral({
+              txHash: hash,
+              chainId: targetChain.id,
+            });
+          } catch (diviError) {
+            console.log("Divi submitReferral error:", diviError);
+            toast.warning("Claim succeeded, but referral tracking failed");
+          }
+
+          setTxHash(hash);
+          toast.success(`Claimed ${maxClaim} ${currency} (gasless)! Transaction hash: ${hash.slice(0, 6)}...`);
+        }
       }
+    } catch (error) {
+      console.log("Claim error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to process claim");
+    } finally {
+      setClaimPending(false);
     }
-  } catch (error) {
-    console.log("Claim error:", error);
-    toast.error(error instanceof Error ? error.message : "Failed to process claim");
-  } finally {
-    setClaimPending(false);
-  }
-};
+  };
 
   const handleSubmit = async () => {
     if (!isCorrectChain) {
@@ -565,7 +565,7 @@ const handleClaim = async () => {
         toast.error("Please enter a valid amount");
         return;
       }
-      
+
       setDonationLoading(true);
       try {
         await onDonate(amount);
@@ -598,9 +598,8 @@ const handleClaim = async () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`relative flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-                activeTab === tab.id ? activeButtonClasses : inactiveButtonClasses
-              }`}
+              className={`relative flex-1 min-w-[120px] py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${activeTab === tab.id ? activeButtonClasses : inactiveButtonClasses
+                }`}
               aria-label={`${tab.label} tab`}
               role="tab"
               aria-selected={activeTab === tab.id}
@@ -794,7 +793,7 @@ const handleClaim = async () => {
         </motion.div>
       ) : activeTab === "lottery" ? (
         <JackPot isCorrectChain={isCorrectChain} />
-      // ) : activeTab === "lottery2" ? (
+        // ) : activeTab === "lottery2" ? (
         // <JackPotV2 isCorrectChain={isCorrectChain} />
       ) : null}
     </motion.div>
