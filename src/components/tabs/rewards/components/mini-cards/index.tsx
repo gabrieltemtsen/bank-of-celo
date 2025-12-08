@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useChainMode } from "~/app/chain-mode/context";
+
 import { cn } from "~/lib/utils";
 
 interface MiniCard {
@@ -22,8 +22,8 @@ const MiniCards: React.FC<MiniCardsProps> = ({
   openSheet,
   scrollRef,
 }) => {
-  const { mode } = useChainMode();
-  const isDegen = mode === "degen";
+
+
   const [showHint, setShowHint] = useState(true);
   const [active, setActive] = useState(0);
   const itemWidthRef = useRef<number | null>(null);
@@ -54,7 +54,7 @@ const MiniCards: React.FC<MiniCardsProps> = ({
       el.removeEventListener("pointerdown", onPointer);
       clearTimeout(t);
     };
-  }, [scrollRef]);
+  }, [scrollRef, miniCards.length]);
 
   return (
     <div className="relative">

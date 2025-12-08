@@ -3,7 +3,7 @@ import {
   RewardItem,
   RewardItemProps,
 } from "../reward-tiers-sheet/reward-item/RewardItem";
-import { useChainMode } from "~/app/chain-mode/context";
+
 import { cn } from "~/lib/utils";
 
 // Claims Sheet Component
@@ -13,8 +13,8 @@ export const ClaimsSheet: React.FC<{
   rewardItems: RewardItemProps[];
   onRedeem: (rewardId: string) => void;
 }> = ({ isOpen, onClose, rewardItems, onRedeem }) => {
-  const { mode } = useChainMode();
-  const isDegen = mode === "degen";
+
+
 
   return (
     <BottomSheet

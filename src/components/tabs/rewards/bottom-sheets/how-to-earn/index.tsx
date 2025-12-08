@@ -2,7 +2,7 @@ import React from "react";
 import { Edit3, Trophy, DollarSign } from "lucide-react";
 import { BottomSheet } from "../../components/bottomSheet";
 import { EarnItem } from "../../earn/EarnItem";
-import { useChainMode } from "~/app/chain-mode/context";
+
 
 interface HowToEarnSheetProps {
   isOpen: boolean;
@@ -10,8 +10,8 @@ interface HowToEarnSheetProps {
 }
 
 const HowToEarnSheet: React.FC<HowToEarnSheetProps> = ({ isOpen, onClose }) => {
-  const { mode } = useChainMode();
-  const isDegen = mode === "degen";
+
+
 
   return (
     <BottomSheet

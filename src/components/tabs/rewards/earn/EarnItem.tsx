@@ -1,4 +1,4 @@
-import { useChainMode } from "~/app/chain-mode/context";
+
 import { cn } from "~/lib/utils";
 
 interface EarnItemProps {
@@ -12,8 +12,8 @@ export const EarnItem: React.FC<EarnItemProps> = ({
   title,
   description,
 }) => {
-  const { mode } = useChainMode();
-  const isDegen = mode === "degen";
+
+
 
   return (
     <div className={cn(
