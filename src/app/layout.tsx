@@ -1,31 +1,19 @@
 import type { Metadata } from "next";
-
-import { getSession } from "~/auth";
 import "~/app/globals.css";
-import { Providers } from "~/app/providers";
-import { APP_NAME, APP_DESCRIPTION } from "~/lib/constants";
-import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: APP_NAME,
-  description: APP_DESCRIPTION,
+  title: "Bank of Celo - Coming Soon",
+  description: "Something amazing is coming. Stay tuned!",
 };
 
-export const dynamic = 'force-dynamic';
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-
   return (
     <html lang="en">
-      <body>
-        <Providers session={session}>{children}</Providers>
-        <Toaster position="top-right" />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
