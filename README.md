@@ -66,7 +66,7 @@ Bank of Celo combines social identity verification through Farcaster with decent
 
 **Vault Contracts:**
 - EUR Vault: `0x6C617A05b9D183D2BD1A3350F4782Fc125460634`
-- USDC Vault: `0x8Ca054b89F04C5546f37B633690fb940Cc4130`
+- USDC Vault: `0x8Ca054b89C9F04C5546f37B633690fb940Cc4130`
 
 ### 🏆 **Rewards & Gamification**
 - Daily check-in system
@@ -107,7 +107,7 @@ EUR Vault (FX):   0x6C617A05b9D183D2BD1A3350F4782Fc125460634
 Bank of Degen:    0xbAA9d576E6bA810C6e15f2b3b144a7268a6280e2
 Daily Check-in:   0x951C3C3A213a6845a7aD92E5Ea52D3983D83C296
 Jackpot:          0xb805cAcA994d25234Ac9d6b9c53De49a1B500872
-USDC Vault (FX):  0x8Ca054b89F04C5546f37B633690fb940Cc4130
+USDC Vault (FX):  0x8Ca054b89C9F04C5546f37B633690fb940Cc4130
 ```
 
 ### **Legacy Contracts** *(Deprecated)*
